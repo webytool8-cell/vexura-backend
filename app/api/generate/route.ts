@@ -70,7 +70,7 @@ Rules:
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Anthropic API error:', errorText);
-      throw new Error(`Anthropic API error: ${response.status}`);
+      throw new Error(`Anthropic API error: ${response.status}`);  // FIXED THIS LINE
     }
 
     const data = await response.json();
@@ -90,11 +90,11 @@ Rules:
       throw new Error('Invalid vector structure');
     }
 
-    // Return both JSON and rendered SVG (for flexibility)
+    // Return both JSON and rendered SVG
     return NextResponse.json(
       { 
         vector,
-        svg: renderFormats.svg(vector) // Now using your render function!
+        svg: renderFormats.svg(vector)
       },
       { status: 200, headers }
     );
