@@ -24,7 +24,8 @@ export async function POST(request) {
     if (!apiKey) {
       return new Response(
         JSON.stringify({ 
-          error: 'Could not resolve authentication method. See https://docs.anthropic.com/en/api/getting-started for available authentication methods.' 
+          error: 'API key not configured',
+          details: 'ANTHROPIC_API_KEY environment variable is missing'
         }),
         { status: 500, headers }
       );
@@ -45,7 +46,7 @@ export async function POST(request) {
           role: 'user',
           content: `You are a vector icon generator. Generate a clean, professional SVG icon based on this prompt: "${prompt}"
 
-Return ONLY valid JSON in this exact format (no markdown, no code blocks, no explanations):
+Return ONLY valid JSON in this exact format (no markdown, no code blocks):
 {
   "name": "Icon Name",
   "width": 400,
@@ -55,27 +56,26 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks, no exp
   ]
 }
 
-CRITICAL RULES:
-- Use ONLY these element types: circle, rect, ellipse, polygon, path, line
-- 400x400 viewBox always
-- 3-12 elements maximum for clean design
-- Use hex colors only (#RRGGBB format)
-- Clean, minimal, professional design
-- Include subtle shadows or depth if appropriate
-- Return ONLY the JSON object, nothing else`
+Rules:
+- Use ONLY: circle, rect, ellipse, polygon, path, line
+- 400x400 viewBox
+- 3-12 elements max
+- Hex colors only
+- Clean, minimal design
+- Return ONLY JSON, nothing else`
         }]
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
     const data = await response.json();
     const text = data.content[0].text;
     
-    // Extract JSON from response (handle potential markdown wrapping)
+    // Extract JSON
     let jsonStr = text.trim();
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -83,11 +83,6 @@ CRITICAL RULES:
     }
 
     const vector = JSON.parse(jsonStr);
-
-    // Validate the structure
-    if (!vector.elements || !Array.isArray(vector.elements)) {
-      throw new Error('Invalid vector structure returned from AI');
-    }
 
     return new Response(
       JSON.stringify({ vector }),
@@ -98,8 +93,7 @@ CRITICAL RULES:
     console.error('Generation error:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Generation failed',
-        details: error.toString()
+        error: error.message || 'Generation failed'
       }),
       { status: 500, headers }
     );
