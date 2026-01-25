@@ -1,4 +1,3 @@
-```json
 {
   "name": "vexura-backend",
   "version": "0.1.0",
@@ -16,4 +15,4 @@
     "react-dom": "^18"
   }
 }
-```
+
