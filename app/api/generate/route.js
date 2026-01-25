@@ -1,75 +1,119 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { NextResponse } from 'next/server';
+// app/api/generate/route.js
+export async function POST(request) {
+  // Set CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+  };
 
-export const runtime = 'edge';
+  try {
+    const { prompt } = await request.json();
 
-// Initialize the client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+    if (!prompt) {
+      return new Response(
+        JSON.stringify({ error: 'Prompt is required' }),
+        { status: 400, headers }
+      );
+    }
 
-const SYSTEM_PROMPT = `
-ROLE: You are a vector icon generation engine.
-OUTPUT: JSON only. No markdown. No chatter.
-FORMAT: 
+    // Get API key from environment
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Could not resolve authentication method. See https://docs.anthropic.com/en/api/getting-started for available authentication methods.' 
+        }),
+        { status: 500, headers }
+      );
+    }
+
+    // Call Anthropic API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: `You are a vector icon generator. Generate a clean, professional SVG icon based on this prompt: "${prompt}"
+
+Return ONLY valid JSON in this exact format (no markdown, no code blocks, no explanations):
 {
-  "name": "Object Name",
+  "name": "Icon Name",
   "width": 400,
   "height": 400,
   "elements": [
-    { "type": "circle", "cx": 200, "cy": 200, "r": 50, "fill": "black" },
-    ...
+    {"type": "circle", "cx": 200, "cy": 200, "r": 80, "fill": "#3b82f6", "stroke": "none", "strokeWidth": 0}
   ]
 }
-CONSTRAINTS:
-- Use only standard SVG shapes: circle, rect, ellipse, polygon, line, path.
-- Canvas is 400x400.
-- Icon must be simple, bold, and scalable.
-`;
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    const { prompt } = body;
-
-    if (!prompt) {
-      return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
-    }
-
-    const msg = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [
-        { role: "user", content: `Generate a vector icon for: ${prompt}` }
-      ],
-      temperature: 0.5,
+CRITICAL RULES:
+- Use ONLY these element types: circle, rect, ellipse, polygon, path, line
+- 400x400 viewBox always
+- 3-12 elements maximum for clean design
+- Use hex colors only (#RRGGBB format)
+- Clean, minimal, professional design
+- Include subtle shadows or depth if appropriate
+- Return ONLY the JSON object, nothing else`
+        }]
+      })
     });
 
-    const responseText = msg.content[0].text;
-
-    // Clean the output
-    let cleanJson = responseText;
-    if (responseText.includes('```json')) {
-        cleanJson = responseText.split('```json')[1].split('```')[0].trim();
-    } else if (responseText.includes('{')) {
-        const first = responseText.indexOf('{');
-        const last = responseText.lastIndexOf('}');
-        cleanJson = responseText.substring(first, last + 1);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
     }
 
-    const vectorData = JSON.parse(cleanJson);
+    const data = await response.json();
+    const text = data.content[0].text;
+    
+    // Extract JSON from response (handle potential markdown wrapping)
+    let jsonStr = text.trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
 
-    return NextResponse.json({
-      cached: false,
-      vector: vectorData
-    });
+    const vector = JSON.parse(jsonStr);
+
+    // Validate the structure
+    if (!vector.elements || !Array.isArray(vector.elements)) {
+      throw new Error('Invalid vector structure returned from AI');
+    }
+
+    return new Response(
+      JSON.stringify({ vector }),
+      { status: 200, headers }
+    );
 
   } catch (error) {
-    console.error("Backend Error:", error);
-    return NextResponse.json(
-      { error: "Generation failed", details: error.message },
-      { status: 500 }
+    console.error('Generation error:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message || 'Generation failed',
+        details: error.toString()
+      }),
+      { status: 500, headers }
     );
   }
+}
+
+// Handle CORS preflight
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
