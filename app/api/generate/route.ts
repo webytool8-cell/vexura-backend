@@ -1,8 +1,8 @@
 // app/api/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { renderFormats } from '../../../lib/render/svg';
 
 export async function POST(request: NextRequest) {
-  // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -19,7 +19,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get API key from environment
     const apiKey = process.env.ANTHROPIC_API_KEY;
     
     if (!apiKey) {
@@ -91,8 +90,12 @@ Rules:
       throw new Error('Invalid vector structure');
     }
 
+    // Return both JSON and rendered SVG (for flexibility)
     return NextResponse.json(
-      { vector },
+      { 
+        vector,
+        svg: renderFormats.svg(vector) // Now using your render function!
+      },
       { status: 200, headers }
     );
 
@@ -108,7 +111,6 @@ Rules:
   }
 }
 
-// Handle CORS preflight
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
