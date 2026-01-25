@@ -1,6 +1,6 @@
 // app/api/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { renderFormats } from '../../../lib/render/svg';
+import { renderFormats } from '@/lib/render/svg';
 
 export async function POST(request: NextRequest) {
   const headers = {
