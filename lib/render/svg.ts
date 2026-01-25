@@ -27,15 +27,4 @@ export const renderFormats = {
 ${elements}
 </svg>`.trim();
   },
-
-  // Placeholder for future formats
-  png: (vector: any) => {
-    // Could use libraries like sharp or puppeteer to render SVG to PNG
-    return null;
-  },
-
-  eps: (vector: any) => {
-    // Could convert SVG to EPS if needed
-    return null;
-  },
 };
