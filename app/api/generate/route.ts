@@ -2,6 +2,48 @@
 import { renderFormats } from '../../../lib/render/svg';
 import { runQualityChecks } from '../../../lib/quality/checks';
 
+/* -----------------------------
+   Auto-Inference Helpers
+-------------------------------- */
+
+function inferStyle(type: 'icon' | 'illustration', prompt: string) {
+  const p = prompt.toLowerCase();
+
+  if (type === 'icon') {
+    if (p.includes('outline') || p.includes('stroke')) return 'outline';
+    if (p.includes('solid') || p.includes('filled')) return 'filled';
+    if (p.includes('geo') || p.includes('sharp')) return 'geometric';
+    return 'minimal';
+  }
+
+  // illustration
+  if (p.includes('nature') || p.includes('animal') || p.includes('human'))
+    return 'organic';
+  if (p.includes('diagram') || p.includes('system') || p.includes('ui'))
+    return 'technical';
+  if (p.includes('abstract'))
+    return 'abstract';
+  return 'flat';
+}
+
+function inferPalette(prompt: string) {
+  const p = prompt.toLowerCase();
+
+  if (p.includes('sun') || p.includes('fire') || p.includes('warm'))
+    return 'warm';
+  if (p.includes('night') || p.includes('water') || p.includes('cool'))
+    return 'cool';
+  if (p.includes('soft') || p.includes('cute'))
+    return 'pastel';
+  if (p.includes('neon') || p.includes('bold'))
+    return 'vibrant';
+  return 'mono';
+}
+
+/* -----------------------------
+   API Handler
+-------------------------------- */
+
 export async function POST(request: Request) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -16,12 +58,12 @@ export async function POST(request: Request) {
       type,
       style,
       palette,
-      customColors
+      customColors = [],
     } = await request.json();
 
-    if (!prompt || !style || !palette) {
+    if (!prompt) {
       return new Response(
-        JSON.stringify({ error: 'Prompt, style, and palette are required.' }),
+        JSON.stringify({ error: 'Prompt is required' }),
         { status: 400, headers }
       );
     }
@@ -29,37 +71,66 @@ export async function POST(request: Request) {
     const vectorType: 'icon' | 'illustration' =
       type === 'illustration' ? 'illustration' : 'icon';
 
+    // Resolve AUTO logic
+    const resolvedStyle =
+      !style || style === 'auto'
+        ? inferStyle(vectorType, prompt)
+        : style;
+
+    const resolvedPalette =
+      !palette || palette === 'auto'
+        ? inferPalette(prompt)
+        : palette;
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }),
+        JSON.stringify({
+          error: 'API key not configured',
+          details: 'ANTHROPIC_API_KEY environment variable missing',
+        }),
         { status: 500, headers }
       );
     }
 
-    const styleInstructions = {
-      icon: {
-        minimal: 'Extremely simple shapes, minimal paths, no decoration.',
-        outline: 'Stroke-only vectors, no fills, consistent stroke width.',
-        filled: 'Solid filled shapes, no strokes.',
-        geometric: 'Sharp angles, precise geometry, minimal curves.'
-      },
-      illustration: {
-        flat: 'Flat layered shapes, clean composition, no gradients.',
-        organic: 'Smooth flowing curves inspired by nature and anatomy.',
-        abstract: 'Expressive symbolic forms, non-literal shapes.',
-        technical: 'Structured, precise, diagram-like illustration.'
-      }
-    };
+    /* -----------------------------
+       AI Prompt Construction
+    -------------------------------- */
 
-    const paletteInstructions = {
-      mono: 'Use a single color with possible tints.',
-      warm: 'Use warm colors like red, orange, yellow.',
-      cool: 'Use cool colors like blue, teal, purple.',
-      pastel: 'Use soft pastel tones.',
-      vibrant: 'Use bright high-saturation colors.',
-      custom: `Use ONLY these colors: ${customColors?.join(', ')}`
-    };
+    const aiPrompt = `
+You are a professional ${vectorType} illustrator.
+
+Goal:
+Generate a high-quality SVG ${vectorType} suitable for designers, similar in quality to Freepik or Vecteezy assets.
+
+User prompt:
+"${prompt}"
+
+Style:
+${resolvedStyle}
+
+Color palette:
+${resolvedPalette}
+${customColors.length ? `Custom colors: ${customColors.join(', ')}` : ''}
+
+Rules:
+- Return ONLY valid JSON
+- No markdown, no explanations
+- SVG must be clean and production-ready
+- 400x400 viewBox
+- Use ONLY: circle, rect, ellipse, polygon, path, line
+- Icons: simple, geometric, consistent stroke logic
+- Illustrations: flowing curves, organic shapes, layered depth
+- Avoid randomness in proportions
+
+JSON format:
+{
+  "name": "Vector Name",
+  "width": 400,
+  "height": 400,
+  "elements": []
+}
+`.trim();
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -71,75 +142,60 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: `
-You are a professional ${vectorType} designer.
-
-STYLE:
-${styleInstructions[vectorType][style]}
-
-COLOR PALETTE:
-${paletteInstructions[palette]}
-
-TASK:
-Generate a clean, professional SVG vector for:
-"${prompt}"
-
-Return ONLY valid JSON in this exact format:
-{
-  "name": "Vector Name",
-  "width": 400,
-  "height": 400,
-  "elements": []
-}
-
-Rules:
-- Use ONLY: circle, rect, ellipse, polygon, path, line
-- 400x400 viewBox
-- 3–12 elements
-- Hex colors only
-- No text elements
-- Return ONLY JSON
-          `
-        }]
-      })
+        messages: [{ role: 'user', content: aiPrompt }],
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(await response.text());
+      const errorText = await response.text();
+      throw new Error(`Anthropic API error: ${response.status} – ${errorText}`);
     }
 
     const data = await response.json();
-    const text = data.content[0].text;
+    const text = data.content?.[0]?.text || '';
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Invalid JSON from AI');
+    if (!jsonMatch) {
+      throw new Error('Failed to extract vector JSON');
+    }
 
     const vector = JSON.parse(jsonMatch[0]);
 
     const warnings = runQualityChecks(
       vector,
       vectorType,
-      style,
-      palette,
+      resolvedStyle,
+      resolvedPalette,
       customColors
     );
 
     const svg = renderFormats.svg(vector);
 
     return new Response(
-      JSON.stringify({ vector, svg, warnings }),
+      JSON.stringify({
+        vector,
+        svg,
+        warnings,
+        meta: {
+          type: vectorType,
+          style: resolvedStyle,
+          palette: resolvedPalette,
+        },
+      }),
       { status: 200, headers }
     );
-
   } catch (error: any) {
+    console.error('Generation error:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Generation failed' }),
       { status: 500, headers }
     );
   }
 }
+
+/* -----------------------------
+   CORS Preflight
+-------------------------------- */
 
 export async function OPTIONS() {
   return new Response(null, {
