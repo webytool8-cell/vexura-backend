@@ -3,7 +3,6 @@ import { renderFormats } from '../../../lib/render/svg';
 import { runQualityChecks } from '../../../lib/quality/checks';
 
 export async function POST(request: Request) {
-  // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -12,31 +11,56 @@ export async function POST(request: Request) {
   };
 
   try {
-    const { prompt, type } = await request.json();
+    const {
+      prompt,
+      type,
+      style,
+      palette,
+      customColors
+    } = await request.json();
 
-    if (!prompt) {
+    if (!prompt || !style || !palette) {
       return new Response(
-        JSON.stringify({ error: 'Prompt is required' }),
+        JSON.stringify({ error: 'Prompt, style, and palette are required.' }),
         { status: 400, headers }
       );
     }
 
-    // Validate type
-    const vectorType = type === 'illustration' ? 'illustration' : 'icon';
+    const vectorType: 'icon' | 'illustration' =
+      type === 'illustration' ? 'illustration' : 'icon';
 
-    // Get API key from environment
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return new Response(
-        JSON.stringify({
-          error: 'API key not configured',
-          details: 'ANTHROPIC_API_KEY environment variable is missing',
-        }),
+        JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }),
         { status: 500, headers }
       );
     }
 
-    // Call Anthropic API
+    const styleInstructions = {
+      icon: {
+        minimal: 'Extremely simple shapes, minimal paths, no decoration.',
+        outline: 'Stroke-only vectors, no fills, consistent stroke width.',
+        filled: 'Solid filled shapes, no strokes.',
+        geometric: 'Sharp angles, precise geometry, minimal curves.'
+      },
+      illustration: {
+        flat: 'Flat layered shapes, clean composition, no gradients.',
+        organic: 'Smooth flowing curves inspired by nature and anatomy.',
+        abstract: 'Expressive symbolic forms, non-literal shapes.',
+        technical: 'Structured, precise, diagram-like illustration.'
+      }
+    };
+
+    const paletteInstructions = {
+      mono: 'Use a single color with possible tints.',
+      warm: 'Use warm colors like red, orange, yellow.',
+      cool: 'Use cool colors like blue, teal, purple.',
+      pastel: 'Use soft pastel tones.',
+      vibrant: 'Use bright high-saturation colors.',
+      custom: `Use ONLY these colors: ${customColors?.join(', ')}`
+    };
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -47,58 +71,69 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
-        messages: [
-          {
-            role: 'user',
-            content: `You are a vector ${vectorType} generator. Generate a clean, professional SVG vector based on this prompt: "${prompt}"
+        messages: [{
+          role: 'user',
+          content: `
+You are a professional ${vectorType} designer.
 
-Return ONLY valid JSON in this exact format (no markdown, no code blocks):
+STYLE:
+${styleInstructions[vectorType][style]}
+
+COLOR PALETTE:
+${paletteInstructions[palette]}
+
+TASK:
+Generate a clean, professional SVG vector for:
+"${prompt}"
+
+Return ONLY valid JSON in this exact format:
 {
   "name": "Vector Name",
   "width": 400,
   "height": 400,
-  "elements": [
-    {"type": "circle", "cx": 200, "cy": 200, "r": 80, "fill": "#3b82f6", "stroke": "none", "strokeWidth": 0}
-  ]
+  "elements": []
 }
 
 Rules:
 - Use ONLY: circle, rect, ellipse, polygon, path, line
 - 400x400 viewBox
-- 3-12 elements max for icons, 6+ for illustrations
+- 3–12 elements
 - Hex colors only
-- Icons should be simple; illustrations should be flowing and organic
-- Return ONLY JSON, nothing else`,
-          },
-        ],
-      }),
+- No text elements
+- Return ONLY JSON
+          `
+        }]
+      })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
+      throw new Error(await response.text());
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+    const text = data.content[0].text;
 
-    // Safely extract JSON object
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Failed to parse vector JSON from AI response');
+    if (!jsonMatch) throw new Error('Invalid JSON from AI');
+
     const vector = JSON.parse(jsonMatch[0]);
 
-    // Run async quality checks
-    const warnings = await runQualityChecks(vector, vectorType);
+    const warnings = runQualityChecks(
+      vector,
+      vectorType,
+      style,
+      palette,
+      customColors
+    );
 
-    // Render SVG
     const svg = renderFormats.svg(vector);
 
-    return new Response(JSON.stringify({ vector, svg, warnings }), {
-      status: 200,
-      headers,
-    });
+    return new Response(
+      JSON.stringify({ vector, svg, warnings }),
+      { status: 200, headers }
+    );
+
   } catch (error: any) {
-    console.error('Generation error:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Generation failed' }),
       { status: 500, headers }
@@ -106,7 +141,6 @@ Rules:
   }
 }
 
-// Handle CORS preflight
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
