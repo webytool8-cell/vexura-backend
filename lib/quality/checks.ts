@@ -1,53 +1,17 @@
 // lib/quality/checks.ts
-import fs from 'fs';
-import path from 'path';
-import { iconReferenceList } from './icon-reference';
-
-type VectorElement = {
-  type: string;
-  d?: string;
-  fill?: string;
-  stroke?: string;
-  name?: string;
-};
 
 type Vector = {
   width: number;
   height: number;
-  elements: VectorElement[];
+  elements: any[];
 };
 
-/* ---------------------------------------------
-   Load illustration SVG references (SERVER ONLY)
----------------------------------------------- */
-const ILLUSTRATION_REF_DIR = path.join(
-  process.cwd(),
-  'lib/quality/illustration-reference'
-);
-
-function loadIllustrationSVGs(): string[] {
-  try {
-    if (!fs.existsSync(ILLUSTRATION_REF_DIR)) return [];
-
-    return fs
-      .readdirSync(ILLUSTRATION_REF_DIR)
-      .filter(file => file.endsWith('.svg'))
-      .map(file =>
-        fs.readFileSync(path.join(ILLUSTRATION_REF_DIR, file), 'utf-8')
-      );
-  } catch {
-    return [];
-  }
-}
-
-const illustrationReferences = loadIllustrationSVGs();
-
-/* ---------------------------------------------
-   Main Quality Check Logic
----------------------------------------------- */
 export function runQualityChecks(
   vector: Vector,
-  type: 'icon' | 'illustration'
+  type: 'icon' | 'illustration',
+  style: string,
+  palette: string,
+  customColors?: string[]
 ) {
   const warnings: string[] = [];
   const elements = vector.elements || [];
@@ -85,49 +49,58 @@ export function runQualityChecks(
 
   const colorCount = colorSet.size;
 
-  /* ---------------------------------------------
-     ICON RULES
-  ---------------------------------------------- */
+  // -------- ICON RULES --------
   if (type === 'icon') {
     if (elements.length > 8)
       warnings.push('Icons should use fewer than 8 elements.');
 
-    if (pathRatio > 0.6)
-      warnings.push('Icons should favor simple geometry over complex paths.');
+    if (style === 'minimal' && elements.length > 6)
+      warnings.push('Minimal icons should be extremely simple.');
 
-    if (curveRatio > 0.35)
-      warnings.push('Icons should avoid excessive curves.');
+    if (style === 'outline' && elements.some(e => e.fill && e.fill !== 'none'))
+      warnings.push('Outline icons should not use fills.');
+
+    if (style === 'filled' && elements.some(e => e.stroke && e.stroke !== 'none'))
+      warnings.push('Filled icons should not use strokes.');
+
+    if (style === 'geometric' && curveRatio > 0.25)
+      warnings.push('Geometric icons should avoid organic curves.');
 
     if (colorCount > 2)
       warnings.push('Icons should use 1–2 colors maximum.');
-
-    // Reference heuristic (name / semantic match)
-    const matched = elements.some(e =>
-      e.name && iconReferenceList.includes(e.name)
-    );
-
-    if (!matched)
-      warnings.push('Icon does not resemble common reference icons.');
   }
 
-  /* ---------------------------------------------
-     ILLUSTRATION RULES
-  ---------------------------------------------- */
+  // -------- ILLUSTRATION RULES --------
   if (type === 'illustration') {
     if (elements.length < 6)
-      warnings.push('Illustrations should contain more visual detail.');
+      warnings.push('Illustrations should contain more detail.');
 
     if (pathRatio < 0.6)
-      warnings.push('Illustrations should rely heavily on path elements.');
+      warnings.push('Illustrations should rely heavily on paths.');
 
-    if (curveRatio < 0.5)
-      warnings.push('Illustrations should use flowing, organic curves.');
+    if (style === 'organic' && curveRatio < 0.6)
+      warnings.push('Organic illustrations need flowing curves.');
+
+    if (style === 'technical' && curveRatio > 0.4)
+      warnings.push('Technical illustrations should be more rigid.');
 
     if (colorCount < 3)
       warnings.push('Illustrations usually require richer color variation.');
+  }
 
-    if (!illustrationReferences.length)
-      warnings.push('Illustration reference library not found.');
+  // -------- PALETTE RULES --------
+  if (palette === 'mono' && colorCount > 1)
+    warnings.push('Monochrome palette should use one color.');
+
+  if (palette === 'custom' && customColors?.length) {
+    elements.forEach(e => {
+      if (
+        (e.fill && !customColors.includes(e.fill)) ||
+        (e.stroke && !customColors.includes(e.stroke))
+      ) {
+        warnings.push('Used colors outside custom palette.');
+      }
+    });
   }
 
   return warnings;
