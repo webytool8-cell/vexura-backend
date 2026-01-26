@@ -3,6 +3,15 @@ import fs from 'fs';
 import path from 'path';
 import { iconReferenceList } from './icon-reference';
 
+// ----------- Types -----------
+export type GenerationType = 'icon' | 'illustration';
+
+type Vector = {
+  width: number;
+  height: number;
+  elements: any[];
+};
+
 // ----------- Setup illustration reference cache -----------
 const illustrationRefPath = path.join(
   process.cwd(),
@@ -11,7 +20,6 @@ const illustrationRefPath = path.join(
 
 let illustrationReferences: any[] = [];
 
-// Load all SVGs once
 function loadIllustrationReferences() {
   if (illustrationReferences.length) return illustrationReferences;
 
@@ -46,13 +54,7 @@ function loadIllustrationReferences() {
 }
 
 // ----------- Quality check function -----------
-type Vector = {
-  width: number;
-  height: number;
-  elements: any[];
-};
-
-export function runQualityChecks(vector: Vector, type: 'icon' | 'illustration', prompt?: string) {
+export function runQualityChecks(vector: Vector, type: GenerationType, prompt?: string) {
   const warnings: string[] = [];
   const elements = vector.elements || [];
 
