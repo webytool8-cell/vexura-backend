@@ -2,6 +2,9 @@
 import { renderFormats } from '../../../lib/render/svg';
 import { runQualityChecks } from '../../../lib/quality/checks';
 
+const warnings = await runQualityChecks(vector, vectorType);
+
+
 export async function POST(request: Request) {
   // CORS headers
   const headers = {
