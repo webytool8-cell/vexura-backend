@@ -1,115 +1,111 @@
-// lib/quality/checks.ts
-import { iconReferenceList } from './icon-reference';
-import fs from 'fs';
-import path from 'path';
+// app/api/generate/route.ts
+import { renderFormats } from '../../../lib/render/svg';
+import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
 
-type Vector = {
-  width: number;
-  height: number;
-  elements: any[];
-  reference?: string; // optional reference used
-};
+export async function POST(request: Request) {
+  // Set CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+  };
 
-export type GenerationType = 'icon' | 'illustration';
+  try {
+    const { prompt, type }: { prompt: string; type: GenerationType } = await request.json();
 
-const illustrationRefFolder = path.join(process.cwd(), 'lib/quality/illustration-reference');
-const illustrationRefs = fs.existsSync(illustrationRefFolder)
-  ? fs.readdirSync(illustrationRefFolder)
-  : [];
+    if (!prompt) {
+      return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers });
+    }
 
-export function runQualityChecks(vector: Vector, type: GenerationType) {
-  const warnings: string[] = [];
-  const elements = vector.elements || [];
+    // Validate type
+    const vectorType: GenerationType = type === 'illustration' ? 'illustration' : 'icon';
 
-  if (!elements.length) {
-    warnings.push('Vector contains no elements.');
-    return { warnings, score: 0 };
+    // Get API key from environment
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({
+          error: 'API key not configured',
+          details: 'ANTHROPIC_API_KEY environment variable is missing',
+        }),
+        { status: 500, headers }
+      );
+    }
+
+    // Call Anthropic API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [
+          {
+            role: 'user',
+            content: `You are a vector ${vectorType} generator. Generate a clean, professional SVG vector based on this prompt: "${prompt}"
+
+Return ONLY valid JSON in this exact format (no markdown, no code blocks):
+{
+  "name": "Vector Name",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {"type": "circle", "cx": 200, "cy": 200, "r": 80, "fill": "#3b82f6", "stroke": "none", "strokeWidth": 0}
+  ],
+  "reference": "optional_reference_filename.svg"
+}
+
+Rules:
+- Use ONLY: circle, rect, ellipse, polygon, path, line
+- 400x400 viewBox
+- 3-12 elements max
+- Hex colors only
+- Clean, minimal design
+- Return ONLY JSON, nothing else`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const text = data.content[0].text;
+
+    // Extract JSON safely
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Failed to parse vector JSON from AI response');
+    const vector = JSON.parse(jsonMatch[0]);
+
+    // Run quality checks
+    const { warnings, score } = runQualityChecks(vector, vectorType);
+
+    // Optionally, render SVG
+    const svg = renderFormats.svg(vector);
+
+    return new Response(JSON.stringify({ vector, svg, warnings, score }), { status: 200, headers });
+  } catch (error: any) {
+    console.error('Generation error:', error);
+    return new Response(JSON.stringify({ error: error.message || 'Generation failed' }), { status: 500, headers });
   }
+}
 
-  const paths = elements.filter(e => e.type === 'path');
-  const shapes = elements.filter(e =>
-    ['circle', 'rect', 'ellipse', 'polygon', 'line'].includes(e.type)
-  );
-
-  const pathRatio = paths.length / elements.length;
-
-  const bezierScore = paths.reduce((sum, p) => {
-    if (!p.d) return sum;
-    return sum + (p.d.match(/[CQ]/g)?.length || 0);
-  }, 0);
-
-  const lineScore = paths.reduce((sum, p) => {
-    if (!p.d) return sum;
-    return sum + (p.d.match(/[LHV]/g)?.length || 0);
-  }, 0);
-
-  const curveRatio = bezierScore / Math.max(bezierScore + lineScore, 1);
-
-  const colorSet = new Set<string>();
-  elements.forEach(e => {
-    if (e.fill && e.fill !== 'none') colorSet.add(e.fill);
-    if (e.stroke && e.stroke !== 'none') colorSet.add(e.stroke);
+// Handle CORS preflight
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
   });
-  const colorCount = colorSet.size;
-
-  // ---------- ICON RULES ----------
-  let score = 100;
-
-  if (type === 'icon') {
-    if (elements.length > 8) {
-      warnings.push('Icons should use fewer than 8 elements.');
-      score -= 15;
-    }
-    if (pathRatio > 0.6) {
-      warnings.push('Icons should favor simple geometry over complex paths.');
-      score -= 15;
-    }
-    if (curveRatio > 0.35) {
-      warnings.push('Icons should avoid excessive curves.');
-      score -= 15;
-    }
-    if (colorCount > 2) {
-      warnings.push('Icons should use 1–2 colors maximum.');
-      score -= 10;
-    }
-
-    const matches = elements.filter(e => iconReferenceList.includes(e.name));
-    if (!matches.length) {
-      warnings.push('Icon does not resemble reference icons.');
-      score -= 20;
-    }
-  }
-
-  // ---------- ILLUSTRATION RULES ----------
-  if (type === 'illustration') {
-    if (elements.length < 6) {
-      warnings.push('Illustrations should contain more visual detail.');
-      score -= 15;
-    }
-    if (pathRatio < 0.6) {
-      warnings.push('Illustrations should rely heavily on path elements.');
-      score -= 15;
-    }
-    if (curveRatio < 0.5) {
-      warnings.push('Illustrations should use flowing, organic curves.');
-      score -= 15;
-    }
-    if (colorCount < 3) {
-      warnings.push('Illustrations usually require richer color variation.');
-      score -= 10;
-    }
-
-    const refMatch = illustrationRefs.some(f =>
-      vector.reference?.includes(f) || elements.some(e => e.name === f.replace('.svg', ''))
-    );
-    if (!refMatch) {
-      warnings.push('Illustration does not match any reference.');
-      score -= 20;
-    }
-  }
-
-  // Ensure score is between 0-100
-  score = Math.max(0, Math.min(100, score));
-
-  return { warnings, score };
 }
