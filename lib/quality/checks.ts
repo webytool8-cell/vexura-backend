@@ -3,32 +3,27 @@ import { iconReferenceList } from './icon-reference';
 import fs from 'fs';
 import path from 'path';
 
-export type GenerationType = 'icon' | 'illustration';
-
 type Vector = {
   width: number;
   height: number;
   elements: any[];
+  reference?: string; // optional reference used
 };
 
-// Detect if the prompt is suggesting humans, animals, or organic shapes
-export function detectIllustrationBias(prompt: string): boolean {
-  const humanKeywords = [
-    'person', 'human', 'character', 'face', 'body',
-    'people', 'pose', 'expression', 'animal', 'creature', 'organic'
-  ];
-  const lower = prompt.toLowerCase();
-  return humanKeywords.some(word => lower.includes(word));
-}
+export type GenerationType = 'icon' | 'illustration';
 
-// Main quality check function
+const illustrationRefFolder = path.join(process.cwd(), 'lib/quality/illustration-reference');
+const illustrationRefs = fs.existsSync(illustrationRefFolder)
+  ? fs.readdirSync(illustrationRefFolder)
+  : [];
+
 export function runQualityChecks(vector: Vector, type: GenerationType) {
   const warnings: string[] = [];
   const elements = vector.elements || [];
 
   if (!elements.length) {
     warnings.push('Vector contains no elements.');
-    return warnings;
+    return { warnings, score: 0 };
   }
 
   const paths = elements.filter(e => e.type === 'path');
@@ -58,35 +53,63 @@ export function runQualityChecks(vector: Vector, type: GenerationType) {
   const colorCount = colorSet.size;
 
   // ---------- ICON RULES ----------
-  if (type === 'icon') {
-    if (elements.length > 8) warnings.push('Icons should use fewer than 8 elements.');
-    if (pathRatio > 0.6) warnings.push('Icons should favor simple geometry over complex paths.');
-    if (curveRatio > 0.35) warnings.push('Icons should avoid excessive curves.');
-    if (colorCount > 2) warnings.push('Icons should use 1–2 colors maximum.');
+  let score = 100;
 
-    // Check against reference icons
+  if (type === 'icon') {
+    if (elements.length > 8) {
+      warnings.push('Icons should use fewer than 8 elements.');
+      score -= 15;
+    }
+    if (pathRatio > 0.6) {
+      warnings.push('Icons should favor simple geometry over complex paths.');
+      score -= 15;
+    }
+    if (curveRatio > 0.35) {
+      warnings.push('Icons should avoid excessive curves.');
+      score -= 15;
+    }
+    if (colorCount > 2) {
+      warnings.push('Icons should use 1–2 colors maximum.');
+      score -= 10;
+    }
+
     const matches = elements.filter(e => iconReferenceList.includes(e.name));
-    if (!matches.length) warnings.push('Icon does not resemble reference icons.');
+    if (!matches.length) {
+      warnings.push('Icon does not resemble reference icons.');
+      score -= 20;
+    }
   }
 
   // ---------- ILLUSTRATION RULES ----------
   if (type === 'illustration') {
-    if (elements.length < 6) warnings.push('Illustrations should contain more visual detail.');
-    if (pathRatio < 0.6) warnings.push('Illustrations should rely heavily on path elements.');
-    if (curveRatio < 0.5) warnings.push('Illustrations should use flowing, organic curves.');
-    if (colorCount < 3) warnings.push('Illustrations usually require richer color variation.');
+    if (elements.length < 6) {
+      warnings.push('Illustrations should contain more visual detail.');
+      score -= 15;
+    }
+    if (pathRatio < 0.6) {
+      warnings.push('Illustrations should rely heavily on path elements.');
+      score -= 15;
+    }
+    if (curveRatio < 0.5) {
+      warnings.push('Illustrations should use flowing, organic curves.');
+      score -= 15;
+    }
+    if (colorCount < 3) {
+      warnings.push('Illustrations usually require richer color variation.');
+      score -= 10;
+    }
+
+    const refMatch = illustrationRefs.some(f =>
+      vector.reference?.includes(f) || elements.some(e => e.name === f.replace('.svg', ''))
+    );
+    if (!refMatch) {
+      warnings.push('Illustration does not match any reference.');
+      score -= 20;
+    }
   }
 
-  return warnings;
-}
+  // Ensure score is between 0-100
+  score = Math.max(0, Math.min(100, score));
 
-// ---------- OPTIONAL: Reference folder for illustration human/animal poses ----------
-export function getIllustrationReferences(): string[] {
-  const folder = path.join(process.cwd(), 'lib', 'quality', 'illustration-references');
-  try {
-    return fs.readdirSync(folder).filter(file => file.endsWith('.svg'));
-  } catch (e) {
-    console.warn('Illustration reference folder not found.');
-    return [];
-  }
+  return { warnings, score };
 }
