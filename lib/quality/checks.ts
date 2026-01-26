@@ -1,120 +1,85 @@
 // lib/quality/checks.ts
 
-type VectorElement = {
-  type: string;
-  [key: string]: any;
-};
-
-type VectorData = {
+type Vector = {
   width: number;
   height: number;
-  elements: VectorElement[];
+  elements: any[];
 };
 
-/* =========================
-   ICON QUALITY RULES
-   (Freepik / Vecteezy icon style)
-========================= */
+export function runQualityChecks(vector: Vector, type: "icon" | "illustration") {
+  const warnings: string[] = [];
+  const elements = vector.elements || [];
 
-const iconChecks = [
-  (vector: VectorData) => {
-    if (vector.elements.length < 2 || vector.elements.length > 12) {
-      return "Icons should contain between 2 and 12 elements.";
-    }
-    return null;
-  },
-
-  (vector: VectorData) => {
-    const hasStrokeOnly = vector.elements.every(
-      el => !el.fill || el.fill === "none"
-    );
-    if (hasStrokeOnly) {
-      return "Icons should include at least one filled shape.";
-    }
-    return null;
-  },
-
-  (vector: VectorData) => {
-    const pathCount = vector.elements.filter(el => el.type === "path").length;
-    if (pathCount > 6) {
-      return "Too many paths may reduce clarity for icon usage.";
-    }
-    return null;
-  },
-
-  (vector: VectorData) => {
-    const unsupported = vector.elements.some(
-      el =>
-        !["circle", "rect", "ellipse", "polygon", "path", "line"].includes(el.type)
-    );
-    if (unsupported) {
-      return "Icons contain unsupported SVG elements.";
-    }
-    return null;
+  if (!elements.length) {
+    warnings.push("Vector contains no elements.");
+    return warnings;
   }
-];
 
-/* =========================
-   ILLUSTRATION QUALITY RULES
-   (Organic / nature-inspired)
-========================= */
+  const paths = elements.filter(e => e.type === "path");
+  const shapes = elements.filter(e =>
+    ["circle", "rect", "ellipse", "polygon", "line"].includes(e.type)
+  );
 
-const illustrationChecks = [
-  (vector: VectorData) => {
-    const pathCount = vector.elements.filter(el => el.type === "path").length;
-    if (pathCount < 2) {
-      return "Illustrations should use multiple path elements for organic forms.";
+  const pathRatio = paths.length / elements.length;
+
+  const bezierScore = paths.reduce((sum, p) => {
+    if (!p.d) return sum;
+    return sum + (p.d.match(/[CQ]/g)?.length || 0);
+  }, 0);
+
+  const lineScore = paths.reduce((sum, p) => {
+    if (!p.d) return sum;
+    return sum + (p.d.match(/[LHV]/g)?.length || 0);
+  }, 0);
+
+  const curveRatio =
+    bezierScore / Math.max(bezierScore + lineScore, 1);
+
+  const colorSet = new Set<string>();
+  elements.forEach(e => {
+    if (e.fill && e.fill !== "none") colorSet.add(e.fill);
+    if (e.stroke && e.stroke !== "none") colorSet.add(e.stroke);
+  });
+
+  const colorCount = colorSet.size;
+
+  // ---------- ICON RULES ----------
+  if (type === "icon") {
+    if (elements.length > 8) {
+      warnings.push("Icons should use fewer than 8 elements.");
     }
-    return null;
-  },
 
-  (vector: VectorData) => {
-    const hasBezierCurves = vector.elements.some(
-      el => el.type === "path" && typeof el.d === "string" && /[CS]/.test(el.d)
-    );
-    if (!hasBezierCurves) {
-      return "Illustrations should include Bezier curves (C or S commands) for natural flow.";
+    if (pathRatio > 0.6) {
+      warnings.push("Icons should favor simple geometry over complex paths.");
     }
-    return null;
-  },
 
-  (vector: VectorData) => {
-    const straightLines = vector.elements.filter(el => el.type === "line").length;
-    if (straightLines > 2) {
-      return "Too many straight lines reduce the organic feel of illustrations.";
+    if (curveRatio > 0.35) {
+      warnings.push("Icons should avoid excessive curves.");
     }
-    return null;
-  },
 
-  (vector: VectorData) => {
-    const perfectCircles = vector.elements.filter(el => el.type === "circle").length;
-    if (perfectCircles > 3) {
-      return "Overuse of perfect circles can make illustrations feel too mechanical.";
+    if (colorCount > 2) {
+      warnings.push("Icons should use 1–2 colors maximum.");
     }
-    return null;
-  },
-
-  (vector: VectorData) => {
-    if (vector.elements.length < 4) {
-      return "Illustrations typically require more elements to convey depth and form.";
-    }
-    return null;
   }
-];
 
-/* =========================
-   QUALITY CHECK RUNNER
-========================= */
+  // ---------- ILLUSTRATION RULES ----------
+  if (type === "illustration") {
+    if (elements.length < 6) {
+      warnings.push("Illustrations should contain more visual detail.");
+    }
 
-export function runQualityChecks(
-  vector: VectorData,
-  type: "icon" | "illustration"
-) {
-  const checks = type === "illustration" ? illustrationChecks : iconChecks;
+    if (pathRatio < 0.6) {
+      warnings.push("Illustrations should rely heavily on path elements.");
+    }
 
-  const warnings = checks
-    .map(check => check(vector))
-    .filter(Boolean);
+    if (curveRatio < 0.5) {
+      warnings.push("Illustrations should use flowing, organic curves.");
+    }
+
+    if (colorCount < 3) {
+      warnings.push("Illustrations usually require richer color variation.");
+    }
+  }
 
   return warnings;
 }
