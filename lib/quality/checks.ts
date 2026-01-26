@@ -1,12 +1,14 @@
 // lib/quality/checks.ts
+import { iconReferenceList } from './icon-reference';
 
 type Vector = {
+  name?: string;
   width: number;
   height: number;
   elements: any[];
 };
 
-export function runQualityChecks(vector: Vector, type: "icon" | "illustration") {
+export async function runQualityChecks(vector: Vector, type: "icon" | "illustration") {
   const warnings: string[] = [];
   const elements = vector.elements || [];
 
@@ -32,8 +34,7 @@ export function runQualityChecks(vector: Vector, type: "icon" | "illustration") 
     return sum + (p.d.match(/[LHV]/g)?.length || 0);
   }, 0);
 
-  const curveRatio =
-    bezierScore / Math.max(bezierScore + lineScore, 1);
+  const curveRatio = bezierScore / Math.max(bezierScore + lineScore, 1);
 
   const colorSet = new Set<string>();
   elements.forEach(e => {
@@ -60,6 +61,16 @@ export function runQualityChecks(vector: Vector, type: "icon" | "illustration") 
     if (colorCount > 2) {
       warnings.push("Icons should use 1–2 colors maximum.");
     }
+
+    // Check against top 150 Tabler icons
+    try {
+      const icons = await iconReferenceList;
+      if (vector.name && !icons.includes(vector.name.toLowerCase())) {
+        warnings.push("Icon name not in reference list — may need refinement.");
+      }
+    } catch (err) {
+      console.warn("Failed to fetch icon reference list:", err);
+    }
   }
 
   // ---------- ILLUSTRATION RULES ----------
@@ -79,6 +90,8 @@ export function runQualityChecks(vector: Vector, type: "icon" | "illustration") 
     if (colorCount < 3) {
       warnings.push("Illustrations usually require richer color variation.");
     }
+
+    // Optional: Add illustration-specific rules here later
   }
 
   return warnings;
