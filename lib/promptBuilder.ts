@@ -1,7 +1,9 @@
 // lib/promptBuilder.ts
 
-import { GenerationType } from "./checks";
-import { detectIllustrationBias } from "./checks";
+import {
+  GenerationType,
+  detectIllustrationBias,
+} from "./quality/checks";
 
 interface BuildPromptArgs {
   userPrompt: string;
@@ -13,54 +15,36 @@ interface BuildPromptArgs {
 export function buildPrompt({
   userPrompt,
   type,
-  autoStyle,
-  autoColor,
 }: BuildPromptArgs) {
   if (type === "icon") {
     return `
-You are generating a HIGH-QUALITY SVG ICON.
+Generate a PROFESSIONAL SVG ICON.
 
 Rules:
-- Clean geometry
-- Symmetrical or intentionally balanced
+- Simple geometry
+- Clear silhouette
 - Minimal detail
-- Strong silhouette
-- Works at 24x24 and 48x48
-- Flat vector paths only
-- No gradients unless explicitly requested
-- No strokes converted to outlines
-- Icon must be visually centered
+- Flat vector paths
+- Balanced composition
+- Icon-safe design
 
 User request:
 "${userPrompt}"
 `;
   }
 
-  // Illustration logic
   const bias = detectIllustrationBias(userPrompt);
 
   if (bias === "organic") {
     return `
-You are generating a DESIGNER-GRADE SVG ILLUSTRATION.
+Generate a DESIGNER-GRADE SVG ILLUSTRATION.
 
 Style:
 - Organic
 - Natural curves
+- Expressive motion
 - Flowing shapes
 - Asymmetry allowed
-- Human, emotional, expressive
-- Smooth Bézier curves
-- Avoid rigid geometry and modular icon language
-- Illustration should feel hand-crafted but clean
-- No icon-like simplification
-- No grid-based construction
-- No sharp angles unless conceptually required
-
-Composition:
-- Depth and motion
-- Visual rhythm
-- Slight imperfections allowed
-- Balanced negative space
 
 Output:
 - SVG only
@@ -72,29 +56,18 @@ User request:
 `;
   }
 
-  // Technical / modular illustration
   return `
-You are generating a VECTOR ILLUSTRATION for UI / PRODUCT USE.
+Generate a CLEAN, MODULAR SVG ILLUSTRATION.
 
 Style:
-- Clean
-- Modular
-- Geometric
 - Structured
-- Clear layers
-- Controlled curves
-- Consistent stroke logic
+- Geometric
 - System-friendly
-
-Composition:
-- Predictable spacing
-- Readable forms
-- Design-system friendly
+- UI-appropriate
 
 Output:
 - SVG only
 - Editable paths
-- No raster effects
 
 User request:
 "${userPrompt}"
