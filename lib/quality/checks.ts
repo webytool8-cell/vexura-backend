@@ -1,13 +1,54 @@
 // lib/quality/checks.ts
+import fs from 'fs';
+import path from 'path';
 import { iconReferenceList } from './icon-reference';
+
+type VectorElement = {
+  type: string;
+  d?: string;
+  fill?: string;
+  stroke?: string;
+  name?: string;
+};
 
 type Vector = {
   width: number;
   height: number;
-  elements: any[];
+  elements: VectorElement[];
 };
 
-export function runQualityChecks(vector: Vector, type: 'icon' | 'illustration') {
+/* ---------------------------------------------
+   Load illustration SVG references (SERVER ONLY)
+---------------------------------------------- */
+const ILLUSTRATION_REF_DIR = path.join(
+  process.cwd(),
+  'lib/quality/illustration-reference'
+);
+
+function loadIllustrationSVGs(): string[] {
+  try {
+    if (!fs.existsSync(ILLUSTRATION_REF_DIR)) return [];
+
+    return fs
+      .readdirSync(ILLUSTRATION_REF_DIR)
+      .filter(file => file.endsWith('.svg'))
+      .map(file =>
+        fs.readFileSync(path.join(ILLUSTRATION_REF_DIR, file), 'utf-8')
+      );
+  } catch {
+    return [];
+  }
+}
+
+const illustrationReferences = loadIllustrationSVGs();
+
+/* ---------------------------------------------
+   Main Quality Check Logic
+---------------------------------------------- */
+export function runQualityChecks(
+  vector: Vector,
+  type: 'icon' | 'illustration'
+) {
   const warnings: string[] = [];
   const elements = vector.elements || [];
 
@@ -33,7 +74,8 @@ export function runQualityChecks(vector: Vector, type: 'icon' | 'illustration') 
     return sum + (p.d.match(/[LHV]/g)?.length || 0);
   }, 0);
 
-  const curveRatio = bezierScore / Math.max(bezierScore + lineScore, 1);
+  const curveRatio =
+    bezierScore / Math.max(bezierScore + lineScore, 1);
 
   const colorSet = new Set<string>();
   elements.forEach(e => {
@@ -43,24 +85,49 @@ export function runQualityChecks(vector: Vector, type: 'icon' | 'illustration') 
 
   const colorCount = colorSet.size;
 
-  // ---------- ICON RULES ----------
+  /* ---------------------------------------------
+     ICON RULES
+  ---------------------------------------------- */
   if (type === 'icon') {
-    if (elements.length > 8) warnings.push('Icons should use fewer than 8 elements.');
-    if (pathRatio > 0.6) warnings.push('Icons should favor simple geometry over complex paths.');
-    if (curveRatio > 0.35) warnings.push('Icons should avoid excessive curves.');
-    if (colorCount > 2) warnings.push('Icons should use 1–2 colors maximum.');
+    if (elements.length > 8)
+      warnings.push('Icons should use fewer than 8 elements.');
 
-    // Check against reference icons
-    const matches = elements.filter(e => iconReferenceList.includes(e.name));
-    if (!matches.length) warnings.push('Icon does not resemble reference icons.');
+    if (pathRatio > 0.6)
+      warnings.push('Icons should favor simple geometry over complex paths.');
+
+    if (curveRatio > 0.35)
+      warnings.push('Icons should avoid excessive curves.');
+
+    if (colorCount > 2)
+      warnings.push('Icons should use 1–2 colors maximum.');
+
+    // Reference heuristic (name / semantic match)
+    const matched = elements.some(e =>
+      e.name && iconReferenceList.includes(e.name)
+    );
+
+    if (!matched)
+      warnings.push('Icon does not resemble common reference icons.');
   }
 
-  // ---------- ILLUSTRATION RULES ----------
+  /* ---------------------------------------------
+     ILLUSTRATION RULES
+  ---------------------------------------------- */
   if (type === 'illustration') {
-    if (elements.length < 6) warnings.push('Illustrations should contain more visual detail.');
-    if (pathRatio < 0.6) warnings.push('Illustrations should rely heavily on path elements.');
-    if (curveRatio < 0.5) warnings.push('Illustrations should use flowing, organic curves.');
-    if (colorCount < 3) warnings.push('Illustrations usually require richer color variation.');
+    if (elements.length < 6)
+      warnings.push('Illustrations should contain more visual detail.');
+
+    if (pathRatio < 0.6)
+      warnings.push('Illustrations should rely heavily on path elements.');
+
+    if (curveRatio < 0.5)
+      warnings.push('Illustrations should use flowing, organic curves.');
+
+    if (colorCount < 3)
+      warnings.push('Illustrations usually require richer color variation.');
+
+    if (!illustrationReferences.length)
+      warnings.push('Illustration reference library not found.');
   }
 
   return warnings;
