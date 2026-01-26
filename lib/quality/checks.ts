@@ -2,24 +2,23 @@
 import { iconReferenceList } from './icon-reference';
 
 type Vector = {
-  name?: string;
   width: number;
   height: number;
   elements: any[];
 };
 
-export async function runQualityChecks(vector: Vector, type: "icon" | "illustration") {
+export function runQualityChecks(vector: Vector, type: 'icon' | 'illustration') {
   const warnings: string[] = [];
   const elements = vector.elements || [];
 
   if (!elements.length) {
-    warnings.push("Vector contains no elements.");
+    warnings.push('Vector contains no elements.');
     return warnings;
   }
 
-  const paths = elements.filter(e => e.type === "path");
+  const paths = elements.filter(e => e.type === 'path');
   const shapes = elements.filter(e =>
-    ["circle", "rect", "ellipse", "polygon", "line"].includes(e.type)
+    ['circle', 'rect', 'ellipse', 'polygon', 'line'].includes(e.type)
   );
 
   const pathRatio = paths.length / elements.length;
@@ -38,60 +37,30 @@ export async function runQualityChecks(vector: Vector, type: "icon" | "illustrat
 
   const colorSet = new Set<string>();
   elements.forEach(e => {
-    if (e.fill && e.fill !== "none") colorSet.add(e.fill);
-    if (e.stroke && e.stroke !== "none") colorSet.add(e.stroke);
+    if (e.fill && e.fill !== 'none') colorSet.add(e.fill);
+    if (e.stroke && e.stroke !== 'none') colorSet.add(e.stroke);
   });
 
   const colorCount = colorSet.size;
 
   // ---------- ICON RULES ----------
-  if (type === "icon") {
-    if (elements.length > 8) {
-      warnings.push("Icons should use fewer than 8 elements.");
-    }
+  if (type === 'icon') {
+    if (elements.length > 8) warnings.push('Icons should use fewer than 8 elements.');
+    if (pathRatio > 0.6) warnings.push('Icons should favor simple geometry over complex paths.');
+    if (curveRatio > 0.35) warnings.push('Icons should avoid excessive curves.');
+    if (colorCount > 2) warnings.push('Icons should use 1–2 colors maximum.');
 
-    if (pathRatio > 0.6) {
-      warnings.push("Icons should favor simple geometry over complex paths.");
-    }
-
-    if (curveRatio > 0.35) {
-      warnings.push("Icons should avoid excessive curves.");
-    }
-
-    if (colorCount > 2) {
-      warnings.push("Icons should use 1–2 colors maximum.");
-    }
-
-    // Check against top 150 Tabler icons
-    try {
-      const icons = await iconReferenceList;
-      if (vector.name && !icons.includes(vector.name.toLowerCase())) {
-        warnings.push("Icon name not in reference list — may need refinement.");
-      }
-    } catch (err) {
-      console.warn("Failed to fetch icon reference list:", err);
-    }
+    // Check against reference icons
+    const matches = elements.filter(e => iconReferenceList.includes(e.name));
+    if (!matches.length) warnings.push('Icon does not resemble reference icons.');
   }
 
   // ---------- ILLUSTRATION RULES ----------
-  if (type === "illustration") {
-    if (elements.length < 6) {
-      warnings.push("Illustrations should contain more visual detail.");
-    }
-
-    if (pathRatio < 0.6) {
-      warnings.push("Illustrations should rely heavily on path elements.");
-    }
-
-    if (curveRatio < 0.5) {
-      warnings.push("Illustrations should use flowing, organic curves.");
-    }
-
-    if (colorCount < 3) {
-      warnings.push("Illustrations usually require richer color variation.");
-    }
-
-    // Optional: Add illustration-specific rules here later
+  if (type === 'illustration') {
+    if (elements.length < 6) warnings.push('Illustrations should contain more visual detail.');
+    if (pathRatio < 0.6) warnings.push('Illustrations should rely heavily on path elements.');
+    if (curveRatio < 0.5) warnings.push('Illustrations should use flowing, organic curves.');
+    if (colorCount < 3) warnings.push('Illustrations usually require richer color variation.');
   }
 
   return warnings;
