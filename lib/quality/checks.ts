@@ -1,9 +1,8 @@
 // lib/quality/checks.ts
+import { iconReferenceList } from './icon-reference';
 import fs from 'fs';
 import path from 'path';
-import { iconReferenceList } from './icon-reference';
 
-// ----------- Types -----------
 export type GenerationType = 'icon' | 'illustration';
 
 type Vector = {
@@ -12,49 +11,18 @@ type Vector = {
   elements: any[];
 };
 
-// ----------- Setup illustration reference cache -----------
-const illustrationRefPath = path.join(
-  process.cwd(),
-  'lib/quality/illustration-reference'
-);
-
-let illustrationReferences: any[] = [];
-
-function loadIllustrationReferences() {
-  if (illustrationReferences.length) return illustrationReferences;
-
-  function parseSVGContent(svgContent: string) {
-    const elementsMatch = svgContent.match(
-      /<(circle|rect|ellipse|polygon|line|path)[^>]*>/g
-    );
-    return elementsMatch || [];
-  }
-
-  function readFolderRecursive(folder: string) {
-    const files: string[] = [];
-    const entries = fs.readdirSync(folder, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(folder, entry.name);
-      if (entry.isDirectory()) {
-        files.push(...readFolderRecursive(fullPath));
-      } else if (entry.isFile() && entry.name.endsWith('.svg')) {
-        files.push(fullPath);
-      }
-    }
-    return files;
-  }
-
-  const svgFiles = readFolderRecursive(illustrationRefPath);
-  illustrationReferences = svgFiles.map(file => {
-    const content = fs.readFileSync(file, 'utf-8');
-    return parseSVGContent(content);
-  });
-
-  return illustrationReferences;
+// Detect if the prompt is suggesting humans, animals, or organic shapes
+export function detectIllustrationBias(prompt: string): boolean {
+  const humanKeywords = [
+    'person', 'human', 'character', 'face', 'body',
+    'people', 'pose', 'expression', 'animal', 'creature', 'organic'
+  ];
+  const lower = prompt.toLowerCase();
+  return humanKeywords.some(word => lower.includes(word));
 }
 
-// ----------- Quality check function -----------
-export function runQualityChecks(vector: Vector, type: GenerationType, prompt?: string) {
+// Main quality check function
+export function runQualityChecks(vector: Vector, type: GenerationType) {
   const warnings: string[] = [];
   const elements = vector.elements || [];
 
@@ -87,7 +55,6 @@ export function runQualityChecks(vector: Vector, type: GenerationType, prompt?: 
     if (e.fill && e.fill !== 'none') colorSet.add(e.fill);
     if (e.stroke && e.stroke !== 'none') colorSet.add(e.stroke);
   });
-
   const colorCount = colorSet.size;
 
   // ---------- ICON RULES ----------
@@ -108,22 +75,18 @@ export function runQualityChecks(vector: Vector, type: GenerationType, prompt?: 
     if (pathRatio < 0.6) warnings.push('Illustrations should rely heavily on path elements.');
     if (curveRatio < 0.5) warnings.push('Illustrations should use flowing, organic curves.');
     if (colorCount < 3) warnings.push('Illustrations usually require richer color variation.');
-
-    // ----------- Reference check for Open Peeps -----------
-    if (prompt && /pose|expression|action|gesture|emotion/i.test(prompt)) {
-      loadIllustrationReferences();
-      let matchedRef = false;
-      for (const ref of illustrationReferences) {
-        const refPaths = ref.filter((el: string) => el.includes('<path'));
-        const genPaths = paths.length;
-        if (refPaths.length > 0 && genPaths > 0) {
-          matchedRef = true;
-          break;
-        }
-      }
-      if (!matchedRef) warnings.push('Illustration may not match typical human poses or expressions in references.');
-    }
   }
 
   return warnings;
+}
+
+// ---------- OPTIONAL: Reference folder for illustration human/animal poses ----------
+export function getIllustrationReferences(): string[] {
+  const folder = path.join(process.cwd(), 'lib', 'quality', 'illustration-references');
+  try {
+    return fs.readdirSync(folder).filter(file => file.endsWith('.svg'));
+  } catch (e) {
+    console.warn('Illustration reference folder not found.');
+    return [];
+  }
 }
