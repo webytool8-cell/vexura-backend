@@ -1,8 +1,9 @@
 // app/api/generate/route.ts
 import { renderFormats } from '../../../lib/render/svg';
-import { runQualityChecks, GenerationType, detectIllustrationBias, getIllustrationReferences } from '../../../lib/quality/checks';
+import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
 
 export async function POST(request: Request) {
+  // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -11,26 +12,19 @@ export async function POST(request: Request) {
   };
 
   try {
-    const { prompt, type } = await request.json();
+    const { prompt, type, style, colorPalette } = await request.json();
 
     if (!prompt) {
-      return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers });
+      return new Response(
+        JSON.stringify({ error: 'Prompt is required' }),
+        { status: 400, headers }
+      );
     }
 
-    // Determine vector type
+    // Determine vector type: "icon" or "illustration"
     const vectorType: GenerationType = type === 'illustration' ? 'illustration' : 'icon';
 
-    // Determine if we need illustration references
-    let referenceNote = '';
-    if (vectorType === 'illustration' && detectIllustrationBias(prompt)) {
-      const references = getIllustrationReferences();
-      if (references.length) {
-        const randomRef = references[Math.floor(Math.random() * references.length)];
-        referenceNote = ` Use reference illustration: ${randomRef}`;
-      }
-    }
-
-    // Anthropic API key
+    // Get API key from environment
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return new Response(
@@ -42,20 +36,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Call Anthropic API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: `You are a vector ${vectorType} generator. Generate a clean, professional SVG vector based on this prompt: "${prompt}".${referenceNote}
+    // Build prompt for the AI
+    const aiPrompt = `
+You are a vector ${vectorType} generator.
+Generate a clean, professional SVG vector based on this prompt: "${prompt}".
+Use the requested style: "${style || 'auto'}" and color palette: "${colorPalette || 'auto'}".
 
 Return ONLY valid JSON in this exact format (no markdown, no code blocks):
 {
@@ -73,7 +58,23 @@ Rules:
 - 3-12 elements max
 - Hex colors only
 - Clean, minimal design
-- Return ONLY JSON, nothing else`
+- Return ONLY JSON
+`;
+
+    // Call Anthropic API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: aiPrompt,
         }]
       })
     });
@@ -86,14 +87,21 @@ Rules:
     const data = await response.json();
     const text = data.content[0].text;
 
+    // Extract JSON safely
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('Failed to parse vector JSON from AI response');
     const vector = JSON.parse(jsonMatch[0]);
 
+    // Run quality checks using the new scoring logic
     const warnings = runQualityChecks(vector, vectorType);
+
+    // Render SVG
     const svg = renderFormats.svg(vector);
 
-    return new Response(JSON.stringify({ vector, svg, warnings }), { status: 200, headers });
+    return new Response(
+      JSON.stringify({ vector, svg, warnings }),
+      { status: 200, headers }
+    );
 
   } catch (error: any) {
     console.error('Generation error:', error);
