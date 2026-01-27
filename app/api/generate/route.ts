@@ -1,120 +1,158 @@
-import { NextRequest, NextResponse } from "next/server";
+// app/api/generate/route.ts
+import { NextResponse } from "next/server";
+import { runQualityChecks, GenerationType } from "../../../lib/quality/checks";
+import { renderSVG } from "../../../lib/render/svg";
 
-/**
- * Determines whether a node should be organic
- */
-function shouldBeOrganic(label: string) {
-  const organicKeywords = [
-    "human",
-    "person",
-    "face",
-    "body",
-    "hand",
-    "animal",
-    "tree",
-    "plant",
-    "leaf",
-    "flower",
-    "mountain",
-    "cloud",
-    "water",
-    "river",
-    "hair",
-    "skin",
-    "nature",
-  ];
-
-  return organicKeywords.some(keyword =>
-    label.toLowerCase().includes(keyword)
-  );
-}
-
-/**
- * Generate SVG nodes based on intent
- */
-function generateSVG({
-  type,
-  elements,
-}: {
+type GenerateRequest = {
+  prompt: string;
   type: "icon" | "illustration";
-  elements: Array<{ label: string }>;
-}) {
-  let svgContent = "";
+};
 
-  elements.forEach((el, index) => {
-    const organic = type === "illustration" && shouldBeOrganic(el.label);
+export async function POST(request: Request) {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json",
+  };
 
-    if (organic) {
-      // Organic blob-like shape
-      svgContent += `
-        <path
-          d="M30 ${20 + index * 40}
-             C 50 ${10 + index * 40},
-               90 ${30 + index * 40},
-               70 ${50 + index * 40}
-             C 50 ${70 + index * 40},
-               20 ${50 + index * 40},
-               30 ${20 + index * 40}"
-          fill="#000"
-        />
-      `;
-    } else {
-      // Geometric shape
-      svgContent += `
-        <rect
-          x="${20 + index * 60}"
-          y="20"
-          width="40"
-          height="40"
-          fill="#000"
-          rx="${type === "icon" ? 0 : 4}"
-        />
-      `;
-    }
-  });
-
-  return `
-    <svg
-      width="512"
-      height="512"
-      viewBox="0 0 512 512"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      ${svgContent}
-    </svg>
-  `;
-}
-
-export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body: GenerateRequest = await request.json();
+    const { prompt, type } = body;
 
-    const {
-      generationType = "icon",
-      elements = [],
-    } = body;
-
-    if (!elements.length) {
-      return NextResponse.json(
-        { error: "No elements provided" },
-        { status: 400 }
-      );
+    if (!prompt) {
+      return new Response(JSON.stringify({ error: "Prompt is required" }), {
+        status: 400,
+        headers,
+      });
     }
 
-    const svg = generateSVG({
-      type: generationType,
-      elements,
+    const generationType: GenerationType =
+      type === "icon" ? GenerationType.ICON : GenerationType.ILLUSTRATION;
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Missing ANTHROPIC_API_KEY");
+
+    // Build AI prompt with organic rules applied only to humans, animals, natural objects
+    const fullPrompt = buildPrompt(generationType, prompt);
+
+    // Call AI orchestrator
+    const vector = await callAIOrchestrator(fullPrompt, apiKey);
+
+    // Ensure elements exist
+    vector.elements = Array.isArray(vector.elements) ? vector.elements : [];
+
+    if (vector.elements.length === 0) {
+      // Provide a placeholder element to avoid "No elements provided" error
+      vector.elements.push({
+        type: "rect",
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+        fill: "#cccccc",
+      });
+    }
+
+    // Apply organic styling only to humans, animals, nature
+    vector.elements = vector.elements.map((el: any) => {
+      if (isOrganicCandidate(el)) {
+        return { ...el, style: { ...el.style, organic: true } };
+      }
+      return el;
     });
+
+    // Run quality checks
+    const warnings = runQualityChecks(vector, generationType);
+
+    // Render SVG
+    const svgOutput = renderSVG(vector);
 
     return NextResponse.json({
       success: true,
-      svg,
+      vector,
+      svg: svgOutput ?? "<svg></svg>",
+      warnings,
     });
-  } catch (error) {
-    console.error("SVG generation error:", error);
-    return NextResponse.json(
-      { error: "Generation failed" },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error("Generation error:", err);
+    return NextResponse.json({
+      success: false,
+      error: err.message ?? "Generation failed",
+    });
   }
+}
+
+// ---------------- Helpers ----------------
+
+function buildPrompt(type: GenerationType, prompt: string): string {
+  const basePrompt = `
+You are a professional vector illustrator.
+
+TASK:
+Generate a ${type} SVG based on:
+"${prompt}"
+
+STRICT RULES:
+- 400x400 viewBox
+- Use ONLY: path, circle, rect, ellipse, polygon, line
+- Clean JSON output only
+- No markdown or explanations
+- Natural proportions
+- Limbs must connect at joints if human
+- Smooth Bézier curves
+
+RETURN FORMAT:
+{
+  "name": "Vector Name",
+  "width": 400,
+  "height": 400,
+  "elements": [...]
+}
+`;
+
+  return basePrompt;
+}
+
+async function callAIOrchestrator(prompt: string, apiKey: string): Promise<any> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2500,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  const data = await res.json();
+  const text = data.content?.[0]?.text;
+
+  if (!text) throw new Error("AI response empty");
+
+  // Parse the JSON inside the AI response
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Invalid SVG JSON");
+
+  return JSON.parse(match[0]);
+}
+
+function isOrganicCandidate(el: any): boolean {
+  // Only humans, animals, plants, natural objects are organic
+  if (!el || !el.type) return false;
+  const organicTypes = ["human", "animal", "tree", "plant", "rock", "mountain"];
+  return organicTypes.includes(el.type.toLowerCase());
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }
