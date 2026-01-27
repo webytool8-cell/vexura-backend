@@ -1,49 +1,71 @@
 // app/api/generate/route.ts
-import { NextResponse } from 'next/server';
-import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
-import { renderFormats } from '../../../lib/render';
+import { NextResponse } from "next/server";
+import { runQualityChecks, GenerationType } from "../../../lib/quality/checks";
+import { renderFormats } from "../../../lib/render";
 
 type GenerateRequest = {
   prompt: string;
-  type: 'icon' | 'illustration';
-  // add more fields if needed
+  type: "icon" | "illustration";
+  // Add other fields if needed
 };
 
 export async function POST(request: Request) {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json",
   };
 
   try {
-    const { prompt, type }: GenerateRequest = await request.json();
+    const { prompt, type } = await request.json() as GenerateRequest;
 
     if (!prompt) {
       return new Response(
-        JSON.stringify({ error: 'Prompt is required' }),
+        JSON.stringify({ error: "Prompt is required" }),
         { status: 400, headers }
       );
     }
 
-    // Map frontend type to GenerationType
+    // 1️⃣ Map type to GenerationType safely
     const generationType: GenerationType =
-      type === 'illustration' ? GenerationType.ILLUSTRATION : GenerationType.ICON;
+      type === "icon" ? GenerationType.ICON : GenerationType.ILLUSTRATION;
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error('Missing ANTHROPIC_API_KEY');
+    // 2️⃣ Define style references to enforce icon vs illustration style
+    const iconReference = `
+- Clean, geometric shapes
+- Minimal strokes
+- Flat colors only, no gradients
+- Consistent size and spacing
+- Simple, functional design
+`;
+    const illustrationReference = `
+- Stylized illustration
+- Natural proportions
+- Smooth, continuous lines
+- Vibrant but simple colors
+- No abstract/organic drift
+- Characters and objects clearly defined
+`;
 
-    // Optional pose rules for illustrations
-    const poseRules = generationType === GenerationType.ILLUSTRATION
-      ? deriveHumanPoseRules(prompt)
-      : '';
+    const styleReference =
+      generationType === GenerationType.ICON ? iconReference : illustrationReference;
 
+    // 3️⃣ Optionally add pose rules for illustrations
+    const poseRules =
+      generationType === GenerationType.ILLUSTRATION
+        ? deriveHumanPoseRules(prompt)
+        : "";
+
+    // 4️⃣ Construct the full prompt for AI
     const fullPrompt = `
 You are a professional vector illustrator.
 
 TASK:
 Generate a ${generationType} SVG based on:
 "${prompt}"
+
+STYLE REFERENCE:
+${styleReference}
 
 ${poseRules}
 
@@ -53,6 +75,7 @@ STRICT RULES:
 - Clean JSON output only
 - No markdown
 - No explanations
+- Elements must have proper fill or stroke
 - Natural proportions
 - No mirrored limbs
 - Limbs must connect at joints
@@ -68,69 +91,50 @@ RETURN FORMAT:
 }
 `;
 
-    // 1️⃣ Call Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
+    // 5️⃣ Send request to backend AI (Anthropic)
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Missing ANTHROPIC_API_KEY");
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: "claude-sonnet-4-20250514",
         max_tokens: 2500,
-        messages: [{ role: 'user', content: fullPrompt }],
+        messages: [{ role: "user", content: fullPrompt }],
       }),
     });
 
     const data = await response.json();
-    const rawText = data.content?.[0]?.text ?? '';
+    const text = data.content?.[0]?.text;
 
-    console.log('AI raw response:', rawText); // ✅ for debugging
+    // 6️⃣ Parse JSON safely
+    const match = text?.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("Invalid SVG JSON returned");
 
-    // 2️⃣ Safe JSON parsing
-    let vector: any = { elements: [] };
-    try {
-      const match = rawText.match(/\{[\s\S]*\}/); // extract JSON object
-      if (!match) throw new Error('No JSON object found in AI response');
+    const vector = JSON.parse(match[0]);
+    // Ensure safe structure
+    vector.elements = Array.isArray(vector.elements) ? vector.elements : [];
 
-      vector = JSON.parse(match[0]);
-
-      // Ensure safe defaults
-      vector.elements = Array.isArray(vector.elements) ? vector.elements : [];
-      vector.width = vector.width ?? 400;
-      vector.height = vector.height ?? 400;
-    } catch (err) {
-      console.error('Vector parsing failed:', err, rawText);
-      return new Response(
-        JSON.stringify({ error: 'Backend reported generation failure' }),
-        { status: 500, headers }
-      );
-    }
-
-    // 3️⃣ Run quality checks safely
+    // 7️⃣ Run quality checks and render SVG
     const warnings = runQualityChecks(vector, generationType);
+    const svgOutput = renderFormats(vector);
 
-    // 4️⃣ Render SVG safely
-    let svgOutput = '<svg></svg>';
-    try {
-      svgOutput = renderFormats(vector)?.svg ?? '<svg></svg>';
-    } catch (err) {
-      console.error('SVG rendering failed:', err);
-    }
-
-    // 5️⃣ Return successful response
     return new Response(
       JSON.stringify({
         success: true,
         vector,
-        svg: svgOutput,
+        svg: svgOutput?.svg ?? "<svg></svg>",
         warnings,
       }),
       { status: 200, headers }
     );
   } catch (err: any) {
-    console.error('Orchestration error:', err);
+    console.error("Orchestration error:", err);
     return new Response(
       JSON.stringify({ success: false, error: err.message }),
       { status: 500, headers }
@@ -142,7 +146,7 @@ RETURN FORMAT:
 function deriveHumanPoseRules(prompt: string): string {
   const p = prompt.toLowerCase();
 
-  if (p.includes('wave') || p.includes('waving')) {
+  if (p.includes("wave") || p.includes("waving")) {
     return `
 POSE RULES:
 - One arm raised
@@ -152,7 +156,7 @@ POSE RULES:
 `;
   }
 
-  if (p.includes('holding')) {
+  if (p.includes("holding")) {
     return `
 POSE RULES:
 - One arm bent holding object
@@ -161,7 +165,7 @@ POSE RULES:
 `;
   }
 
-  if (p.includes('walk') || p.includes('running')) {
+  if (p.includes("walk") || p.includes("running")) {
     return `
 POSE RULES:
 - Legs offset in stride
@@ -178,13 +182,12 @@ POSE RULES:
 `;
 }
 
-// ---------------- OPTIONS ----------------
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type",
     },
   });
 }
