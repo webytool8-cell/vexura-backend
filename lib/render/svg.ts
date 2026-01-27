@@ -1,5 +1,5 @@
 // lib/render/svg.ts
-export function svg(vector: any): string {
+export function renderSVG(vector: any): string {
   if (!vector || !Array.isArray(vector.elements)) return "<svg></svg>";
 
   const { width = 400, height = 400, elements = [] } = vector;
@@ -8,17 +8,17 @@ export function svg(vector: any): string {
     .map((el: any) => {
       switch (el.shape) {
         case "circle":
-          return `<circle cx="${el.x}" cy="${el.y}" r="${el.r}" fill="${el.fill}" />`;
+          return `<circle cx="${el.x}" cy="${el.y}" r="${el.r}" fill="${el.fill || 'black'}" />`;
         case "rect":
-          return `<rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" fill="${el.fill}" />`;
+          return `<rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" fill="${el.fill || 'black'}" />`;
         case "ellipse":
-          return `<ellipse cx="${el.cx}" cy="${el.cy}" rx="${el.rx}" ry="${el.ry}" fill="${el.fill}" />`;
+          return `<ellipse cx="${el.cx}" cy="${el.cy}" rx="${el.rx}" ry="${el.ry}" fill="${el.fill || 'black'}" />`;
         case "line":
-          return `<line x1="${el.x1}" y1="${el.y1}" x2="${el.x2}" y2="${el.y2}" stroke="${el.stroke}" />`;
+          return `<line x1="${el.x1}" y1="${el.y1}" x2="${el.x2}" y2="${el.y2}" stroke="${el.stroke || 'black'}" />`;
         case "polygon":
-          return `<polygon points="${el.points}" fill="${el.fill}" />`;
+          return `<polygon points="${el.points}" fill="${el.fill || 'black'}" />`;
         case "path":
-          return `<path d="${el.d}" fill="${el.fill}" />`;
+          return `<path d="${el.d}" fill="${el.fill || 'black'}" />`;
         default:
           return "";
       }
