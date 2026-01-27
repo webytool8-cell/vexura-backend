@@ -2,10 +2,11 @@
 import { NextResponse } from 'next/server';
 import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
 import { renderFormats } from '../../../lib/render';
+import { generateVector } from '../../../lib/generation'; // make sure this path is correct
 
 type GenerateRequest = {
   type: 'icon' | 'illustration';
-  // other fields as needed
+  // add any other fields your generation function needs
 };
 
 export async function POST(request: Request) {
@@ -13,21 +14,20 @@ export async function POST(request: Request) {
     const body: GenerateRequest = await request.json();
     const type = body.type;
 
-    // 1️⃣ Map type to GenerationType safely
+    // 1️⃣ Map type string to GenerationType enum
     const genType: GenerationType =
       type === 'icon' ? GenerationType.ICON : GenerationType.ILLUSTRATION;
 
-    // 2️⃣ Generate vector (your existing generation logic)
-    // Wrap in try/catch in case generation fails
+    // 2️⃣ Generate vector safely
     let vector: any = {};
     try {
-      vector = await generateVector(genType, body); // <-- your generation function
+      vector = await generateVector(genType, body);
     } catch (err) {
       console.error('Vector generation failed:', err);
       vector = {};
     }
 
-    // 3️⃣ Ensure vector has safe structure
+    // 3️⃣ Ensure vector structure is safe
     vector = vector ?? {};
     vector.elements = Array.isArray(vector.elements) ? vector.elements : [];
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     // 5️⃣ Render SVG safely
     const svgOutput = renderFormats(vector);
 
-    // 6️⃣ Return response
+    // 6️⃣ Return full response
     return NextResponse.json({
       success: true,
       vector,
