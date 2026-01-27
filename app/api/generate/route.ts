@@ -8,6 +8,27 @@ type GenerateRequest = {
   // add other fields as needed
 };
 
+// Mock generator for now
+function mockGenerateVector(type: GenerationType) {
+  if (type === GenerationType.ICON) {
+    return {
+      elements: [
+        { id: 1, shape: 'circle', fill: '#FF0000', x: 50, y: 50, r: 20 },
+        { id: 2, shape: 'rect', fill: '#00FF00', x: 30, y: 30, width: 40, height: 20 },
+      ],
+    };
+  } else {
+    // Illustration example
+    return {
+      elements: [
+        { id: 1, shape: 'circle', fill: '#0000FF', x: 100, y: 100, r: 40 },
+        { id: 2, shape: 'line', stroke: '#000', x1: 80, y1: 80, x2: 120, y2: 120, strokeWidth: 3 },
+        { id: 3, shape: 'rect', fill: '#FFA500', x: 50, y: 150, width: 100, height: 50 },
+      ],
+    };
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body: GenerateRequest = await request.json();
@@ -17,25 +38,20 @@ export async function POST(request: Request) {
     const genType: GenerationType =
       type === 'icon' ? GenerationType.ICON : GenerationType.ILLUSTRATION;
 
-    // Create a default vector object (replace with real generation later)
-    let vector: any = {
-      elements: [
-        // Example element to prevent undefined errors
-        { id: 1, shape: 'circle', color: '#000000', size: 50, x: 50, y: 50 },
-      ],
-    };
+    // 1️⃣ Generate vector using mock generator
+    const vector = mockGenerateVector(genType);
 
-    // Run quality checks safely
+    // 2️⃣ Run quality checks safely
     const warnings = runQualityChecks(vector, genType);
 
-    // Render SVG safely
+    // 3️⃣ Render SVG safely
     const svgOutput = renderFormats(vector);
 
-    // Return response
+    // 4️⃣ Return response
     return NextResponse.json({
       success: true,
       vector,
-      svg: svgOutput?.svg ?? '<svg></svg>', // fallback
+      svg: svgOutput?.svg ?? '<svg></svg>',
       warnings,
     });
   } catch (err) {
