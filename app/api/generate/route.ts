@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { runQualityChecks, GenerationType } from "@/lib/quality/checks";
 import { renderFormats } from "@/lib/render";
-import { generateVector } from "@/lib/generation/generateVector";
+import { orchestrateGeneration } from "@/lib/orchestrator";
 
 type GenerateRequest = {
   type: "icon" | "illustration";
@@ -21,24 +21,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // 🔒 Strong enum mapping (no strings past this point)
+    // ✅ Strong enum mapping (no strings downstream)
     const generationType: GenerationType =
       body.type === "icon"
         ? GenerationType.ICON
         : GenerationType.ILLUSTRATION;
 
-    // 🧠 Generate vector
-    const vector = await generateVector({
+    // 🧠 Orchestrator call (THIS is your real generator)
+    const vector = await orchestrateGeneration({
       prompt: body.prompt,
       type: generationType,
       options: body.options ?? {},
     });
 
     if (!vector || !Array.isArray(vector.elements)) {
-      throw new Error("Invalid vector structure");
+      throw new Error("Invalid vector structure returned from orchestrator");
     }
 
-    // 🧪 Run quality checks (FIXED ARG ORDER)
+    // 🧪 Quality checks (correct argument order)
     const warnings = runQualityChecks(
       body.prompt,
       generationType
