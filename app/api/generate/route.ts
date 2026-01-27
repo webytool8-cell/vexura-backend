@@ -1,43 +1,54 @@
 // app/api/generate/route.ts
 import { NextResponse } from 'next/server';
-import { renderFormats } from '../../../lib/render';
 import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
+import { renderFormats } from '../../../lib/render';
 
 type GenerateRequest = {
   type: 'icon' | 'illustration';
-  vector: any;
+  // other fields as needed
 };
 
 export async function POST(request: Request) {
   try {
     const body: GenerateRequest = await request.json();
-    const { type, vector } = body;
+    const type = body.type;
 
-    // ---- 1️⃣ Cast type string to GenerationType enum ----
+    // 1️⃣ Map type to GenerationType safely
     const genType: GenerationType =
       type === 'icon' ? GenerationType.ICON : GenerationType.ILLUSTRATION;
 
-    // ---- 2️⃣ Run quality checks / warnings ----
+    // 2️⃣ Generate vector (your existing generation logic)
+    // Wrap in try/catch in case generation fails
+    let vector: any = {};
+    try {
+      vector = await generateVector(genType, body); // <-- your generation function
+    } catch (err) {
+      console.error('Vector generation failed:', err);
+      vector = {};
+    }
+
+    // 3️⃣ Ensure vector has safe structure
+    vector = vector ?? {};
+    vector.elements = Array.isArray(vector.elements) ? vector.elements : [];
+
+    // 4️⃣ Run quality checks safely
     const warnings = runQualityChecks(vector, genType);
 
-    // ---- 3️⃣ Fix missing elements if vector.elements is empty ----
-    if (!vector.elements || vector.elements.length === 0) {
-      vector.elements = [{ type: 'rect', x: 10, y: 10, width: 80, height: 80, fill: 'black' }];
-    }
-
-    // ---- 4️⃣ Optional: add more logic to fix malformed nodes/joints ----
-    // Example: prevent invisible nodes
-    if (vector.elements) {
-      vector.elements.forEach((el: any) => {
-        if (!el.fill) el.fill = 'black';
-      });
-    }
-
-    // ---- 5️⃣ Render SVG / response ----
+    // 5️⃣ Render SVG safely
     const svgOutput = renderFormats(vector);
 
-    return NextResponse.json({ success: true, warnings, svg: svgOutput.svg });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message });
+    // 6️⃣ Return response
+    return NextResponse.json({
+      success: true,
+      vector,
+      svg: svgOutput?.svg ?? '<svg></svg>', // fallback SVG
+      warnings,
+    });
+  } catch (err) {
+    console.error('Orchestration error:', err);
+    return NextResponse.json({
+      success: false,
+      error: 'Generation failed',
+    });
   }
 }
