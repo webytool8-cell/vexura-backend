@@ -1,88 +1,43 @@
 // app/api/generate/route.ts
-
 import { NextResponse } from 'next/server';
-import { renderSVG } from '../../../lib/render';
+import { renderFormats } from '../../../lib/render';
 import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
 
 type GenerateRequest = {
   type: 'icon' | 'illustration';
-  prompt: string;
-  style?: string;
-  colorPalette?: string;
+  vector: any;
 };
 
 export async function POST(request: Request) {
   try {
     const body: GenerateRequest = await request.json();
-    const { type, prompt, style, colorPalette } = body;
+    const { type, vector } = body;
 
-    // 1️⃣ Generate vector
-    const vector = generateVector(type, prompt, style, colorPalette);
-
-    // 2️⃣ Run quality checks / warnings
-    // Correct enum usage
+    // ---- 1️⃣ Cast type string to GenerationType enum ----
     const genType: GenerationType =
       type === 'icon' ? GenerationType.ICON : GenerationType.ILLUSTRATION;
 
+    // ---- 2️⃣ Run quality checks / warnings ----
     const warnings = runQualityChecks(vector, genType);
 
-    // 3️⃣ Fix missing elements
+    // ---- 3️⃣ Fix missing elements if vector.elements is empty ----
     if (!vector.elements || vector.elements.length === 0) {
-      vector.elements = [
-        {
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: vector.width || 100,
-          height: vector.height || 100,
-          fill: 'lightgray',
-        },
-      ];
-      warnings.push('No elements were generated. Placeholder applied.');
+      vector.elements = [{ type: 'rect', x: 10, y: 10, width: 80, height: 80, fill: 'black' }];
     }
 
-    // 4️⃣ Render SVG
-    const svgOutput = renderSVG(vector);
+    // ---- 4️⃣ Optional: add more logic to fix malformed nodes/joints ----
+    // Example: prevent invisible nodes
+    if (vector.elements) {
+      vector.elements.forEach((el: any) => {
+        if (!el.fill) el.fill = 'black';
+      });
+    }
 
-    return NextResponse.json({
-      success: true,
-      svg: svgOutput,
-      warnings,
-    });
+    // ---- 5️⃣ Render SVG / response ----
+    const svgOutput = renderFormats(vector);
+
+    return NextResponse.json({ success: true, warnings, svg: svgOutput.svg });
   } catch (err: any) {
-    console.error('Generation error:', err);
-    return NextResponse.json({ success: false, error: err.message || 'Unknown error' });
+    return NextResponse.json({ success: false, error: err.message });
   }
-}
-
-// -------------------------
-// Mock / simple generator logic
-// -------------------------
-function generateVector(
-  type: string,
-  prompt: string,
-  style?: string,
-  colorPalette?: string
-) {
-  const base: any = { width: 100, height: 100, elements: [] };
-
-  if (type === 'icon') {
-    // Example: Eye icon mock
-    if (prompt.toLowerCase().includes('eye')) {
-      base.elements.push(
-        { type: 'circle', cx: 50, cy: 50, r: 20, fill: 'black' },
-        { type: 'circle', cx: 50, cy: 50, r: 8, fill: 'white' } // pupil
-      );
-    } else {
-      base.elements.push({ type: 'circle', cx: 50, cy: 50, r: 30, fill: 'black' });
-    }
-  } else if (type === 'illustration') {
-    // Example: Human figure mock
-    base.elements.push(
-      { type: 'rect', x: 45, y: 40, width: 10, height: 40, fill: 'blue' }, // body
-      { type: 'circle', cx: 50, cy: 20, r: 10, fill: 'peachpuff' } // head
-    );
-  }
-
-  return base;
 }
