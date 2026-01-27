@@ -1,9 +1,8 @@
-import { renderSVG } from "./svg";
+// lib/render/index.ts
 
-export function renderFormats(vector) {
-  return {
-    json: vector,
-    svg: renderSVG(vector)
-  };
+export { renderSVG } from './svg';
+
+// Optional wrapper for multiple formats
+export function renderFormats(vector: any) {
+  return { svg: renderSVG(vector) };
 }
-
