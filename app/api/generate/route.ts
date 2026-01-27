@@ -1,122 +1,71 @@
+// app/api/generate/route.ts
 import { NextResponse } from "next/server";
-import { runQualityChecks, GenerationType } from "../../../lib/quality/checks";
-import { renderSVG } from "../../../lib/render/svg";
+import { runQualityChecks, GenerationType } from "@/lib/quality/checks";
+import { renderFormats } from "@/lib/render";
+import { generateVector } from "@/lib/generation/generateVector";
 
 type GenerateRequest = {
-  prompt: string;
   type: "icon" | "illustration";
+  prompt: string;
+  options?: Record<string, any>;
 };
 
-/**
- * Semantic categories allowed to be organic
- */
-const ORGANIC_SUBJECTS = [
-  "human",
-  "person",
-  "face",
-  "body",
-  "animal",
-  "creature",
-  "plant",
-  "tree",
-  "flower",
-  "leaf",
-  "mountain",
-  "rock",
-  "water",
-  "river",
-  "cloud",
-  "smoke",
-  "fire",
-  "terrain",
-  "landscape",
-];
-
-/**
- * Builds scoped style rules
- */
-function buildStyleInstruction(type: "icon" | "illustration") {
-  if (type === "icon") {
-    return `
-Style rules for icons:
-- Strictly geometric
-- No organic curves
-- No hand-drawn appearance
-- Clean vector primitives only
-`;
-  }
-
-  return `
-Style rules for illustrations:
-- Default style is geometric and structured
-- Flat vector illustration
-- Clean lines and consistent stroke weights
-
-Organic styling rules:
-- Organic curves, irregular edges, and flowing shapes are allowed ONLY for elements representing:
-  ${ORGANIC_SUBJECTS.join(", ")}
-- Organic styling must be scoped ONLY to those elements
-- All other elements MUST remain geometric
-- Organic elements must not influence surrounding geometry
-`;
-}
-
-/**
- * Final prompt builder
- */
-function buildPrompt(type: "icon" | "illustration", userPrompt: string) {
-  return `
-You are a professional vector illustrator.
-
-Output SVG ONLY.
-
-Global rules:
-- Use clean SVG paths
-- No raster effects
-- No filters
-- No blur
-- No gradients unless explicitly requested
-- No randomness
-
-${buildStyleInstruction(type)}
-
-User request:
-"${userPrompt}"
-`;
-}
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const body = (await req.json()) as GenerateRequest;
+    const body: GenerateRequest = await request.json();
 
-    if (!body.prompt || !body.type) {
+    if (!body?.prompt || !body?.type) {
       return NextResponse.json(
-        { error: "Missing prompt or type" },
+        { success: false, error: "Missing prompt or type" },
         { status: 400 }
       );
     }
 
-    const generationPrompt = buildPrompt(body.type, body.prompt);
-
-    // ✅ FIX: correct function signature
-    const generationResult = await runQualityChecks(
+    // 🔒 Strong enum mapping (no strings past this point)
+    const generationType: GenerationType =
       body.type === "icon"
         ? GenerationType.ICON
-        : GenerationType.ILLUSTRATION,
-      generationPrompt
-    );
+        : GenerationType.ILLUSTRATION;
 
-    if (!generationResult?.svg) {
-      throw new Error("Generation failed");
+    // 🧠 Generate vector
+    const vector = await generateVector({
+      prompt: body.prompt,
+      type: generationType,
+      options: body.options ?? {},
+    });
+
+    if (!vector || !Array.isArray(vector.elements)) {
+      throw new Error("Invalid vector structure");
     }
 
-    const svg = renderSVG(generationResult.svg);
+    // 🧪 Run quality checks (FIXED ARG ORDER)
+    const warnings = runQualityChecks(
+      body.prompt,
+      generationType
+    );
 
-    return NextResponse.json({ svg });
-  } catch (err) {
-    console.error("SVG generation error:", err);
+    // 🖼 Render SVG
+    const rendered = renderFormats(vector);
+
+    if (!rendered?.svg) {
+      throw new Error("SVG rendering failed");
+    }
+
+    return NextResponse.json({
+      success: true,
+      vector,
+      svg: rendered.svg,
+      warnings,
+    });
+  } catch (error: any) {
+    console.error("<< Orchestration Error:", error);
+
     return NextResponse.json(
-      { error: "SVG generation failed" },
+      {
+        success: false,
+        error: "Generation Failed",
+        details: error?.message ?? null,
+      },
       { status: 500 }
     );
   }
