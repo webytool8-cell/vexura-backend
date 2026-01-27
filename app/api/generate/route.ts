@@ -1,69 +1,151 @@
-import { renderFormats } from '../../../lib/render/svg';
-import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
-import { buildPrompt } from '../../../lib/promptBuilder';
+// app/api/generate/route.ts
+import { renderFormats } from "../../../lib/render/svg";
+import {
+  runQualityChecks,
+  GenerationType
+} from "../../../lib/quality/checks";
 
 export async function POST(request: Request) {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json",
   };
 
   try {
-    const { prompt, type, style, colorPalette } = await request.json();
-    if (!prompt) return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers });
+    const { prompt, type } = await request.json();
 
-    const vectorType: GenerationType = type === 'illustration' ? 'illustration' : 'icon';
+    if (!prompt) {
+      return new Response(
+        JSON.stringify({ error: "Prompt is required" }),
+        { status: 400, headers }
+      );
+    }
+
+    const generationType: GenerationType =
+      type === "illustration" ? "illustration" : "icon";
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return new Response(JSON.stringify({ error: 'API key not configured' }), { status: 500, headers });
+    if (!apiKey) throw new Error("Missing ANTHROPIC_API_KEY");
 
-    // Build prompt
-    const finalPrompt = buildPrompt(prompt, vectorType, style, colorPalette);
+    const poseRules =
+      generationType === "illustration"
+        ? deriveHumanPoseRules(prompt)
+        : "";
 
-    // Call Anthropic API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
+    const fullPrompt = `
+You are a professional vector illustrator.
+
+TASK:
+Generate a ${generationType} SVG based on:
+"${prompt}"
+
+${poseRules}
+
+STRICT RULES:
+- 400x400 viewBox
+- Use ONLY: path, circle, rect, ellipse, polygon, line
+- Clean JSON output only
+- No markdown
+- No explanations
+- Natural proportions
+- No mirrored limbs
+- Limbs must connect at joints
+- Avoid symmetry in poses
+- Use smooth Bézier curves (C, Q)
+
+RETURN FORMAT:
+{
+  "name": "Vector Name",
+  "width": 400,
+  "height": 400,
+  "elements": [...]
+}
+`;
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: finalPrompt }],
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2500,
+        messages: [{ role: "user", content: fullPrompt }],
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
-    }
-
     const data = await response.json();
-    const text = data.content[0].text;
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Failed to parse vector JSON from AI response');
-    const vector = JSON.parse(jsonMatch[0]);
+    const text = data.content?.[0]?.text;
 
-    const warnings = runQualityChecks(vector, vectorType);
+    const match = text?.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("Invalid SVG JSON");
+
+    const vector = JSON.parse(match[0]);
+    const warnings = runQualityChecks(vector, generationType);
     const svg = renderFormats.svg(vector);
 
-    return new Response(JSON.stringify({ vector, svg, warnings }), { status: 200, headers });
-  } catch (error: any) {
-    console.error('Generation error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Generation failed' }), { status: 500, headers });
+    return new Response(
+      JSON.stringify({ vector, svg, warnings }),
+      { status: 200, headers }
+    );
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      { status: 500, headers }
+    );
   }
+}
+
+// ---------------- POSE LOGIC ----------------
+
+function deriveHumanPoseRules(prompt: string): string {
+  const p = prompt.toLowerCase();
+
+  if (p.includes("wave") || p.includes("waving")) {
+    return `
+POSE RULES:
+- One arm raised
+- Other arm relaxed
+- Arms must not mirror
+- Elbow slightly bent
+`;
+  }
+
+  if (p.includes("holding")) {
+    return `
+POSE RULES:
+- One arm bent holding object
+- Other arm neutral
+- Hands must connect to arms
+`;
+  }
+
+  if (p.includes("walk") || p.includes("running")) {
+    return `
+POSE RULES:
+- Legs offset in stride
+- Arms counter-swing
+- No symmetry
+`;
+  }
+
+  return `
+POSE RULES:
+- Neutral relaxed pose
+- Asymmetrical limbs
+- Natural joint flow
+`;
 }
 
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type",
     },
   });
 }
