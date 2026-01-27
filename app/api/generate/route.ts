@@ -1,7 +1,7 @@
 // app/api/generate/route.ts
 import { NextResponse } from 'next/server';
 import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
-import { renderFormats } from '../../../lib/render/svg';
+import { renderFormats } from '../../../lib/render';
 
 type GenerateRequest = {
   prompt: string;
