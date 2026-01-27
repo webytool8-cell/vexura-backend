@@ -1,6 +1,11 @@
 // app/api/generate/route.ts
-import { renderFormats } from "../../../lib/render/svg";
+import { svg as renderSVG } from "../../../lib/render/svg"; // direct import
 import { runQualityChecks, GenerationType } from "../../../lib/quality/checks";
+
+type GenerateRequest = {
+  prompt: string;
+  type: "icon" | "illustration";
+};
 
 export async function POST(request: Request) {
   const headers = {
@@ -10,13 +15,13 @@ export async function POST(request: Request) {
   };
 
   try {
-    const { prompt, type } = await request.json();
+    const { prompt, type }: GenerateRequest = await request.json();
 
     if (!prompt) {
-      return new Response(JSON.stringify({ error: "Prompt is required" }), {
-        status: 400,
-        headers,
-      });
+      return new Response(
+        JSON.stringify({ error: "Prompt is required" }),
+        { status: 400, headers }
+      );
     }
 
     // Map type to GenerationType safely
@@ -26,6 +31,7 @@ export async function POST(request: Request) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("Missing ANTHROPIC_API_KEY");
 
+    // Generate prompt with optional pose rules
     const poseRules =
       generationType === GenerationType.ILLUSTRATION
         ? deriveHumanPoseRules(prompt)
@@ -61,8 +67,8 @@ RETURN FORMAT:
 }
 `;
 
-    // 1️⃣ Call the AI for vector generation
     let vector: any = {};
+
     try {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -88,13 +94,14 @@ RETURN FORMAT:
     } catch (err) {
       console.error("Vector generation failed:", err);
 
-      // fallback safe vector
+      // Fallback: safe multi-element vector
       vector = {
         name: "Fallback Vector",
         width: 400,
         height: 400,
         elements: [
-          { id: 1, shape: "circle", fill: "#FF0000", x: 50, y: 50, r: 20 },
+          { id: 1, shape: "circle", fill: "#FF0000", x: 100, y: 100, r: 50 },
+          { id: 2, shape: "rect", fill: "#00FF00", x: 200, y: 200, width: 50, height: 50 },
         ],
       };
     }
@@ -105,16 +112,11 @@ RETURN FORMAT:
     // Run quality checks
     const warnings = runQualityChecks(vector, generationType);
 
-    // Render SVG safely
-    const svg = renderFormats.svg(vector);
+    // Render SVG
+    const svg = renderSVG(vector);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        vector,
-        svg,
-        warnings,
-      }),
+      JSON.stringify({ success: true, vector, svg, warnings }),
       { status: 200, headers }
     );
   } catch (err: any) {
@@ -166,7 +168,7 @@ POSE RULES:
 `;
 }
 
-// OPTIONS handler for CORS preflight
+// ---------------- CORS ----------------
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
