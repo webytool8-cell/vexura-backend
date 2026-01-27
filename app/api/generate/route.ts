@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { renderSVG } from '../../../lib/render';
-import { runQualityChecks } from '../../../lib/quality/checks';
+import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
 
 type GenerateRequest = {
   type: 'icon' | 'illustration';
@@ -20,7 +20,11 @@ export async function POST(request: Request) {
     const vector = generateVector(type, prompt, style, colorPalette);
 
     // 2️⃣ Run quality checks / warnings
-    const warnings = runQualityChecks(vector, type);
+    // Cast type string to GenerationType
+    const genType: GenerationType =
+      type === 'icon' ? GenerationType.Icon : GenerationType.Illustration;
+
+    const warnings = runQualityChecks(vector, genType);
 
     // 3️⃣ Fix missing elements
     if (!vector.elements || vector.elements.length === 0) {
