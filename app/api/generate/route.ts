@@ -8,7 +8,7 @@ type GenerateRequest = {
 };
 
 /**
- * Semantic categories that are allowed to be organic
+ * Semantic categories allowed to be organic
  */
 const ORGANIC_SUBJECTS = [
   "human",
@@ -33,20 +33,9 @@ const ORGANIC_SUBJECTS = [
 ];
 
 /**
- * Builds a scoped style instruction that:
- * - Defaults everything to geometric
- * - Applies organic curves ONLY to qualifying elements
+ * Builds scoped style rules
  */
-function buildStyleInstruction(type: "icon" | "illustration", prompt: string) {
-  const organicClause = `
-Organic styling rules:
-- Organic curves, irregular edges, and flowing shapes are allowed ONLY for elements that represent:
-  ${ORGANIC_SUBJECTS.join(", ")}
-- Organic styling must be scoped ONLY to those elements.
-- All other elements MUST remain geometric, clean, and structured.
-- Organic elements must not influence surrounding geometry.
-`;
-
+function buildStyleInstruction(type: "icon" | "illustration") {
   if (type === "icon") {
     return `
 Style rules for icons:
@@ -62,12 +51,18 @@ Style rules for illustrations:
 - Default style is geometric and structured
 - Flat vector illustration
 - Clean lines and consistent stroke weights
-${organicClause}
+
+Organic styling rules:
+- Organic curves, irregular edges, and flowing shapes are allowed ONLY for elements representing:
+  ${ORGANIC_SUBJECTS.join(", ")}
+- Organic styling must be scoped ONLY to those elements
+- All other elements MUST remain geometric
+- Organic elements must not influence surrounding geometry
 `;
 }
 
 /**
- * Builds the final LLM instruction
+ * Final prompt builder
  */
 function buildPrompt(type: "icon" | "illustration", userPrompt: string) {
   return `
@@ -75,7 +70,7 @@ You are a professional vector illustrator.
 
 Output SVG ONLY.
 
-General rules:
+Global rules:
 - Use clean SVG paths
 - No raster effects
 - No filters
@@ -83,7 +78,7 @@ General rules:
 - No gradients unless explicitly requested
 - No randomness
 
-${buildStyleInstruction(type, userPrompt)}
+${buildStyleInstruction(type)}
 
 User request:
 "${userPrompt}"
@@ -103,13 +98,13 @@ export async function POST(req: Request) {
 
     const generationPrompt = buildPrompt(body.type, body.prompt);
 
-    const generationResult = await runQualityChecks({
-      type:
-        body.type === "icon"
-          ? GenerationType.ICON
-          : GenerationType.ILLUSTRATION,
-      prompt: generationPrompt,
-    });
+    // ✅ FIX: correct function signature
+    const generationResult = await runQualityChecks(
+      body.type === "icon"
+        ? GenerationType.ICON
+        : GenerationType.ILLUSTRATION,
+      generationPrompt
+    );
 
     if (!generationResult?.svg) {
       throw new Error("Generation failed");
