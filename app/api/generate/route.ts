@@ -1,57 +1,41 @@
 // app/api/generate/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { runQualityChecks, autoRepairVector, GenerationType, getIllustrationReferences } from '../../../lib/quality/checks';
+import { NextResponse } from 'next/server';
+import { runQualityChecks } from '../../../lib/quality/checks';
 import { renderFormats } from '../../../lib/render/svg';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { prompt, type, options } = body;
+    const { type, prompt, vector } = body;
 
-    // Validate type
-    const vectorType: GenerationType =
-      type === 'illustration' ? GenerationType.ILLUSTRATION : GenerationType.ICON;
-
-    // ---- 1. Generate vector from prompt ----
-    // Replace this with your actual generation logic / AI call
-    let vector = await generateVectorFromPrompt(prompt, vectorType, options);
-
-    // ---- 2. Auto-repair missing elements / invisible fills ----
-    vector = autoRepairVector(vector, vectorType);
-
-    // ---- 3. Run quality checks / scoring ----
-    const warnings = runQualityChecks(vector, vectorType);
-
-    // ---- 4. Optionally attach reference info (illustrations only) ----
-    let references: string[] = [];
-    if (vectorType === GenerationType.ILLUSTRATION) {
-      references = getIllustrationReferences();
+    if (!vector || !vector.elements || !vector.elements.length) {
+      return NextResponse.json({
+        success: false,
+        error: 'Vector data missing or empty.',
+      });
     }
 
-    // ---- 5. Render SVG / response ----
-    const svgOutput = renderFormats(vector);
+    // ---------- 1. Run quality checks ----------
+    const warnings = runQualityChecks(vector, type);
 
+    // ---------- 2. Optionally fetch illustration references ----------
+    // Placeholder if you implement reference system later
+    const illustrationReferences: string[] = [];
+
+    // ---------- 3. Render SVG ----------
+    const svgOutput = renderFormats.svg(vector);
+
+    // ---------- 4. Return response ----------
     return NextResponse.json({
       success: true,
       svg: svgOutput,
       warnings,
-      references,
+      references: illustrationReferences,
     });
   } catch (err: any) {
-    console.error('Error generating vector:', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: err.message || 'Unknown error',
+    });
   }
-}
-
-// ----- MOCK FUNCTION -----
-// Replace this with your AI/vector generation call
-async function generateVectorFromPrompt(prompt: string, type: GenerationType, options: any): Promise<any> {
-  // Example: returns a placeholder vector
-  return {
-    width: 128,
-    height: 128,
-    elements: [
-      { type: 'circle', cx: 64, cy: 64, r: 32, fill: 'none', stroke: '#000', strokeWidth: 2, name: 'example-circle' }
-    ]
-  };
 }
