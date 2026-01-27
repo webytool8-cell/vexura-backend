@@ -2,11 +2,10 @@
 import { NextResponse } from 'next/server';
 import { runQualityChecks, GenerationType } from '../../../lib/quality/checks';
 import { renderFormats } from '../../../lib/render';
-import { generateVector } from '../../../lib/generation'; // make sure this path is correct
 
 type GenerateRequest = {
   type: 'icon' | 'illustration';
-  // add any other fields your generation function needs
+  // add other fields as needed
 };
 
 export async function POST(request: Request) {
@@ -14,34 +13,29 @@ export async function POST(request: Request) {
     const body: GenerateRequest = await request.json();
     const type = body.type;
 
-    // 1️⃣ Map type string to GenerationType enum
+    // Map type string to GenerationType
     const genType: GenerationType =
       type === 'icon' ? GenerationType.ICON : GenerationType.ILLUSTRATION;
 
-    // 2️⃣ Generate vector safely
-    let vector: any = {};
-    try {
-      vector = await generateVector(genType, body);
-    } catch (err) {
-      console.error('Vector generation failed:', err);
-      vector = {};
-    }
+    // Create a default vector object (replace with real generation later)
+    let vector: any = {
+      elements: [
+        // Example element to prevent undefined errors
+        { id: 1, shape: 'circle', color: '#000000', size: 50, x: 50, y: 50 },
+      ],
+    };
 
-    // 3️⃣ Ensure vector structure is safe
-    vector = vector ?? {};
-    vector.elements = Array.isArray(vector.elements) ? vector.elements : [];
-
-    // 4️⃣ Run quality checks safely
+    // Run quality checks safely
     const warnings = runQualityChecks(vector, genType);
 
-    // 5️⃣ Render SVG safely
+    // Render SVG safely
     const svgOutput = renderFormats(vector);
 
-    // 6️⃣ Return full response
+    // Return response
     return NextResponse.json({
       success: true,
       vector,
-      svg: svgOutput?.svg ?? '<svg></svg>', // fallback SVG
+      svg: svgOutput?.svg ?? '<svg></svg>', // fallback
       warnings,
     });
   } catch (err) {
