@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEXURA Marketplace - Free & Premium Vector Assets</title>
+    <meta name="description" content="Browse high-quality AI-generated vector icons, illustrations, and patterns. Free downloads and premium assets for professional designers.">
+    <link rel="icon" href="https://app.trickle.so/storage/public/images/usr_19c684eaa8000001/585a769d-563d-48bf-b310-e70284177442.png" type="image/png">
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+    @layer theme {
+        :root {
+            --bg-body: #09090b;
+            --bg-panel: #18181b;
+            --bg-surface: #27272a;
+            --bg-hover: #3f3f46;
+            --border-dim: #52525b;
+            --border-mid: #71717a;
+            --text-main: #fafafa;
+            --text-muted: #d4d4d8;
+            --text-dim: #a1a1aa;
+            --text-interactive: #ccff00;
+            --accent: #ccff00;
+            --accent-dim: #b3e600;
+            --accent-fg: #000000;
+            --radius: 2px;
+        }
+    }
+    @layer base {
+        :root { font-size: 16px; }
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        h1, h2, h3, .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .btn { @apply px-4 py-2 text-sm font-medium transition-all flex items-center justify-center gap-2 border min-h-[44px]; border-radius: var(--radius); }
+        .btn-primary { @apply bg-[var(--accent)] text-[var(--accent-fg)] border-transparent hover:bg-[var(--accent-dim)]; }
+        .btn-secondary { @apply bg-[var(--bg-surface)] border-[var(--border-dim)] text-[var(--text-main)] hover:border-[var(--accent)]; }
+        .card { @apply bg-[var(--bg-panel)] border border-[var(--border-dim)] overflow-hidden hover:border-[var(--text-muted)] transition-colors; border-radius: var(--radius); }
+    }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script type="text/babel" src="utils/firebase.js"></script>
+    
+    <!-- App Logic -->
+    <script type="text/babel" src="utils/db.js"></script>
+    <script type="text/babel" src="utils/marketplaceData.js"></script>
+    <script type="text/babel" src="components/Logo.js"></script>
+    <script type="text/babel" src="components/ProBadge.js"></script>
+    <script type="text/babel" src="components/CreditCounter.js"></script>
+    <script type="text/babel" src="components/Header.js"></script>
+    <script type="text/babel" src="components/Footer.js"></script>
+    <script type="text/babel" src="components/AuthModal.js"></script>
+    
+    <!-- Marketplace Components -->
+    <script type="text/babel" src="components/Marketplace/AssetCard.js"></script>
+    <script type="text/babel" src="components/Marketplace/AssetGrid.js"></script>
+    
+    <script type="text/babel" src="marketplace-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Vector Tool - Generate Logos, Icons & SVGs | VEXURA</title>
+    <meta name="description" content="Create custom vector graphics, logos, and icons with AI. Edit paths and nodes directly in your browser. Export optimized SVG code for web and mobile.">
+    <meta name="keywords" content="online vector editor, ai design tool, svg path editor, logo creator, icon maker, vectorizer, text to svg, vexura tool, ai graphics">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="VEXURA - AI Vector Tool">
+    <meta property="og:description" content="Generate and edit AI logos, icons, and SVGs. The professional browser-based vector workspace.">
+    <meta property="twitter:title" content="VEXURA - AI Vector Tool">
+    <meta property="twitter:description" content="Generate and edit AI logos, icons, and SVGs. The professional browser-based vector workspace.">
+    <link rel="icon" href="https://app.trickle.so/storage/public/images/usr_19c684eaa8000001/585a769d-563d-48bf-b310-e70284177442.png" type="image/png">
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <!-- Image Tracer for Vectorization -->
+    <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+    @layer theme {
+        :root {
+            /* Backgrounds */
+            --bg-body: #09090b;      /* Zinc 950 */
+            --bg-panel: #18181b;     /* Zinc 900 */
+            --bg-surface: #27272a;   /* Zinc 800 */
+            --bg-hover: #3f3f46;     /* NEW - Hover states */
+            --bg-active: #52525b;    /* NEW - Active states */
+            
+            /* Borders */
+            --border-dim: #52525b;   /* Zinc 600 - Increased contrast */
+            --border-mid: #71717a;   /* Zinc 500 - Increased contrast */
+            --border-focus: #a3cc00; /* NEW - Focus indicator */
+            
+            /* Text */
+            --text-main: #fafafa;    /* Zinc 50 - Brighter white */
+            --text-muted: #d4d4d8;   /* Zinc 300 - More visible muted text */
+            --text-dim: #a1a1aa;     /* Zinc 400 - More visible dim text */
+            --text-interactive: #ccff00; /* NEW - Links, buttons */
+            
+            /* Accent */
+            --accent: #ccff00;       /* Acid Green - Primary Action */
+            --accent-dim: #b3e600;
+            --accent-fg: #000000;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #ccff00 0%, #a3cc00 100%);
+            --gradient-subtle: linear-gradient(135deg, rgba(204,255,0,0.05) 0%, rgba(204,255,0,0.02) 100%);
+            --gradient-text: linear-gradient(135deg, #ccff00 0%, #eeff00 100%);
+            --gradient-border: linear-gradient(135deg, #ccff00 0%, #a3cc00 100%);
+            --gradient-animated: linear-gradient(90deg, #ccff00, #eeff00, #ccff00);
+
+            /* Semantics */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            
+            --radius: 2px;
+        }
+    }
+
+    @layer base {
+        :root {
+            font-size: 16px;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        h1, h2, h3, h4, h5, h6, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.75;
+        }
+
+        p {
+            margin-bottom: 1em;
+        }
+
+        /* Keyboard Navigation */
+        *:focus {
+            outline: none;
+        }
+
+        *:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        a {
+            color: var(--text-interactive);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+            color: var(--accent);
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--bg-surface); 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--border-mid); 
+            border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--border-dim); 
+        }
+    }
+
+    @layer components {
+        .skip-to-main {
+            @apply absolute -top-10 left-0 bg-[var(--accent)] text-[var(--accent-fg)] px-4 py-2 z-50 focus:top-0 transition-all;
+        }
+
+        .btn {
+            @apply px-4 py-2 text-sm font-medium transition-all duration-100 flex items-center justify-center gap-2 border active:translate-y-[1px] min-h-[44px] min-w-[44px];
+            border-radius: var(--radius);
+        }
+        .btn:disabled {
+            @apply opacity-40 cursor-not-allowed bg-[var(--bg-surface)] border-[var(--border-dim)] text-[var(--text-dim)];
+        }
+
+        .btn-primary {
+            @apply bg-[var(--accent)] text-[var(--accent-fg)] border-transparent hover:bg-[var(--accent-dim)];
+        }
+        .btn-secondary {
+            @apply bg-[var(--bg-surface)] border-[var(--border-dim)] text-[var(--text-main)] hover:border-[var(--accent)] hover:text-[var(--accent)];
+        }
+        .btn-ghost {
+            @apply border-transparent text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--bg-surface)];
+        }
+        
+        .input-field {
+            @apply w-full px-3 py-2 bg-[var(--bg-body)] border border-[var(--border-mid)] text-[var(--text-main)] text-sm transition-all placeholder:text-[var(--text-dim)] focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent)];
+            border-radius: var(--radius);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .input-field:disabled {
+            @apply opacity-50 cursor-not-allowed bg-[var(--bg-surface)];
+        }
+        
+        .panel {
+            @apply bg-[var(--bg-panel)] border border-[var(--border-dim)];
+            border-radius: var(--radius);
+        }
+
+        .label-text {
+            @apply text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-mono mb-1.5 block;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- Scripts -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script type="text/babel" src="utils/firebase.js"></script>
+    
+    <script type="text/babel" src="utils/db.js"></script>
+    <script type="text/babel" src="utils/promptData.js"></script>
+    <script type="text/babel" src="utils/inputManager.js"></script>
+    <script type="text/babel" src="utils/vectorizer.js"></script>
+    <script type="text/babel" src="utils/analytics.js"></script>
+    <script type="text/babel" src="utils/localGenerator.js"></script>
+    <script src="utils/apiConfig.js"></script>
+    <script type="text/babel" src="utils/aiOrchestrator.js"></script>
+    <script type="text/babel" src="utils/svgGenerator.js"></script>
+    <script type="text/babel" src="utils/imageUtils.js"></script>
+    <script type="text/babel" src="utils/animationEngine.js"></script>
+    
+    <script type="text/babel" src="components/AuthModal.js"></script>
+    <script type="text/babel" src="components/Logo.js"></script>
+    <script type="text/babel" src="components/Header.js"></script>
+    <script type="text/babel" src="components/Footer.js"></script>
+    <script type="text/babel" src="components/ProBadge.js"></script>
+    <script type="text/babel" src="components/CreditCounter.js"></script>
+    <script type="text/babel" src="components/UpgradeModal.js"></script>
+    <script type="text/babel" src="components/AnimationControls.js"></script>
+    <script type="text/babel" src="components/ControlPanel.js"></script>
+    <script type="text/babel" src="components/EditorPanel.js"></script>
+    <script type="text/babel" src="components/HistoryThumb.js"></script>
+    <script type="text/babel" src="components/PreviewCanvas.js"></script>
+    <script type="text/babel" src="components/Generator.js"></script>
+    
+    <script type="text/babel" src="tool-app.js"></script>
+</body>
+</html>
