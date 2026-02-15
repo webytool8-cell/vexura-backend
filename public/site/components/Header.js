@@ -63,7 +63,7 @@ function Header({ user, onOpenAuth, onLogout }) {
         {/* Left: Logo */}
         <div className="flex items-center gap-6">
           <a href="index.html" className="flex items-center gap-2 group decoration-transparent">
-            <Logo className="w-8 h-8 transition-all drop-shadow-[0_0_4px_rgba(204,255,0,0.3)] group-hover:drop-shadow-[0_0_8px_rgba(204,255,0,0.6)]" />
+            <Logo className="w-5 h-5 transition-all drop-shadow-[0_0_4px_rgba(204,255,0,0.3)] group-hover:drop-shadow-[0_0_8px_rgba(204,255,0,0.6)]" />
             <span className="font-mono font-bold text-lg tracking-tight text-[var(--text-main)] group-hover:text-[var(--accent)] transition-colors">
               VEXURA
             </span>
