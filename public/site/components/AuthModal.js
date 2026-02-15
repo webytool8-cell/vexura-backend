@@ -21,48 +21,17 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     'bg-fuchsia-900', 'bg-pink-900', 'bg-rose-900', 'bg-slate-900'
   ];
 
-  const mapFirebaseUser = (fbUser) => ({
-    uid: fbUser?.uid || '',
-    email: fbUser?.email || '',
-    username: fbUser?.displayName || (fbUser?.email ? fbUser.email.split('@')[0] : 'user'),
-    displayName: fbUser?.displayName || '',
-    photoURL: fbUser?.photoURL || '',
-    provider: 'google'
-  });
-
-  const completeLogin = async (fbUser) => {
-    // If you have a backend “upsert/login” hook, use it.
-    // Otherwise, fall back to a minimal local user object.
-    const safeUser = mapFirebaseUser(fbUser);
-
-    if (typeof window.apiLoginWithGoogle === 'function') {
-      // If you created a wrapper function, use it
-      // (not required anymore, but supported)
-      const backendUser = await window.apiLoginWithGoogle();
-      return backendUser || safeUser;
-    }
-
-    // If you have an API function that maps Firebase user -> your DB user:
-    if (typeof window.apiLoginWithGoogle === 'function') {
-      // already handled above
-      return safeUser;
-    }
-
-    // Preferred: call your existing backend mapping function if it exists
-    if (typeof window.apiLoginWithGoogle === 'function') {
-      // redundant guard (kept for safety)
-      return safeUser;
-    }
-
-    // Your code previously called apiLoginWithGoogle(uid,email,displayName).
-    // If that function exists globally, use it.
-    if (typeof apiLoginWithGoogle === 'function') {
-      const backendUser = await apiLoginWithGoogle(safeUser.uid, safeUser.email, safeUser.displayName);
-      return backendUser || safeUser;
-    }
-
-    // Otherwise, just return Firebase-mapped user.
-    return safeUser;
+  const buildAppUserFromFirebase = (googleUser) => {
+    if (!googleUser) return null;
+    const emailVal = googleUser.email || '';
+    return {
+      uid: googleUser.uid,
+      email: emailVal,
+      username: googleUser.displayName || (emailVal ? emailVal.split('@')[0] : 'user'),
+      displayName: googleUser.displayName || '',
+      photoURL: googleUser.photoURL || '',
+      provider: 'google'
+    };
   };
 
   const handleSubmit = async (e) => {
@@ -86,6 +55,7 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         if (!username.trim()) throw new Error('Username is required');
         if (!email.trim()) throw new Error('Email is required');
 
+        // Simple email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) throw new Error('Invalid email format');
 
@@ -106,31 +76,22 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     setLoading(true);
 
     try {
-      // Firebase compat SDK must be loaded (you already include it in HTML)
-      if (!window.firebase || !window.firebase.auth) {
-        throw new Error('Firebase SDK not loaded');
-      }
+      if (!window.fireAuth) throw new Error('Firebase not initialized');
 
-      const auth = window.firebase.auth();
-      const provider = new window.firebase.auth.GoogleAuthProvider();
+      // 1) Firebase popup sign-in
+      const googleUser = await window.fireAuth.signInWithGoogle();
+      if (!googleUser) throw new Error('Google Sign-In failed: no user returned');
 
-      // Optional: ask for email + profile (usually default)
-      provider.addScope('email');
-      provider.addScope('profile');
+      // 2) Convert to app user (no backend dependency)
+      const user = buildAppUserFromFirebase(googleUser);
+      if (!user) throw new Error('Google Sign-In failed: invalid user object');
 
-      const result = await auth.signInWithPopup(provider);
-      const fbUser = result?.user;
-
-      if (!fbUser) throw new Error('Google Sign-In failed: no user returned');
-
-      const user = await completeLogin(fbUser);
-
+      // 3) Notify app + close
       onLoginSuccess(user);
       onClose();
     } catch (err) {
       console.error('Auth Error:', err);
 
-      // Handle popup issues gracefully
       if (err?.code === 'auth/popup-closed-by-user') {
         setError('Sign-in cancelled.');
       } else if (err?.code === 'auth/popup-blocked') {
@@ -151,17 +112,9 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     setLoading(true);
 
     try {
-      if (!window.firebase || !window.firebase.auth) {
-        throw new Error('Firebase SDK not loaded');
-      }
-
-      const auth = window.firebase.auth();
-      const provider = new window.firebase.auth.GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
-
-      await auth.signInWithRedirect(provider);
-      // Redirect happens; no further UI actions needed here.
+      if (!window.fireAuth) throw new Error('Firebase not initialized');
+      await window.fireAuth.signInWithGoogleRedirect();
+      // Redirect happens; page reloads.
     } catch (err) {
       console.error('Redirect Error:', err);
       setError('Redirect failed: ' + (err?.message || 'Unknown error'));
@@ -195,6 +148,7 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               disabled={loading}
               className="w-full flex items-center justify-center gap-3 bg-white text-black py-2.5 rounded-[2px] font-bold text-sm hover:bg-gray-100 transition-colors relative overflow-hidden group"
             >
+              {/* Google Icon SVG */}
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -206,7 +160,9 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             </button>
           ) : (
             <div className="space-y-2">
-              <div className="text-xs text-red-400 font-bold text-center">Popup blocked. Try redirect method:</div>
+              <div className="text-xs text-red-400 font-bold text-center">
+                Popup blocked. Try redirect method:
+              </div>
               <button
                 type="button"
                 onClick={handleGoogleRedirect}
@@ -221,7 +177,9 @@ function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
           <div className="relative flex items-center py-2">
             <div className="flex-grow border-t border-[var(--border-dim)]"></div>
-            <span className="flex-shrink-0 mx-4 text-[10px] text-[var(--text-dim)] uppercase tracking-widest">Or continue with</span>
+            <span className="flex-shrink-0 mx-4 text-[10px] text-[var(--text-dim)] uppercase tracking-widest">
+              Or continue with
+            </span>
             <div className="flex-grow border-t border-[var(--border-dim)]"></div>
           </div>
 
