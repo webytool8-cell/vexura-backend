@@ -113,7 +113,7 @@ RETURN FORMAT:
   return basePrompt;
 }
 
-async function callAIOrchestrator(prompt: string, apiKey: string): Promise<any> {
+async function callAIOrchestrator(fullPrompt: string, apiKey: string): Promise<any> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -124,9 +124,46 @@ async function callAIOrchestrator(prompt: string, apiKey: string): Promise<any> 
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 2500,
-      messages: [{ role: "user", content: prompt }],
+
+      // ✅ Proper system message
+      system: `
+You are an elite professional vector icon designer.
+
+You strictly follow icon design best practices:
+- 400x400 canvas
+- Perfect geometry alignment
+- Minimal anchor points
+- Stroke consistency
+- Clean closed paths
+- No gradients
+- No shadows
+- No decorative noise
+- Use geometric logic
+- Maintain visual balance
+- Output JSON only
+`,
+
+      // ✅ User prompt separate
+      messages: [
+        {
+          role: "user",
+          content: fullPrompt
+        }
+      ],
     }),
   });
+
+  const data = await res.json();
+  const text = data.content?.[0]?.text;
+
+  if (!text) throw new Error("AI response empty");
+
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Invalid SVG JSON");
+
+  return JSON.parse(match[0]);
+}
+
 
   const data = await res.json();
   const text = data.content?.[0]?.text;
