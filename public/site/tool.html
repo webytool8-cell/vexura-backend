@@ -185,12 +185,19 @@
     
     <script type="text/babel" src="utils/db.js"></script>
     <script type="text/babel" src="utils/aiEngine.js"></script>
+
+    <!-- optional sanity check (remove if you want) -->
+    <script>console.log("aiEngine loaded?", !!window.aiEngine, "aiOrchestrator?", !!window.aiOrchestrator);</script>
+
     <script type="text/babel" src="utils/promptData.js"></script>
     <script type="text/babel" src="utils/inputManager.js"></script>
     <script type="text/babel" src="utils/vectorizer.js"></script>
     <script type="text/babel" src="utils/analytics.js"></script>
     <script type="text/babel" src="utils/localGenerator.js"></script>
-    <script src="utils/apiConfig.js"></script>
+
+    <!-- IMPORTANT: this one is NOT text/babel, make it absolute so base href can't break it -->
+    <script src="/site/utils/apiConfig.js"></script>
+
     <script type="text/babel" src="utils/aiOrchestrator.js"></script>
     <script type="text/babel" src="utils/svgGenerator.js"></script>
     <script type="text/babel" src="utils/imageUtils.js"></script>
