@@ -165,18 +165,6 @@ You strictly follow icon design best practices:
 }
 
 
-  const data = await res.json();
-  const text = data.content?.[0]?.text;
-
-  if (!text) throw new Error("AI response empty");
-
-  // Parse the JSON inside the AI response
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Invalid SVG JSON");
-
-  return JSON.parse(match[0]);
-}
-
 function isOrganicCandidate(el: any): boolean {
   // Only humans, animals, plants, natural objects are organic
   if (!el || !el.type) return false;
