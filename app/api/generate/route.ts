@@ -149,6 +149,17 @@ ICON CONSTRUCTION RULES:
 • No shadows.
 • No decorative noise.
 • No randomness.
+• Prefer a single unified <path> element for compound icons.
+• Do NOT stack primitive shapes unless absolutely necessary.
+• Hearts, pins, shields, clouds, bookmarks must be constructed as continuous paths.
+• Enforce perfect vertical symmetry across x = 200.
+• All curves must be smooth Bézier transitions.
+• No flat seams where shapes meet.
+• Avoid visible intersection edges.
+• Avoid primitive overlap artifacts.
+• All curves must be intentional and mathematically aligned.
+• Icon must look like it was designed in Figma by a senior designer.
+
 
 Return JSON only.
 `,
