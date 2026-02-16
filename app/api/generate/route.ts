@@ -54,6 +54,15 @@ export async function POST(request: Request) {
       });
     }
 
+        vector.elements = vector.elements.map((el: any) => ({
+  ...el,
+  fill: "none",
+  stroke: el.stroke || "#000000",
+  strokeWidth: 16,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+}));
+
     // Apply organic styling only to humans, animals, nature
     vector.elements = vector.elements.map((el: any) => {
       if (isOrganicCandidate(el)) {
@@ -62,14 +71,7 @@ export async function POST(request: Request) {
       return el;
     });
 
-    vector.elements = vector.elements.map((el: any) => ({
-  ...el,
-  fill: "none",
-  stroke: el.stroke || "#000000",
-  strokeWidth: 32,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-}));
+
 
 
     // Apply geometry correction layer
