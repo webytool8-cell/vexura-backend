@@ -1,6 +1,7 @@
 // app/api/generate/route.ts
 import { NextResponse } from "next/server";
 import { runQualityChecks, GenerationType } from "../../../lib/quality/checks";
+import { correctGeometry } from "../../../lib/geometry/correct";
 import { renderSVG } from "../../../lib/render/svg";
 
 type GenerateRequest = {
@@ -61,6 +62,11 @@ export async function POST(request: Request) {
       return el;
     });
 
+    // Apply geometry correction layer
+    const corrected = correctGeometry(vector);
+    vector.elements = corrected.elements;
+
+    
     // Run quality checks
     const warnings = runQualityChecks(vector, generationType);
 
