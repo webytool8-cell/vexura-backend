@@ -62,6 +62,16 @@ export async function POST(request: Request) {
       return el;
     });
 
+    vector.elements = vector.elements.map((el: any) => ({
+  ...el,
+  fill: "none",
+  stroke: el.stroke || "#000000",
+  strokeWidth: 32,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+}));
+
+
     // Apply geometry correction layer
     const corrected = correctGeometry(vector);
     vector.elements = corrected.elements;
