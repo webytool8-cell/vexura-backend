@@ -47,7 +47,7 @@ function ToolApp() {
           const parsedUser = JSON.parse(stored);
           // Ensure plan/credits exist (Migration for existing users)
           if (!parsedUser.plan) parsedUser.plan = 'free';
-          if (parsedUser.credits === undefined) parsedUser.credits = 10;
+          if (parsedUser.credits === undefined) parsedUser.credits = 100;
           
           // Reset credits if it's a new day (Simulation)
           const lastReset = parsedUser.lastReset || 0;
