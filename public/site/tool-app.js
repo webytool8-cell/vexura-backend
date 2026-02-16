@@ -53,7 +53,7 @@ function ToolApp() {
           const lastReset = parsedUser.lastReset || 0;
           const now = Date.now();
           if (now - lastReset > 24 * 60 * 60 * 1000) {
-              parsedUser.credits = 10;
+              parsedUser.credits = 100;
               parsedUser.lastReset = now;
           }
           
@@ -115,7 +115,7 @@ function ToolApp() {
       const fullData = {
           ...userData,
           plan: 'free',
-          credits: 10,
+          credits: 100,
           lastReset: Date.now()
       };
       setUser(fullData);
