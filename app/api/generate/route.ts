@@ -183,6 +183,20 @@ STYLE CONSISTENCY:
 - No decorative or unnecessary shapes
 - Deterministic geometry only (no randomness)
 
+STROKE SYSTEM:
+- Stroke-only (no fills)
+- Stroke width: 32 units
+- stroke-linecap: round
+- stroke-linejoin: round
+- Consistent stroke weight across entire icon
+- No variable thickness
+
+SPACING:
+- Internal negative space must be consistent
+- Elements should feel optically balanced
+- No crowded areas
+- No fragile thin connections
+
 SCALABILITY REQUIREMENTS:
 - Icon must remain legible when scaled to 24px × 24px
 - Critical details must be visible at small sizes
