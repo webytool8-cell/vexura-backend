@@ -517,6 +517,85 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
     const singleSelectedId = selectedElementIds.length === 1 ? selectedElementIds[0] : null;
     const selectedElement = result && singleSelectedId ? result.elements.find(el => el.id === singleSelectedId) : null;
 
+function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
+  const [open, setOpen] = React.useState(false);
+
+  const handleExport = async (type) => {
+    if (!isPro) {
+      onOpenUpgrade();
+      return;
+    }
+
+    const filename = result.name || "vexura-export";
+
+    switch (type) {
+      case "png":
+        await window.ImageUtils.downloadSvgAsImage(
+          svgRef.current,
+          filename,
+          "png",
+          2,
+          "#ffffff"
+        );
+        break;
+
+      case "jpeg":
+        await window.ImageUtils.downloadSvgAsImage(
+          svgRef.current,
+          filename,
+          "jpeg",
+          2,
+          "#ffffff"
+        );
+        break;
+
+      case "svg":
+        window.ImageUtils.downloadSvg(svgRef.current, filename);
+        break;
+
+      case "json":
+        window.ImageUtils.downloadJson(result, filename);
+        break;
+
+      case "html":
+        window.ImageUtils.downloadHtml(svgRef.current, filename);
+        break;
+
+      default:
+        break;
+    }
+
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="btn btn-secondary text-xs"
+      >
+        EXPORT
+        <div className="icon-chevron-down w-3 h-3"></div>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-40 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] shadow-lg z-50">
+          {["png", "jpeg", "svg", "json", "html"].map((type) => (
+            <button
+              key={type}
+              onClick={() => handleExport(type)}
+              className="w-full text-left px-3 py-2 text-xs font-mono hover:bg-[var(--bg-surface)] border-b border-[var(--border-dim)] last:border-none"
+            >
+              {type.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
     return (
         <div className="flex flex-col md:flex-row md:h-[calc(100vh-56px)] md:overflow-hidden bg-[var(--bg-body)]">
             
