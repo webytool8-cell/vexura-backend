@@ -67,7 +67,7 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
                 onClick={() => setOpen(!open)}
                 className="flex items-center gap-2 hover:text-[var(--text-main)] transition-colors"
             >
-                EXPORT
+                EXPORT AS
                 <div className="icon-chevron-down w-3 h-3"></div>
             </button>
 
