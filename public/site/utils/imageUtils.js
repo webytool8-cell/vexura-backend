@@ -82,21 +82,51 @@ window.ImageUtils = {
     document.body.removeChild(link);
   },
 
-  /**
-   * Download JSON vector data
-   */
-  downloadJson: function (data, filename) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
+/**
+ * Download enriched JSON vector data (Marketplace Ready)
+ */
+downloadJson: function (data, filename) {
+  const enrichedExport = {
+    meta: {
+      title: data.name || filename,
+      description: `Premium vector ${data.type || "icon"} generated with VEXURA.`,
+      keywords: [
+        data.name,
+        data.type,
+        "vector",
+        "svg",
+        "icon",
+        "design",
+        "ui",
+        "marketplace"
+      ].filter(Boolean),
+      category: data.type || "icon",
+      tags: [data.type, "clean", "minimal", "geometric"].filter(Boolean),
+      createdAt: new Date().toISOString(),
+      version: "1.0.0",
+      platform: "VEXURA",
+      license: "commercial",
+      author: "VEXURA AI",
+      dimensions: {
+        width: data.width || 400,
+        height: data.height || 400
+      }
+    },
+    vector: data
+  };
 
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `${filename}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  },
+  const blob = new Blob([JSON.stringify(enrichedExport, null, 2)], {
+    type: "application/json",
+  });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${filename}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 
   /**
    * Download HTML wrapper
