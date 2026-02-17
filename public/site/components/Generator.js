@@ -1133,7 +1133,7 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
                     </div>
                     
                     {result && !isProcessing && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4 ml-4">
   
   {/* SAVE BUTTON (unchanged logic) */}
   <button 
