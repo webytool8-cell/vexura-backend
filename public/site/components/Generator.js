@@ -1052,6 +1052,21 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
                                         <span className="leading-none">DETAILED</span>
                                     </button>
                                  </div>
+                                            <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
+    {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}
+  </button>
+
+  {/* EXPORT DROPDOWN */}
+  {result && (
+    <ExportDropdown
+      svgRef={previewSvgRef}
+      result={result}
+      isPro={user?.plan === "pro" || window.__DEV_PRO__}
+      onOpenUpgrade={onOpenUpgrade}
+    />
+  )}
+
+</div>
                              </div>
                         </div>
                      )}
@@ -1141,21 +1156,7 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
     disabled={saved}
     className={`flex items-center gap-1 hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
   >
-    <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
-    {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}
-  </button>
 
-  {/* EXPORT DROPDOWN */}
-  {result && (
-    <ExportDropdown
-      svgRef={previewSvgRef}
-      result={result}
-      isPro={user?.plan === "pro" || window.__DEV_PRO__}
-      onOpenUpgrade={onOpenUpgrade}
-    />
-  )}
-
-</div>
 
                     )}
                 </div>
