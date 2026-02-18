@@ -5,8 +5,8 @@
     { "source": "/marketplace", "destination": "/site/marketplace.html" },
     { "source": "/profile", "destination": "/site/profile.html" },
     { "source": "/about", "destination": "/site/about.html"}, 
-    { "source": "/pricing", "destination": "/pricing.html" },}
+    { "source": "/pricing", "destination": "/pricing.html"}
   ],
-  "cleanUrls": 
+  "cleanUrls": true
 }
 
