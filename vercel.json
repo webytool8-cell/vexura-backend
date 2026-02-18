@@ -4,8 +4,7 @@
     { "source": "/tool", "destination": "/site/tool.html" },
     { "source": "/marketplace", "destination": "/site/marketplace.html" },
     { "source": "/profile", "destination": "/site/profile.html" },
-    { "source": "/about", "destination": "/site/about.html"}, 
-    { "source": "/pricing", "destination": "/pricing.html"}
+    { "source": "/about", "destination": "/site/about.html"}
   ],
   "cleanUrls": true
 }
