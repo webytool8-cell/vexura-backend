@@ -1126,8 +1126,8 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
                 )}
                 
                 {/* Footer */}
-                <div className="h-8 border-t border-[var(--border-dim)] bg-[var(--bg-surface)] flex items-center justify-center md:justify-between px-4 text-[10px] font-mono text-[var(--text-dim)] shrink-0">
-                    <div className="hidden md:flex items-center gap-4">
+                <div className="border-t border-[var(--border-dim)] bg-[var(--bg-surface)] px-4 py-2 text-[10px] font-mono text-[var(--text-dim)] shrink-0">
+  <div className="flex items-center justify-between">
                         <span>STATUS: {isProcessing ? 'BUSY' : (viewMode === 'edit' ? 'EDITING' : 'READY')}</span>
                         {result && <span>NODES: {result.elements ? result.elements.length : 0}</span>}
                     </div>
