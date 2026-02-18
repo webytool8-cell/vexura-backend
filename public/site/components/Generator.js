@@ -1026,49 +1026,68 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
                                  <div className="text-center text-[10px] text-green-500 font-mono py-2">FEEDBACK_LOGGED</div>
                              )}
 
-                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                                     <button 
-                                        onClick={enterEditMode}
-                                        className="btn btn-primary btn-primary-animate shadow-[0_0_15px_rgba(204,255,0,0.2)] text-black font-bold px-4 py-2 w-full sm:w-auto justify-center"
-                                     >
-                                        <div className="icon-edit-3 w-4 h-4"></div>
-                                        <span className="text-xs sm:text-sm">ENTER EDIT MODE</span>
-                                     </button>
-                                 </div>
-                                 <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex">
-                                    {result.source !== 'upload' && (
-                                        <button onClick={handleSmartRetry} className="btn btn-secondary text-[10px] sm:text-xs py-2 px-1 sm:px-3 gap-2 justify-center items-center flex-row h-[32px] min-h-0 hover:border-[var(--accent)] hover:text-[var(--accent)]" title="Smart Retry (Auto-adjusts based on quality)">
-                                            <div className="icon-sparkles text-xs leading-none shrink-0"></div>
-                                            <span className="leading-none">SMART RETRY</span>
-                                        </button>
-                                    )}
-                                    <button onClick={() => handleGenerate(null, 'simpler')} className="btn btn-secondary text-[10px] sm:text-xs py-2 px-1 sm:px-3 gap-2 justify-center items-center flex-row h-[32px] min-h-0" title="Simpler Version" disabled={result.source === 'upload'}>
-                                        <div className="icon-circle-minus text-xs leading-none shrink-0"></div>
-                                        <span className="leading-none">SIMPLER</span>
-                                    </button>
-                                    <button onClick={() => handleGenerate(null, 'detailed')} className="btn btn-secondary text-[10px] sm:text-xs py-2 px-1 sm:px-3 gap-2 justify-center items-center flex-row h-[32px] min-h-0" title="More Detail" disabled={result.source === 'upload'}>
-                                        <div className="icon-circle-plus text-xs leading-none shrink-0"></div>
-                                        <span className="leading-none">DETAILED</span>
-                                    </button>
-                                 </div>
-                                            <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
-    {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}
-  </button>
+<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 
-  {/* EXPORT DROPDOWN */}
-  {result && (
+  {/* LEFT SIDE */}
+  <div className="flex items-center gap-2 w-full sm:w-auto">
+    <button 
+      onClick={enterEditMode}
+      className="btn btn-primary btn-primary-animate shadow-[0_0_15px_rgba(204,255,0,0.2)] text-black font-bold px-4 py-2 w-full sm:w-auto justify-center"
+    >
+      <div className="icon-edit-3 w-4 h-4"></div>
+      <span className="text-xs sm:text-sm">ENTER EDIT MODE</span>
+    </button>
+  </div>
+
+  {/* RIGHT SIDE */}
+  <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+
+    {result.source !== 'upload' && (
+      <button 
+        onClick={handleSmartRetry} 
+        className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px]"
+      >
+        SMART RETRY
+      </button>
+    )}
+
+    <button 
+      onClick={() => handleGenerate(null, 'simpler')} 
+      className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px]"
+      disabled={result.source === 'upload'}
+    >
+      SIMPLER
+    </button>
+
+    <button 
+      onClick={() => handleGenerate(null, 'detailed')} 
+      className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px]"
+      disabled={result.source === 'upload'}
+    >
+      DETAILED
+    </button>
+
+    {/* SAVE BUTTON */}
+    <button 
+      onClick={handleSave}
+      disabled={saved}
+      className={`flex items-center gap-1 text-xs hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
+    >
+      <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
+      {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}
+    </button>
+
+    {/* EXPORT DROPDOWN */}
     <ExportDropdown
       svgRef={previewSvgRef}
       result={result}
       isPro={user?.plan === "pro" || window.__DEV_PRO__}
       onOpenUpgrade={onOpenUpgrade}
     />
-  )}
 
+  </div>
 </div>
-                             </div>
-                        </div>
+
                      )}
 
                      {viewMode === 'edit' && (
