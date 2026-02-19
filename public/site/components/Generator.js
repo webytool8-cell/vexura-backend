@@ -1159,25 +1159,12 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
                     </div>
                 )}
                 
-                {/* Footer */}
+{/* Footer */}
                 <div className="border-t border-[var(--border-dim)] bg-[var(--bg-surface)] px-4 py-2 text-[10px] font-mono text-[var(--text-dim)] shrink-0">
-  <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                         <span>STATUS: {isProcessing ? 'BUSY' : (viewMode === 'edit' ? 'EDITING' : 'READY')}</span>
                         {result && <span>NODES: {result.elements ? result.elements.length : 0}</span>}
                     </div>
-                    
-                    {result && !isProcessing && (
-                    <div className="flex items-center gap-4 ml-4">
-  
-  {/* SAVE BUTTON (unchanged logic) */}
-  <button 
-    onClick={handleSave}
-    disabled={saved}
-    className={`flex items-center gap-1 hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
-  >
-
-
-                    )}
                 </div>
             </div>
 
