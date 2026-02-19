@@ -1027,7 +1027,7 @@ function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
                              )}
 
 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-
+    
   {/* LEFT SIDE */}
   <div className="flex items-center gap-2 w-full sm:w-auto">
     <button 
