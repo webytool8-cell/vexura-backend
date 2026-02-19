@@ -125,7 +125,7 @@ downloadJson: function (data, filename) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-}
+},
 
 
   /**
