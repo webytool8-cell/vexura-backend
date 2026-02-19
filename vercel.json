@@ -1,12 +1,14 @@
 {
   "rewrites": [
-    { "source": "/tool", "destination": "/site/tool.html" },
-    { "source": "/marketplace", "destination": "/site/marketplace.html" },
-    { "source": "/profile", "destination": "/site/profile.html" },
-    { "source": "/about", "destination": "/site/about.html" }
+    { "source": "/:path*", "destination": "/site/:path*" }
   ],
-  "cleanUrls": true,
-  "routes": [
-    { "src": "/(.*)", "dest": "/site/$1" }
-  ]
+  "cleanUrls": true
 }
+```
+
+This catches **all routes** and maps them to `/site/`
+
+Result:
+- `vexura.io/` → `/site/index.html`
+- `vexura.io/tool` → `/site/tool.html`
+- `vexura.io/marketplace` → `/site/marketplace.html`
