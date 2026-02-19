@@ -1,7 +1,12 @@
 {
   "rewrites": [
-    { "source": "/:path*", "destination": "/site/:path*" }
+    { "source": "/tool", "destination": "/site/tool.html" },
+    { "source": "/marketplace", "destination": "/site/marketplace.html" },
+    { "source": "/profile", "destination": "/site/profile.html" },
+    { "source": "/about", "destination": "/site/about.html" }
   ],
-  "cleanUrls": true
+  "cleanUrls": true,
+  "routes": [
+    { "src": "/(.*)", "dest": "/site/$1" }
+  ]
 }
-
