@@ -4,11 +4,4 @@
   ],
   "cleanUrls": true
 }
-```
 
-This catches **all routes** and maps them to `/site/`
-
-Result:
-- `vexura.io/` → `/site/index.html`
-- `vexura.io/tool` → `/site/tool.html`
-- `vexura.io/marketplace` → `/site/marketplace.html`
