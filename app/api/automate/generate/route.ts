@@ -3,24 +3,39 @@ import { executeAutomationPipeline } from '@/lib/automation/pipeline';
 
 export async function POST(request: Request) {
   try {
-    const { prompt, options } = await request.json();
+    const body = await request.json();
+    const { prompt } = body;
     
-    if (!prompt) {
+    if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
-        { error: 'Prompt is required' },
+        { error: 'Valid prompt string is required' },
         { status: 400 }
       );
     }
 
-    const result = await executeAutomationPipeline(prompt, options);
+    const result = await executeAutomationPipeline(prompt);
     
     return NextResponse.json(result);
     
   } catch (error: any) {
-    console.error('Automation failed:', error);
+    console.error('API Error:', error);
     return NextResponse.json(
-      { error: error.message },
+      { 
+        error: error.message || 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
+}
+
+// Add OPTIONS for CORS if needed
+export async function OPTIONS() {
+  return NextResponse.json({}, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
 }
