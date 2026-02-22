@@ -196,16 +196,11 @@ CRITICAL GEOMETRY RULES (STRUCTURAL):
         // 6. Build Contract Payload
         const payload = {
             prompt: finalPrompt,
-            type: type
+            type: type,
+            style: style,      // ALWAYS send
+            intent: intent,    // ALWAYS send
+            palette: palette   // optional but consistent
         };
-
-        if (style !== 'auto') {
-            payload.style = style.charAt(0).toUpperCase() + style.slice(1);
-        }
-
-        if (palette !== 'auto') {
-            payload.palette = palette.charAt(0).toUpperCase() + palette.slice(1);
-        }
 
         // 7. Reference Logic (Preserved & Scoped)
         // Only inject human references if humans are actually detected
