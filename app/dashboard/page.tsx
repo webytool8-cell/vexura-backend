@@ -173,4 +173,23 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           
             href="/api/marketplace/list"
-            targ
+            target="_blank"
+            className="bg-[#111] border border-zinc-800 rounded-lg p-6 hover:border-[#ccff00] transition"
+          >
+            <h3 className="font-bold mb-2">View All Items</h3>
+            <p className="text-sm text-zinc-400">Browse marketplace items via API</p>
+          </a>
+          
+          
+            href="/api/marketplace/stats"
+            target="_blank"
+            className="bg-[#111] border border-zinc-800 rounded-lg p-6 hover:border-[#ccff00] transition"
+          >
+            <h3 className="font-bold mb-2">API Stats</h3>
+            <p className="text-sm text-zinc-400">View marketplace statistics</p>
+          </a>
+        </div>
+      </main>
+    </div>
+  );
+}
