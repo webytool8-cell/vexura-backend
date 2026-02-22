@@ -99,7 +99,7 @@ export async function getMarketplaceListing(slug: string): Promise<MarketplaceIt
       return null;
     }
     
-    return typeof data === 'string' ? JSON.parse(data) : data;
+    return typeof data === 'string' ? JSON.parse(data) : (data as MarketplaceItem);
     
   } catch (error) {
     console.error('❌ Failed to get listing:', error);
@@ -118,7 +118,7 @@ export async function getMarketplaceListingById(id: string): Promise<Marketplace
       return null;
     }
     
-    return typeof data === 'string' ? JSON.parse(data) : data;
+    return typeof data === 'string' ? JSON.parse(data) : (data as MarketplaceItem);
     
   } catch (error) {
     console.error('❌ Failed to get listing by ID:', error);
