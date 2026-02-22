@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DashboardPage() {
   const [uploading, setUploading] = useState(false);
@@ -8,9 +8,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ totalItems: 0 });
 
   // Fetch stats on mount
-  useState(() => {
+  useEffect(() => {
     fetchStats();
-  });
+  }, []);
 
   async function fetchStats() {
     try {
@@ -173,23 +173,4 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           
             href="/api/marketplace/list"
-            target="_blank"
-            className="bg-[#111] border border-zinc-800 rounded-lg p-6 hover:border-[#ccff00] transition"
-          >
-            <h3 className="font-bold mb-2">View All Items</h3>
-            <p className="text-sm text-zinc-400">Browse marketplace items via API</p>
-          </a>
-          
-          
-            href="/api/marketplace/stats"
-            target="_blank"
-            className="bg-[#111] border border-zinc-800 rounded-lg p-6 hover:border-[#ccff00] transition"
-          >
-            <h3 className="font-bold mb-2">API Stats</h3>
-            <p className="text-sm text-zinc-400">View marketplace statistics</p>
-          </a>
-        </div>
-      </main>
-    </div>
-  );
-}
+            targ
