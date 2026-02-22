@@ -8,20 +8,13 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ totalItems: 0 });
 
   useEffect(() => {
-    fetchStats();
+    fetch('/api/marketplace/stats')
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(err => console.error(err));
   }, []);
 
-  async function fetchStats() {
-    try {
-      const res = await fetch('/api/marketplace/stats');
-      const data = await res.json();
-      setStats(data);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    }
-  }
-
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -40,118 +33,99 @@ export default function DashboardPage() {
       const res = await fetch('/api/marketplace/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vectorData,
-          fileName: file.name
-        })
+        body: JSON.stringify({ vectorData, fileName: file.name })
       });
 
       const result = await res.json();
 
       if (res.ok) {
-        setMessage('Uploaded successfully! Slug: ' + result.slug);
-        fetchStats();
+        setMessage('Success: ' + result.slug);
         e.target.value = '';
       } else {
-        setMessage('Upload failed: ' + result.error);
+        setMessage('Error: ' + result.error);
       }
     } catch (error: any) {
       setMessage('Error: ' + error.message);
-    } finally {
-      setUploading(false);
     }
-  }
+
+    setUploading(false);
+  };
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl font-bold mb-2">VEXURA DASHBOARD</h1>
-          <a href="/" className="text-sm text-gray-400 hover:text-white">
-            Back to Site
-          </a>
-        </header>
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', padding: '2rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>VEXURA DASHBOARD</h1>
 
-        <div className="grid grid-cols-3 gap-6 mb-12">
-          <div className="bg-gray-900 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Total Items</div>
-            <div className="text-3xl font-bold">{stats.totalItems}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{ background: '#111', padding: '1.5rem', borderRadius: '8px' }}>
+            <div style={{ fontSize: '0.875rem', color: '#888', marginBottom: '0.5rem' }}>Total Items</div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{stats.totalItems}</div>
           </div>
-          
-          <div className="bg-gray-900 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Status</div>
-            <div className="text-3xl font-bold text-green-500">ONLINE</div>
+          <div style={{ background: '#111', padding: '1.5rem', borderRadius: '8px' }}>
+            <div style={{ fontSize: '0.875rem', color: '#888', marginBottom: '0.5rem' }}>Status</div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0f0' }}>ONLINE</div>
           </div>
-          
-          <div className="bg-gray-900 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Storage</div>
-            <div className="text-3xl font-bold">REDIS</div>
+          <div style={{ background: '#111', padding: '1.5rem', borderRadius: '8px' }}>
+            <div style={{ fontSize: '0.875rem', color: '#888', marginBottom: '0.5rem' }}>Storage</div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>REDIS</div>
           </div>
         </div>
 
-        <div className="bg-gray-900 p-8 rounded-lg">
-          <h2 className="text-2xl font-bold mb-6">Upload Vector JSON</h2>
+        <div style={{ background: '#111', padding: '2rem', borderRadius: '8px', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Upload Vector JSON</h2>
           
-          <div className="mb-6">
-            <label 
-              htmlFor="file-upload"
-              className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-700 rounded-lg cursor-pointer hover:border-gray-500"
-            >
-              <div className="flex flex-col items-center">
-                <p className="mb-2 text-sm text-gray-400">
-                  <span className="font-semibold">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-gray-500">JSON files only</p>
-              </div>
-              <input 
-                id="file-upload" 
-                type="file" 
-                className="hidden" 
-                accept=".json"
-                onChange={handleFileUpload}
-                disabled={uploading}
-              />
-            </label>
-          </div>
+          <input 
+            type="file" 
+            accept=".json"
+            onChange={handleFileUpload}
+            disabled={uploading}
+            style={{ 
+              display: 'block',
+              padding: '1rem',
+              border: '2px dashed #333',
+              borderRadius: '8px',
+              width: '100%',
+              marginBottom: '1rem',
+              cursor: 'pointer'
+            }}
+          />
 
           {message && (
-            <div className="p-4 rounded-lg bg-gray-800 text-white mb-4">
+            <div style={{ padding: '1rem', background: '#222', borderRadius: '8px', marginTop: '1rem' }}>
               {message}
             </div>
           )}
-
-          <details className="mt-6">
-            <summary className="text-sm text-gray-400 cursor-pointer">
-              Expected JSON Format
-            </summary>
-            <pre className="mt-4 p-4 bg-black rounded-lg text-xs text-gray-400 overflow-x-auto">
-{`{
-  "name": "Rocket Icon",
-  "width": 400,
-  "height": 400,
-  "elements": []
-}`}
-            </pre>
-          </details>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 mt-8">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
           
             href="/api/marketplace/list"
             target="_blank"
-            className="bg-gray-900 p-6 rounded-lg hover:bg-gray-800"
+            style={{ 
+              background: '#111', 
+              padding: '1.5rem', 
+              borderRadius: '8px',
+              textDecoration: 'none',
+              color: '#fff'
+            }}
           >
-            <h3 className="font-bold mb-2">View All Items</h3>
-            <p className="text-sm text-gray-400">Browse marketplace items</p>
+            <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>View All Items</h3>
+            <p style={{ fontSize: '0.875rem', color: '#888' }}>Browse marketplace</p>
           </a>
           
           
             href="/api/marketplace/stats"
             target="_blank"
-            className="bg-gray-900 p-6 rounded-lg hover:bg-gray-800"
+            style={{ 
+              background: '#111', 
+              padding: '1.5rem', 
+              borderRadius: '8px',
+              textDecoration: 'none',
+              color: '#fff'
+            }}
           >
-            <h3 className="font-bold mb-2">API Stats</h3>
-            <p className="text-sm text-gray-400">View statistics</p>
+            <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>API Stats</h3>
+            <p style={{ fontSize: '0.875rem', color: '#888' }}>View statistics</p>
           </a>
         </div>
       </div>
