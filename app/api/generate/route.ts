@@ -190,43 +190,103 @@ STYLE:
 
   // 🌊 ORGANIC SYSTEM
   const organicSystem = `
-You are a professional vector illustrator specializing in smooth organic forms and flowing silhouettes.
+You are a professional vector icon designer. Generate clean, geometric SVG icons following modern UI standards.
 
 OUTPUT FORMAT:
-Return ONLY valid JSON. No markdown, no explanations, no code fences.
-Schema:
+Return ONLY valid JSON. No markdown, no explanations.
 {
-  "name": "Illustration Name",
+  "name": "Icon Name",
   "width": 400,
   "height": 400,
   "elements": [...]
 }
 
-CANVAS:
-- 400x400 viewBox
-- Minimum padding: 40px
-- Optical balance, not strict symmetry
+CRITICAL RULES:
 
-ORGANIC GEOMETRY RULES:
-- Use smooth continuous Bézier curves
-- Allow natural asymmetry
-- Avoid rigid grid snapping
-- Avoid mechanical straight-line bias
-- Use unified flowing silhouettes
-- No stacking primitive circles/triangles to fake curves
-- Curvature continuity required
-- Balanced but fluid proportions
+1. CENTERING & COMPOSITION:
+   - Icon MUST be centered at (200, 200)
+   - All elements MUST stay within 40px padding (60-340 range)
+   - Use symmetry axis at x=200 whenever possible
+   - Test: Measure bounding box, ensure centered
 
-STYLE:
-- Stroke-only
-- Stroke width: 32
-- stroke-linecap: round
-- stroke-linejoin: round
-- No gradients, shadows, filters
-- Avoid harsh angular corners unless concept requires it
+2. GEOMETRIC PRIMITIVES:
+   - Use SIMPLE shapes: circle, rect, line, polygon
+   - ONE primitive per element (no complex multi-command paths)
+   - Circles for round things, rects for boxes, lines for connections
+   - Only use <path> for curves that CANNOT be made with primitives
 
-CRITICAL:
-Prioritize flow, curvature rhythm, and natural visual movement over strict geometric rigidity.
+3. PATH CONSTRUCTION (when needed):
+   - Maximum 8 commands per path
+   - Use absolute coordinates (M, L, C) not relative (m, l, c)
+   - Close paths with Z
+   - Test each command - does it create the intended shape?
+
+4. STROKE VS FILL:
+   - Icons under 5 elements: Use strokes (stroke-width: 16-24px)
+   - Icons 5+ elements: Use fills (solid shapes)
+   - NEVER mix strokes and fills in same icon
+   - Round stroke caps: stroke-linecap="round", stroke-linejoin="round"
+
+5. COORDINATE ALIGNMENT:
+   - All coordinates MUST be multiples of 10 or 20
+   - Example: 200, 220, 180 (GOOD) vs 226, 245, 152 (BAD)
+   - This ensures pixel-perfect scaling
+
+6. SYMMETRY:
+   - If icon is symmetric, elements should mirror around x=200
+   - Left element at x=120 → Right element at x=280
+   - Use geometric relationships, not approximations
+
+7. ELEMENT COUNT:
+   - Simple icons: 3-8 elements
+   - Complex icons: 8-15 elements maximum
+   - If you need more, simplify the design
+
+8. FORBIDDEN:
+   - NO class attributes
+   - NO data-id attributes  
+   - NO preserveAspectRatio
+   - NO style attributes
+   - NO transforms (use correct coordinates instead)
+   - NO gradients, filters, or effects
+
+9. VALIDATION CHECKLIST:
+   Before returning JSON, verify:
+   □ All elements within 60-340 range (x and y)
+   □ Icon visually centered
+   □ Coordinates are round numbers (multiples of 10)
+   □ Maximum 15 elements
+   □ Consistent stroke OR fill (not mixed)
+   □ No class/data-id/style attributes
+
+EXAMPLE GOOD OUTPUT:
+{
+  "name": "Rocket Icon",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "type": "polygon",
+      "points": "200,100 160,200 240,200",
+      "fill": "#000000"
+    },
+    {
+      "type": "rect",
+      "x": 160,
+      "y": 200,
+      "width": 80,
+      "height": 120,
+      "fill": "#000000"
+    },
+    {
+      "type": "circle",
+      "cx": 200,
+      "cy": 250,
+      "r": 20,
+      "fill": "#ffffff"
+    }
+  ]
+}
 `;
 
   const systemPrompt = isOrganic ? organicSystem : mechanicalSystem;
