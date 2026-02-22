@@ -1,71 +1,49 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { enrichMetadata } from './metadata-enricher';
-import { postToPinterest } from './pinterest-poster';
-import { createMarketplaceListing } from '../database/marketplace';
-import { generateOGImage } from '../generators/og-image';
-import { generatePinterestImage } from '../generators/pinterest-image';
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!
+  apiKey: process.env.ANTHROPIC_API_KEY || ''
 });
 
-interface PipelineOptions {
-  skipPinterest?: boolean;
-  customMetadata?: any;
+interface PipelineResult {
+  success: boolean;
+  vectorData: any;
+  prompt: string;
 }
 
 export async function executeAutomationPipeline(
-  prompt: string,
-  options: PipelineOptions = {}
-) {
-  console.log('🚀 Starting automation pipeline for:', prompt);
+  prompt: string
+): Promise<PipelineResult> {
+  console.log('🚀 Starting pipeline for:', prompt);
 
   try {
     // STEP 1: Generate Vector with Claude
     const vectorData = await generateVectorWithClaude(prompt);
     
-    // STEP 2: Enrich Metadata
-    const enriched = enrichMetadata(vectorData, prompt, options.customMetadata);
-    
-    // STEP 3: Create Marketplace Listing (Database)
-    const listing = await createMarketplaceListing(enriched);
-    
-    // STEP 4: Generate OG Image
-    await generateOGImage(enriched, listing.id);
-    
-    // STEP 5: Generate Pinterest Image
-    const pinterestImage = await generatePinterestImage(enriched, listing.id);
-    
-    // STEP 6: Post to Pinterest
-    let pinterestResult = null;
-    if (!options.skipPinterest) {
-      pinterestResult = await postToPinterest({
-        ...enriched.pinterest,
-        imageUrl: pinterestImage.url,
-        link: `${process.env.NEXT_PUBLIC_BASE_URL}/marketplace/${listing.slug}?utm_source=pinterest`
-      });
-    }
-    
-    console.log('✅ Pipeline complete!');
+    console.log('✅ Vector generated successfully');
     
     return {
       success: true,
-      listing,
-      pinterestPin: pinterestResult,
-      urls: {
-        marketplace: `${process.env.NEXT_PUBLIC_BASE_URL}/marketplace/${listing.slug}`,
-        pinterest: pinterestResult?.pinUrl || null
-      }
+      vectorData,
+      prompt
     };
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Pipeline failed:', error);
-    throw error;
+    throw new Error(`Pipeline failed: ${error.message}`);
   }
 }
 
 async function generateVectorWithClaude(prompt: string) {
-  const systemPrompt = `You are a professional vector icon designer. Generate clean, geometric SVG icons following modern UI icon design standards...`; // Your existing prompt
+  const systemPrompt = `You are a professional vector icon designer. Generate clean, geometric SVG icons.
+
+OUTPUT FORMAT:
+Return ONLY valid JSON. No markdown, no explanations.
+{
+  "name": "Icon Name",
+  "width": 400,
+  "height": 400,
+  "elements": [...]
+}`;
   
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
@@ -79,8 +57,14 @@ async function generateVectorWithClaude(prompt: string) {
   
   const content = message.content[0];
   if (content.type !== 'text') {
-    throw new Error('Unexpected response type');
+    throw new Error('Unexpected response type from Claude');
   }
   
-  return JSON.parse(content.text);
+  // Parse the JSON response
+  try {
+    return JSON.parse(content.text);
+  } catch (parseError) {
+    console.error('Failed to parse Claude response:', content.text);
+    throw new Error('Invalid JSON response from Claude');
+  }
 }
