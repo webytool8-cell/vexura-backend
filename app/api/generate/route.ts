@@ -94,8 +94,8 @@ export async function POST(request: Request) {
 
 // ---------------- Helpers ----------------
 
-function buildPrompt(type: GenerationType, prompt: string, type: GenerationType
- ): string {
+function buildPrompt(type: GenerationType, prompt: string): 
+  string {
   const basePrompt = `
 You are a professional vector illustrator.
 
