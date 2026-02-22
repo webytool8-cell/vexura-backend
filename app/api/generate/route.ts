@@ -7,6 +7,8 @@ import { renderSVG } from "../../../lib/render/svg";
 type GenerateRequest = {
   prompt: string;
   type: "icon" | "illustration";
+  style?: string;
+  intent?: string;
 };
 
 export async function POST(request: Request) {
@@ -17,8 +19,8 @@ export async function POST(request: Request) {
   };
 
   try {
-    const body: GenerateRequest = await request.json();
-    const { prompt, type } = body;
+const body: GenerateRequest = await request.json();
+const { prompt, type, style, intent } = body;
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
@@ -37,8 +39,13 @@ export async function POST(request: Request) {
     const fullPrompt = buildPrompt(generationType, prompt);
 
     // Call AI orchestrator
-    const vector = await callAIOrchestrator(fullPrompt, apiKey, generationType);
-
+   const vector = await callAIOrchestrator(
+  fullPrompt,
+  apiKey,
+  type,
+  style,
+  intent
+  );
     // Ensure elements exist
     vector.elements = Array.isArray(vector.elements) ? vector.elements : [];
 
@@ -127,23 +134,18 @@ RETURN FORMAT:
 async function callAIOrchestrator(
   fullPrompt: string,
   apiKey: string,
-  type?: string
+  type?: string,
+  style?: string,
+  intent?: string
 ): Promise<any> {
 
-  const lowerPrompt = fullPrompt.toLowerCase();
+const isOrganic =
+  style === "organic" ||
+  intent === "abstract" ||
+  intent === "conceptual" ||
+  type === "illustration";
 
-  // 🔍 Detect organic intent
-  const isOrganic =
-    lowerPrompt.includes("wave") ||
-    lowerPrompt.includes("cloud") ||
-    lowerPrompt.includes("user") ||
-    lowerPrompt.includes("profile") ||
-    lowerPrompt.includes("flame") ||
-    lowerPrompt.includes("organic") ||
-    lowerPrompt.includes("fluid") ||
-    lowerPrompt.includes("leaf") ||
-    lowerPrompt.includes("water") ||
-    lowerPrompt.includes("wind");
+console.log("ORGANIC MODE:", isOrganic);
 
   // 🧱 MECHANICAL ICON SYSTEM (Your Existing Rules)
   const mechanicalSystem = `
