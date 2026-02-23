@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createMarketplaceListing } from '@/lib/database/marketplace';
 import { enrichMetadataFromJSON } from '@/lib/automation/metadata-enricher';
+import { validateAndFixIcon, calculateQualityScore } from '@/lib/validators/icon-validator'; // ADD THIS
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate vector structure
+    // Validate structure
     if (!vectorData.name || !vectorData.elements) {
       return NextResponse.json(
         { error: 'Invalid vector format. Must include "name" and "elements"' },
@@ -21,8 +22,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate metadata from filename and vector data
-    const enriched = enrichMetadataFromJSON(vectorData, fileName);
+    // VALIDATE AND FIX (NEW!)
+    const validation = validateAndFixIcon(vectorData);
+    const score = calculateQualityScore(validation);
+    
+    if (validation.errors.length > 0) {
+      return NextResponse.json(
+        { 
+          error: 'Icon validation failed',
+          errors: validation.errors,
+          warnings: validation.warnings
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Use fixed version
+    const fixedVector = validation.fixed;
+
+    // Generate metadata
+    const enriched = enrichMetadataFromJSON(fixedVector, fileName);
+    
+    // Add validation info
+    enriched.validation = {
+      score,
+      warnings: validation.warnings,
+      autoFixed: validation.warnings.length > 0
+    };
 
     // Save to database
     const listing = await createMarketplaceListing(enriched);
@@ -33,6 +59,8 @@ export async function POST(request: Request) {
       success: true,
       slug: listing.slug,
       id: listing.id,
+      score,
+      warnings: validation.warnings,
       url: `${process.env.NEXT_PUBLIC_BASE_URL}/marketplace/${listing.slug}`
     });
 
