@@ -173,8 +173,9 @@ export const iconPatterns = {
     keywords: ['heart', 'like', 'love', 'favorite', 'bookmark', 'save'],
     
     rules: [
-      'Use TWO circles for top lobes',
-      'Connect with triangle or smooth path for bottom point',
+      'Use mirrored top lobes with equal visual weight',
+      'Prefer ONE smooth closed path with cubic Bezier curves for an organic silhouette',
+      'If using primitive shapes, connect lobes with a smooth rounded bottom (avoid hard triangle corners)',
       'Must be perfectly symmetric around x=200',
       'Maximum 3 elements',
       'Smooth, rounded appearance'
@@ -208,9 +209,10 @@ export const iconPatterns = {
     },
     
     commonMistakes: [
-      'Asymmetric circles',
-      'Point not centered at x=200',
-      'Overly complex curved paths instead of simple circles+triangle'
+      'Left and right lobes are not mirrored',
+      'Bottom point not centered at x=200',
+      'Sharp polygon corners that make the heart feel rigid',
+      'Too many tiny path segments that create a jagged contour'
     ]
   },
 

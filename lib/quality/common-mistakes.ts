@@ -170,11 +170,11 @@ export const commonMistakes = {
       problem: 'Asymmetric or overly complex heart',
       examples: [
         'Left circle different size than right',
-        'Complex bezier curves instead of simple circles+triangle',
+        'Flat or angular joins that break an organic heart silhouette',
         'Not centered at x=200'
       ],
       detection: 'Keywords: heart, love, favorite',
-      solution: 'Use exactly 3 elements: 2 symmetric circles + 1 triangle/path for point'
+      solution: 'Prefer a single smooth closed path with mirrored bezier curves; if using multiple shapes keep lobes mirrored and round the bottom transition'
     }
   }
 };
@@ -204,7 +204,8 @@ export function getMistakesForIconType(prompt: string): string[] {
   }
 
   if (lowerPrompt.match(/heart|love|favorite/)) {
-    mistakes.push('Must use exactly 2 symmetric circles for top lobes');
+    mistakes.push('Top lobes must be mirrored and balanced');
+    mistakes.push('Keep the silhouette organic: avoid sharp corners and jagged segments');
     mistakes.push('Must be centered at x=200');
   }
 
