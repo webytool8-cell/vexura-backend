@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { enrichMetadata } from './metadata-enricher';
 import { createMarketplaceListing, updatePinterestInfo } from '../database/marketplace';
+import { validateAndFixIcon, calculateQualityScore } from '../validators/icon-validator'; // ADD THIS
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || ''
@@ -14,21 +15,47 @@ export async function executeAutomationPipeline(prompt: string) {
     const vectorData = await generateVectorWithClaude(prompt);
     console.log('✅ Vector generated');
     
-    // STEP 2: Enrich Metadata
-    const enriched = enrichMetadata(vectorData, prompt);
+    // STEP 2: VALIDATE AND FIX (NEW!)
+    const validation = validateAndFixIcon(vectorData);
+    const score = calculateQualityScore(validation);
+    
+    console.log(`📊 Quality Score: ${score}/100`);
+    
+    if (validation.errors.length > 0) {
+      console.error('❌ Validation errors:', validation.errors);
+      throw new Error(`Icon validation failed: ${validation.errors.join(', ')}`);
+    }
+    
+    if (validation.warnings.length > 0) {
+      console.warn('⚠️  Warnings:', validation.warnings);
+    }
+    
+    // Use the fixed version
+    const fixedVector = validation.fixed;
+    
+    // STEP 3: Enrich Metadata
+    const enriched = enrichMetadata(fixedVector, prompt);
     console.log('✅ Metadata enriched');
     
-    // STEP 3: Save to Database
+    // Add validation metadata
+    enriched.validation = {
+      score,
+      warnings: validation.warnings,
+      autoFixed: validation.warnings.length > 0
+    };
+    
+    // STEP 4: Save to Database
     const listing = await createMarketplaceListing(enriched);
     console.log('✅ Saved to marketplace database');
-    
-    // STEP 4: Post to Pinterest (optional - can skip for now)
-    // const pinterestResult = await postToPinterest(enriched);
-    // await updatePinterestInfo(listing.slug, pinterestResult.pinId, pinterestResult.pinUrl);
     
     return {
       success: true,
       listing,
+      validation: {
+        score,
+        warnings: validation.warnings,
+        errors: validation.errors
+      },
       urls: {
         marketplace: `${process.env.NEXT_PUBLIC_BASE_URL}/marketplace/${listing.slug}`,
         api: `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketplace/${listing.slug}`
