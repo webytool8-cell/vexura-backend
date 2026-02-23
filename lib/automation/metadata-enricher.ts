@@ -223,6 +223,14 @@ export function enrichMetadataFromJSON(vectorData: any, fileName: string) {
     // Original Vector Data
     vector: vectorData,
     prompt: displayName,
-    source: 'manual_upload'
+    source: 'manual_upload',
+
+
+    // Validation placeholder (will be populated by validator)
+  validation: {
+    score: 0,
+    warnings: [],
+    autoFixed: false
+  }
   };
-}
+} as any;
