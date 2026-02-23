@@ -21,7 +21,8 @@ const SUBJECT_CLASSIFICATION = {
     ORGANIC: [
         'human', 'person', 'people', 'man', 'men', 'woman', 'women', 
         'girl', 'boy', 'child', 'kid', 'face', 'head', 'portrait', 
-        'user', 'profile', 'avatar', 'team', 'group', 'family',
+        // REMOVED: 'user', 'profile', 'avatar' - these are ICON keywords
+        'team', 'group', 'family',
         'student', 'worker', 'employee', 'doctor', 'nurse', 'teacher',
         'animal', 'dog', 'cat', 'bird', 'fish', 'creature', 'monster',
         'plant', 'tree', 'flower', 'leaf', 'leaves', 'grass', 'forest', 'garden',
@@ -37,7 +38,9 @@ const SUBJECT_CLASSIFICATION = {
         'tool', 'hammer', 'wrench', 'pen', 'pencil',
         'furniture', 'chair', 'table', 'lamp',
         'box', 'cube', 'grid', 'chart', 'graph', 'line', 'shape',
-        'icon', 'symbol', 'logo', 'badge'
+        'icon', 'symbol', 'logo', 'badge',
+        // ADDED: Icon-specific human representations
+        'user', 'profile', 'avatar', 'account', 'member'
     ]
 };
 
@@ -147,7 +150,15 @@ ${impliedStyleRule}
 - CONSTRAINTS: Use ONLY circle, rect, polygon, and straight lines.
 - FORBIDDEN: Organic curves, hand-drawn paths, wobbly lines, complex bezier curves.
 - ABSTRACTION: Even if the subject is organic (e.g. face, leaf, water), you MUST abstract it into pure geometric shapes (circles/squares).
-- Maintain perfect symmetry and consistent stroke weights.`;
+- Maintain perfect symmetry and consistent stroke weights.
+
+SPECIAL RULE FOR USER/PROFILE/AVATAR ICONS:
+- These are SYMBOLIC REPRESENTATIONS, NOT portraits
+- Use ONLY: 1 circle (head) + 1 simple shape (body)
+- NO facial features (no eyes, nose, mouth, ears)
+- NO realistic human proportions
+- Think: iOS Settings icon, Material Design account icon
+- Maximum 2-3 elements total`;
         
         } else {
             // Illustrations: Mixed Mode
@@ -202,16 +213,24 @@ CRITICAL GEOMETRY RULES (STRUCTURAL):
             palette: palette   // optional but consistent
         };
 
-        // 7. Reference Logic (Preserved & Scoped)
-        // Only inject human references if humans are actually detected
-        // This prevents "robot" prompts from getting human references
-        const humanKeywords = ['human', 'person', 'people', 'man', 'men', 'woman', 'women', 'girl', 'boy', 'child', 'kid', 'face', 'portrait', 'user', 'avatar'];
-        const involvesHumans = humanKeywords.some(keyword => {
-            const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-            return regex.test(lowerText);
+        // 7. Reference Logic (FIXED - Only for REALISTIC human requests)
+        // NEW: Only inject references for REALISTIC portraits or ACTUAL human illustrations
+        // NOT for user/profile/avatar icons
+        const realisticHumanKeywords = ['portrait', 'face', 'realistic person', 'photograph', 'headshot'];
+        const isRealisticHuman = realisticHumanKeywords.some(keyword => {
+            return lowerText.includes(keyword);
         });
 
-        if (involvesHumans) {
+        // Additional check: Is this explicitly an icon?
+        const isIconRequest = type === 'icon' || 
+                             lowerText.includes('icon') || 
+                             lowerText.includes('symbol') ||
+                             lowerText.includes('logo');
+
+        // Only inject human references if:
+        // 1. It's a realistic human request, AND
+        // 2. It's NOT an icon request
+        if (isRealisticHuman && !isIconRequest) {
             // Select 2 distinct references
             const getRef = () => {
                 const num = Math.floor(Math.random() * 20) + 1;
@@ -224,7 +243,11 @@ CRITICAL GEOMETRY RULES (STRUCTURAL):
             while (ref2 === ref1) ref2 = getRef();
 
             payload.reference_images = [ref1, ref2];
-            console.log(">> Human subject detected. References injected.");
+            console.log(">> Realistic human portrait detected. References injected.");
+        } else if (lowerText.match(/\b(user|profile|avatar|account)\b/i)) {
+            console.log(">> User/profile/avatar icon detected. Using geometric icon mode (NO realistic references).");
+        } else {
+            console.log(">> Standard icon generation.");
         }
 
         return payload;
@@ -244,3 +267,35 @@ CRITICAL GEOMETRY RULES (STRUCTURAL):
         return 'abstract';
     }
 };
+```
+
+---
+
+## Key Changes:
+
+### 1. **Moved `user`, `profile`, `avatar` out of ORGANIC list** (lines 14-16)
+They're now in `GEOMETRIC_HINTS` (line 28) since they're icon representations, not realistic humans.
+
+### 2. **Added special rule for user icons** (lines 109-115)
+Explicitly tells the AI these are symbolic, not portraits.
+
+### 3. **Fixed reference injection logic** (lines 157-180)
+Now only injects realistic human references when:
+- User asks for "portrait", "face", "realistic person", etc.
+- AND it's NOT an icon request
+
+### 4. **Better console logging** (lines 175-180)
+Now shows which mode it detected.
+
+---
+
+## Expected Console Output After Fix:
+
+**Before (broken):**
+```
+>> Human subject detected. References injected.
+```
+
+**After (fixed):**
+```
+>> User/profile/avatar icon detected. Using geometric icon mode (NO realistic references).
