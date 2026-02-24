@@ -578,19 +578,19 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
             <div className="relative">
                 <button
                     onClick={() => setOpen(!open)}
-                    className="flex items-center gap-2 hover:text-[var(--text-main)] transition-colors"
+                    className="h-8 px-3 inline-flex items-center justify-center gap-2 text-center rounded-[2px] bg-[var(--accent)] text-black font-semibold text-xs border border-[var(--accent)] hover:brightness-95 transition-all"
                 >
-                    EXPORT
-                    <div className="icon-chevron-down w-3 h-3"></div>
+                    <span>EXPORT</span>
+                    <div className="icon-chevron-down w-3 h-3 flex items-center justify-center"></div>
                 </button>
 
                 {open && (
-                    <div className="absolute right-0 bottom-8 w-40 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] shadow-lg z-50">
+                    <div className="absolute right-0 top-10 w-40 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] shadow-lg z-50">
                         {["png", "jpeg", "svg", "json", "html"].map((type) => (
                             <button
                                 key={type}
                                 onClick={() => handleExport(type)}
-                                className="w-full text-left px-3 py-2 text-xs font-mono hover:bg-[var(--bg-surface)] border-b border-[var(--border-dim)] last:border-none"
+                                className="w-full px-3 py-2 text-xs font-mono inline-flex items-center justify-center text-center hover:bg-[var(--bg-surface)] border-b border-[var(--border-dim)] last:border-none"
                             >
                                 {type.toUpperCase()}
                             </button>
@@ -965,7 +965,7 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                                     {result.source !== 'upload' && (
                                         <button 
                                             onClick={handleSmartRetry} 
-                                            className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px]"
+                                            className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px] inline-flex items-center justify-center text-center"
                                         >
                                             SMART RETRY
                                         </button>
@@ -973,7 +973,7 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
 
                                     <button 
                                         onClick={() => handleGenerate(null, 'simpler')} 
-                                        className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px]"
+                                        className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px] inline-flex items-center justify-center text-center"
                                         disabled={result.source === 'upload'}
                                     >
                                         SIMPLER
@@ -981,7 +981,7 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
 
                                     <button 
                                         onClick={() => handleGenerate(null, 'detailed')} 
-                                        className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px]"
+                                        className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px] inline-flex items-center justify-center text-center"
                                         disabled={result.source === 'upload'}
                                     >
                                         DETAILED
@@ -991,7 +991,7 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                                     <button 
                                         onClick={handleSave}
                                         disabled={saved}
-                                        className={`flex items-center gap-1 text-xs hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
+                                        className={`h-8 px-2 inline-flex items-center justify-center gap-1 text-center text-xs hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
                                     >
                                         <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
                                         {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}

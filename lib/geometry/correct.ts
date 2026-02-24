@@ -15,10 +15,10 @@ export function correctGeometry(vector: any) {
   
   // Step 3: Merge genuinely overlapping shapes with same fill
   elements = resolveOverlaps(elements);
-  
+
   // Step 4: Normalize to fit within canvas with padding
   elements = normalizeBounds(elements, 400, 400);
-  
+
   // Step 5: Final grid snap after scaling
   elements = snapToGrid(elements, 1);
 
@@ -88,6 +88,7 @@ function enforceAxisAlignment(elements: Element[]) {
     return el;
   });
 }
+
 
 /* ---------------- OVERLAP RESOLUTION ---------------- */
 

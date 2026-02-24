@@ -173,12 +173,13 @@ export const iconPatterns = {
     keywords: ['heart', 'like', 'love', 'favorite', 'bookmark', 'save'],
     
     rules: [
-      'Use mirrored top lobes with equal visual weight',
-      'Prefer ONE smooth closed path with cubic Bezier curves for an organic silhouette',
-      'If using primitive shapes, connect lobes with a smooth rounded bottom (avoid hard triangle corners)',
-      'Must be perfectly symmetric around x=200',
-      'Maximum 3 elements',
-      'Smooth, rounded appearance'
+      'Must be perfectly symmetric around x=200 (mirror left/right exactly)',
+      'Use mirrored top lobes with equal visual weight around x=200',
+      'Prefer one smooth closed path for organic silhouettes when possible',
+      'If using primitives, use 2 circles + 1 bottom connector with centered tip near x=200',
+      'Recommended lobe centers around cx=170/230 and cy=170-190 with similar radius',
+      'Keep all major points inside safe zone x/y 40..340',
+      'Use monochrome #000000 by default for icon prompts'
     ],
     
     goodExample: {
@@ -189,20 +190,20 @@ export const iconPatterns = {
         {
           type: 'circle',
           cx: 170,
-          cy: 170,
-          r: 40,
+          cy: 180,
+          r: 60,
           fill: '#000000'
         },
         {
           type: 'circle',
           cx: 230,
-          cy: 170,
-          r: 40,
+          cy: 180,
+          r: 60,
           fill: '#000000'
         },
         {
           type: 'polygon',
-          points: '200,280 130,180 270,180',
+          points: '200,340 120,240 280,240',
           fill: '#000000'
         }
       ]

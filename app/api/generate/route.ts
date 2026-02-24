@@ -4,6 +4,7 @@ import { runQualityChecks, GenerationType } from "../../../lib/quality/checks";
 import { correctGeometry } from "../../../lib/geometry/correct";
 import { renderSVG } from "../../../lib/render/svg";
 import { buildSystemPrompt } from "../../../prompts/system-prompt"; // NEW IMPORT
+import { validateAndFixIcon, calculateQualityScore } from "../../../lib/validators/icon-validator";
 
 type GenerateRequest = {
   prompt: string;
@@ -63,17 +64,33 @@ export async function POST(request: Request) {
     const corrected = correctGeometry(vector);
     vector.elements = corrected.elements;
 
+    // Validate + auto-fix to ensure runtime output respects quality constraints
+    const validation = validateAndFixIcon(vector, {
+      iconTypeHint: generationType === GenerationType.ICON ? "icon" : "illustration",
+      prompt
+    });
+    const validatedVector = validation.fixed ?? vector;
+    const validationScore = calculateQualityScore(validation);
+
     // Run quality checks
-    const warnings = runQualityChecks(vector, generationType);
+    const warnings = [
+      ...runQualityChecks(validatedVector, generationType),
+      ...validation.warnings
+    ];
 
     // Render SVG
-    const svgOutput = renderSVG(vector);
+    const svgOutput = renderSVG(validatedVector);
 
     return NextResponse.json({
       success: true,
-      vector,
+      vector: validatedVector,
       svg: svgOutput ?? "<svg></svg>",
       warnings,
+      validation: {
+        score: validationScore,
+        warnings: validation.warnings,
+        errors: validation.errors
+      }
     });
   } catch (err: any) {
     console.error("Generation error:", err);

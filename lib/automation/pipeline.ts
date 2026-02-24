@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { enrichMetadata } from './metadata-enricher';
 import { createMarketplaceListing, updatePinterestInfo } from '../database/marketplace';
 import { validateAndFixIcon, calculateQualityScore } from '../validators/icon-validator'; // ADD THIS
+import { buildSystemPrompt } from '../../prompts/system-prompt';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || ''
@@ -16,7 +17,7 @@ export async function executeAutomationPipeline(prompt: string) {
     console.log('✅ Vector generated');
     
     // STEP 2: VALIDATE AND FIX (NEW!)
-    const validation = validateAndFixIcon(vectorData);
+    const validation = validateAndFixIcon(vectorData, { iconTypeHint: "icon", prompt });
     const score = calculateQualityScore(validation);
     
     console.log(`📊 Quality Score: ${score}/100`);
@@ -69,16 +70,9 @@ export async function executeAutomationPipeline(prompt: string) {
 }
 
 async function generateVectorWithClaude(prompt: string) {
-  const systemPrompt = `You are a professional vector icon designer. Generate clean, geometric SVG icons.
+  const systemPrompt = buildSystemPrompt(prompt);
 
-OUTPUT FORMAT:
-Return ONLY valid JSON:
-{
-  "name": "Icon Name",
-  "width": 400,
-  "height": 400,
-  "elements": [...]
-}`;
+  console.log('🧠 System prompt built with pattern guidance');
   
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
