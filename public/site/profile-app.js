@@ -90,14 +90,14 @@ function ProfileView() {
         localStorage.setItem('vector_user', JSON.stringify(user));
         setCurrentUser(user);
         if (!targetUser) {
-            window.location.href = `profile.html?user=${user.objectData.username}`;
+            window.location.href = `/profile?user=${user.objectData.username}`;
         }
     };
 
     const handleLogout = () => {
         localStorage.removeItem('vector_user');
         setCurrentUser(null);
-        window.location.href = 'index.html';
+        window.location.href = '/';
     };
 
     const handleDelete = async (creationId, e) => {
@@ -143,7 +143,7 @@ function ProfileView() {
                         </div>
                         <h1 className="text-xl font-bold text-[var(--text-main)] mb-2 uppercase tracking-wide">User Not Found</h1>
                         <p className="text-[var(--text-muted)] mb-8 font-mono text-sm">Profile does not exist or was removed.</p>
-                        <a href="index.html" className="btn btn-primary">LAUNCH_GENERATOR</a>
+                        <a href="/" className="btn btn-primary">LAUNCH_GENERATOR</a>
                     </div>
                 </main>
                 <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLoginSuccess={handleLoginSuccess} />
@@ -181,7 +181,7 @@ function ProfileView() {
                             </div>
                             {currentUser && currentUser.objectId === targetUser.objectId && (
                                 <div className="shrink-0">
-                                    <a href="index.html" className="btn btn-primary">
+                                    <a href="/" className="btn btn-primary">
                                         <div className="icon-plus w-4 h-4"></div>
                                         NEW_PROJECT
                                     </a>
@@ -199,7 +199,7 @@ function ProfileView() {
                             <h3 className="text-sm font-mono text-[var(--text-main)] mb-1 uppercase">No Data Found</h3>
                             <p className="text-[var(--text-dim)] mb-6 text-xs">Initialize your first vector project.</p>
                             {currentUser && currentUser.objectId === targetUser.objectId && (
-                                <a href="index.html" className="btn btn-secondary inline-flex">INITIALIZE</a>
+                                <a href="/" className="btn btn-secondary inline-flex">INITIALIZE</a>
                             )}
                         </div>
                     ) : (

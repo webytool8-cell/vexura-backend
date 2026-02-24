@@ -6,7 +6,7 @@ function AssetCard({ asset }) {
     const displaySvg = isCollection ? asset.previewSvg : asset.svg;
 
     return (
-        <a href={`asset.html?id=${asset.slug}`} className="card group block relative h-full flex flex-col">
+        <a href={`/asset?id=${asset.slug}`} className="card group block relative h-full flex flex-col">
             {/* Preview Area */}
             <div className="aspect-square bg-[var(--bg-body)] relative flex items-center justify-center p-8 overflow-hidden">
                 {/* SVG Preview */}

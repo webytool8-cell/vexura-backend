@@ -48,7 +48,7 @@ function Pricing() {
                             </ul>
                         </div>
                         <div className="p-8 pt-0 mt-auto">
-                            <a href="tool.html" className="btn btn-secondary w-full py-3 hover:border-[var(--text-muted)]">START FREE</a>
+                            <a href="/tool" className="btn btn-secondary w-full py-3 hover:border-[var(--text-muted)]">START FREE</a>
                         </div>
                     </div>
 
@@ -96,7 +96,7 @@ function Pricing() {
                             </ul>
                         </div>
                         <div className="p-8 pt-0 mt-auto relative z-10">
-                            <a href="tool.html?upgrade=true" className="btn btn-primary btn-primary-animate w-full py-3 font-bold shadow-lg shadow-black/20">GET PRO ACCESS</a>
+                            <a href="/tool?upgrade=true" className="btn btn-primary btn-primary-animate w-full py-3 font-bold shadow-lg shadow-black/20">GET PRO ACCESS</a>
                         </div>
                     </div>
                 </div>

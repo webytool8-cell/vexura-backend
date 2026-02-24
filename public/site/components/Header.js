@@ -32,8 +32,8 @@ function Header({ user, onOpenAuth, onLogout }) {
 
   // ---- Routing / page flags ----
   const currentPath = window.location.pathname;
-  const isTool = currentPath.includes('tool.html');
-  const isContact = currentPath.includes('contact.html');
+  const isTool = currentPath.includes('/tool');
+  const isContact = currentPath.includes('/contact');
 
   // ---- Plan & Credits (safe defaults) ----
   const plan = user?.plan || profile?.plan || 'free';
@@ -54,7 +54,7 @@ function Header({ user, onOpenAuth, onLogout }) {
     if (!user) return;
 
     const usernameParam = encodeURIComponent(safeUsername);
-    window.location.href = `profile.html?user=${usernameParam}`;
+    window.location.href = `/profile?user=${usernameParam}`;
   };
 
   return (
@@ -62,7 +62,7 @@ function Header({ user, onOpenAuth, onLogout }) {
       <div className="h-full px-6 flex items-center justify-between relative z-20 bg-[var(--bg-body)]">
         {/* Left: Logo */}
         <div className="flex items-center gap-6">
-          <a href="index.html" className="flex items-center gap-2 group decoration-transparent">
+          <a href="/" className="flex items-center gap-2 group decoration-transparent">
             <Logo className="w-5 h-5 transition-all drop-shadow-[0_0_4px_rgba(204,255,0,0.3)] group-hover:drop-shadow-[0_0_8px_rgba(204,255,0,0.6)]" />
             <span className="font-mono font-bold text-lg tracking-tight text-[var(--text-main)] group-hover:text-[var(--accent)] transition-colors">
               VEXURA
@@ -73,7 +73,7 @@ function Header({ user, onOpenAuth, onLogout }) {
         {/* Desktop Navigation (Centered) */}
         <nav className="hidden md:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--bg-panel)] p-1 rounded-[4px] border border-[var(--border-dim)]">
           <a
-            href="tool.html"
+            href="/tool"
             className={`px-5 py-2 text-xs font-mono font-bold rounded-[2px] transition-all flex items-center gap-2 ${
               isTool
                 ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-sm'
@@ -84,7 +84,7 @@ function Header({ user, onOpenAuth, onLogout }) {
             GENERATOR
           </a>
           <a
-            href="marketplace.html"
+            href="/marketplace"
             className={`px-5 py-2 text-xs font-mono font-bold rounded-[2px] transition-all flex items-center gap-2 ${
               currentPath.includes('marketplace')
                 ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-sm'
@@ -155,7 +155,7 @@ function Header({ user, onOpenAuth, onLogout }) {
         <div className="fixed inset-0 top-16 z-10 bg-[var(--bg-body)] flex flex-col p-6 animate-in slide-in-from-top-2 duration-200 md:hidden overflow-y-auto">
           <nav className="flex flex-col gap-2 mb-8 border-b border-[var(--border-dim)] pb-8">
             <a
-              href="tool.html"
+              href="/tool"
               className={`p-4 text-base font-mono font-bold rounded-[4px] border transition-all flex items-center justify-between ${
                 isTool
                   ? 'bg-[var(--bg-surface)] border-[var(--accent)] text-[var(--accent)]'

@@ -14,17 +14,17 @@ function CTA() {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                    <a href="tool.html" className="btn btn-primary btn-primary-animate h-16 px-10 text-lg inline-flex shadow-[0_0_20px_rgba(204,255,0,0.2)] hover:shadow-[0_0_40px_rgba(204,255,0,0.4)] text-black font-bold tracking-wide">
+                    <a href="/tool" className="btn btn-primary btn-primary-animate h-16 px-10 text-lg inline-flex shadow-[0_0_20px_rgba(204,255,0,0.2)] hover:shadow-[0_0_40px_rgba(204,255,0,0.4)] text-black font-bold tracking-wide">
                         LAUNCH GENERATOR
                     </a>
-                    <a href="tool.html?upgrade=true" className="group flex items-center gap-2 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors font-mono text-sm uppercase font-bold tracking-widest">
+                    <a href="/tool?upgrade=true" className="group flex items-center gap-2 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors font-mono text-sm uppercase font-bold tracking-widest">
                         See Pro Features <div className="icon-arrow-right w-4 h-4 transition-transform group-hover:translate-x-1"></div>
                     </a>
                 </div>
                 
                 <div className="mt-12 pt-12 border-t border-[var(--border-dim)] w-full max-w-lg mx-auto">
                     <p className="text-sm text-[var(--text-muted)] mb-4">Just looking for assets?</p>
-                    <a href="marketplace.html" className="btn btn-secondary w-full sm:w-auto inline-flex bg-[var(--bg-panel)] hover:bg-[var(--bg-surface)] border-[var(--border-dim)]">
+                    <a href="/marketplace" className="btn btn-secondary w-full sm:w-auto inline-flex bg-[var(--bg-panel)] hover:bg-[var(--bg-surface)] border-[var(--border-dim)]">
                         <div className="icon-shopping-bag w-4 h-4"></div>
                         EXPLORE MARKETPLACE
                     </a>
