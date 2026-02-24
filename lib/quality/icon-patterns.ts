@@ -174,12 +174,12 @@ export const iconPatterns = {
     
     rules: [
       'Must be perfectly symmetric around x=200 (mirror left/right exactly)',
-      'Use mirrored top lobes with equal visual weight around x=200',
-      'Prefer one smooth closed path for organic silhouettes when possible',
-      'If using primitives, use 2 circles + 1 bottom connector with centered tip near x=200',
-      'Recommended lobe centers around cx=170/230 and cy=170-190 with similar radius',
-      'Keep all major points inside safe zone x/y 40..340',
-      'Use monochrome #000000 by default for icon prompts'
+      'If using primitives: exactly 2 circles + 1 polygon only',
+      'Circle centers should be cx=170 and cx=230 with equal radius (recommended r=60)',
+      'Circle vertical alignment should match (recommended cy=180)',
+      'Bottom polygon must be a 3-point triangle only: 200,340 120,240 280,240',
+      'All coordinates must stay inside safe zone x/y 40..340',
+      'Use monochrome fill #000000 by default'
     ],
     
     goodExample: {
