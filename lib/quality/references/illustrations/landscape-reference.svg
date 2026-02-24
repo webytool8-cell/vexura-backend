@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <title>Landscape Illustration Reference</title>
+  <rect width="400" height="400" fill="#e0f2fe"/>
+  <circle cx="310" cy="95" r="34" fill="#fde047"/>
+  <path d="M 0 260 Q 70 220 150 250 Q 250 290 400 240 L 400 400 L 0 400 Z" fill="#86efac"/>
+  <path d="M 40 280 L 145 155 L 230 280 Z" fill="#64748b"/>
+  <path d="M 165 280 L 275 135 L 360 280 Z" fill="#475569"/>
+  <path d="M 0 295 Q 80 280 170 305 Q 260 330 400 300 L 400 400 L 0 400 Z" fill="#34d399" opacity="0.8"/>
+</svg>
