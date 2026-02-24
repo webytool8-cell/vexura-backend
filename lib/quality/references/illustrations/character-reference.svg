@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <title>Character Illustration Reference</title>
+  <rect width="400" height="400" fill="#f6f8fb"/>
+  <ellipse cx="200" cy="330" rx="90" ry="18" fill="#d9e2ec"/>
+  <circle cx="200" cy="140" r="40" fill="#ffd7b5"/>
+  <path d="M 160 140 Q 200 90 240 140 L 240 125 Q 200 78 160 125 Z" fill="#2d3748"/>
+  <rect x="160" y="185" width="80" height="95" rx="24" fill="#4f46e5"/>
+  <rect x="130" y="200" width="30" height="75" rx="15" fill="#ffd7b5"/>
+  <rect x="240" y="200" width="30" height="75" rx="15" fill="#ffd7b5"/>
+  <rect x="170" y="280" width="22" height="50" rx="10" fill="#1f2937"/>
+  <rect x="208" y="280" width="22" height="50" rx="10" fill="#1f2937"/>
+</svg>

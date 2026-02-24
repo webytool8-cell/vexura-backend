@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <title>Flower Illustration Reference</title>
+  <rect width="400" height="400" fill="#f8fafc"/>
+  <path d="M 200 300 Q 195 230 200 160" stroke="#15803d" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <ellipse cx="175" cy="230" rx="26" ry="14" transform="rotate(-30 175 230)" fill="#22c55e"/>
+  <ellipse cx="225" cy="220" rx="26" ry="14" transform="rotate(35 225 220)" fill="#22c55e"/>
+  <ellipse cx="200" cy="140" rx="24" ry="44" fill="#f43f5e"/>
+  <ellipse cx="200" cy="140" rx="24" ry="44" transform="rotate(45 200 140)" fill="#fb7185"/>
+  <ellipse cx="200" cy="140" rx="24" ry="44" transform="rotate(90 200 140)" fill="#f43f5e"/>
+  <ellipse cx="200" cy="140" rx="24" ry="44" transform="rotate(135 200 140)" fill="#fb7185"/>
+  <circle cx="200" cy="140" r="20" fill="#facc15"/>
+</svg>

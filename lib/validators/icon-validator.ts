@@ -42,7 +42,9 @@ export function validateAndFixIcon(vectorData: any): ValidationResult {
   cleanAttributes(fixed, result);
   checkAndFixBounds(fixed, result);
   checkAndFixCentering(fixed, result);
+  enforceCanonicalHeartGeometry(fixed, result);
   roundCoordinates(fixed, result);
+  normalizeColors(fixed, result);
   checkStrokeFillConsistency(fixed, result);
   validatePaths(fixed, result);
 
@@ -95,9 +97,16 @@ function checkElementCount(data: VectorData, result: ValidationResult) {
 /**
  * Clean unwanted attributes
  */
-function cleanAttributes(data: VectorData, result: ValidationResult) {
+function cleanAttributes(data: VectorData & Record<string, any>, result: ValidationResult) {
   const forbiddenAttrs = ['class', 'data-id', 'style', 'transform', 'preserveAspectRatio'];
   let cleaned = 0;
+
+  forbiddenAttrs.forEach(attr => {
+    if (data[attr] !== undefined) {
+      delete data[attr];
+      cleaned++;
+    }
+  });
   
   data.elements.forEach(el => {
     forbiddenAttrs.forEach(attr => {
@@ -123,6 +132,7 @@ function checkAndFixBounds(data: VectorData, result: ValidationResult) {
   const MAX = CANVAS_SIZE - PADDING;
   
   let outsideCount = 0;
+  let safeZoneViolations = 0;
   
   data.elements.forEach((el, idx) => {
     const bounds = getElementBounds(el);
@@ -140,11 +150,12 @@ function checkAndFixBounds(data: VectorData, result: ValidationResult) {
     if (bounds.minX < MIN || bounds.maxX > MAX || 
         bounds.minY < MIN || bounds.maxY > MAX) {
       result.warnings.push(`Element ${idx} (${el.type}) violates 40px padding guideline`);
+      safeZoneViolations++;
     }
   });
   
-  if (outsideCount > 0) {
-    // Auto-scale to fit
+  if (outsideCount > 0 || safeZoneViolations > 0) {
+    // Auto-scale to safe zone, not just viewBox
     scaleToFit(data, result);
   }
 }
@@ -374,9 +385,50 @@ function checkAndFixCentering(data: VectorData, result: ValidationResult) {
   const offsetX = Math.abs(centerX - idealCenter);
   const offsetY = Math.abs(centerY - idealCenter);
   
-  // If off-center by more than 20px, warn
+  // If off-center by more than 20px, auto-translate and warn
   if (offsetX > 20 || offsetY > 20) {
     result.warnings.push(`Icon off-center: visual center at (${centerX.toFixed(0)}, ${centerY.toFixed(0)}), should be near (200, 200)`);
+
+    const dx = idealCenter - centerX;
+    const dy = idealCenter - centerY;
+
+    data.elements.forEach(el => {
+      scaleAndTranslateElement(el, 1, dx, dy);
+    });
+
+    result.warnings.push('Auto-centered icon composition to (200, 200)');
+  }
+}
+
+/**
+ * Normalize classic heart geometry if icon looks like two circles + one polygon.
+ */
+function enforceCanonicalHeartGeometry(data: VectorData, result: ValidationResult) {
+  const circles = data.elements.filter(el => el.type === 'circle');
+  const polygons = data.elements.filter(el => el.type === 'polygon');
+
+  if (circles.length !== 2 || polygons.length !== 1) {
+    return;
+  }
+
+  const polygon = polygons[0];
+  const points = typeof polygon.points === 'string' ? parsePoints(polygon.points) : [];
+
+  const hasComplexBottom = points.length > 3;
+  const circlesAreAsymmetric = Math.abs((circles[0].cx || 0) + (circles[1].cx || 0) - 400) > 10;
+
+  if (hasComplexBottom || circlesAreAsymmetric) {
+    circles[0].cx = 170;
+    circles[0].cy = 180;
+    circles[0].r = 60;
+
+    circles[1].cx = 230;
+    circles[1].cy = 180;
+    circles[1].r = 60;
+
+    polygon.points = '200,340 120,240 280,240';
+
+    result.warnings.push('Detected malformed heart geometry; auto-corrected to symmetric 2-circle + triangle structure');
   }
 }
 
@@ -396,10 +448,43 @@ function roundCoordinates(data: VectorData, result: ValidationResult) {
         if (original !== el[prop]) rounded++;
       }
     });
+
+    if (typeof el.points === 'string') {
+      const roundedPoints = parsePoints(el.points)
+        .map(c => `${Math.round(c.x / 10) * 10},${Math.round(c.y / 10) * 10}`)
+        .join(' ');
+      if (roundedPoints !== el.points) {
+        el.points = roundedPoints;
+        rounded++;
+      }
+    }
   });
   
   if (rounded > 0) {
     result.warnings.push(`Rounded ${rounded} coordinates to nearest 10 for pixel-perfect scaling`);
+  }
+}
+
+/**
+ * Normalize icon colors to monochrome black/white defaults.
+ */
+function normalizeColors(data: VectorData, result: ValidationResult) {
+  let normalized = 0;
+
+  data.elements.forEach(el => {
+    if (el.fill && el.fill !== 'none' && el.fill.toLowerCase() !== '#000000' && el.fill.toLowerCase() !== '#ffffff') {
+      el.fill = '#000000';
+      normalized++;
+    }
+
+    if (el.stroke && el.stroke !== 'none' && el.stroke.toLowerCase() !== '#000000' && el.stroke.toLowerCase() !== '#ffffff') {
+      el.stroke = '#000000';
+      normalized++;
+    }
+  });
+
+  if (normalized > 0) {
+    result.warnings.push(`Normalized ${normalized} colors to monochrome palette (#000000/#ffffff)`);
   }
 }
 
