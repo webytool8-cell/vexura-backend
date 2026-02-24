@@ -168,19 +168,6 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
     };
 
 
-    const handleDownloadSvg = () => {
-        if (!svgRef.current) return;
-        const svgData = new XMLSerializer().serializeToString(svgRef.current);
-        const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `vexura-${data?.name || 'icon'}.svg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
     const handleCopyCode = () => {
         if (!svgRef.current) return;
         navigator.clipboard.writeText(new XMLSerializer().serializeToString(svgRef.current));
@@ -284,14 +271,13 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
                     </div>
                     <div className="flex items-center gap-2">
                          <div className="flex items-center border border-[var(--border-dim)] rounded-[2px] bg-[var(--bg-body)] h-8">
-                            <button onClick={handleZoomOut} className="h-full px-3 hover:bg-[var(--bg-surface)] flex items-center justify-center"><div className="icon-minus text-xs leading-none"></div></button>
+                            <button onClick={handleZoomOut} className="h-full px-3 hover:bg-[var(--bg-surface)] inline-flex items-center justify-center text-center"><div className="icon-minus text-xs leading-none"></div></button>
                             <span className="text-[10px] font-mono px-2 border-x border-[var(--border-dim)] h-full flex items-center select-none">{Math.round(zoom * 100)}%</span>
-                            <button onClick={handleZoomIn} className="h-full px-3 hover:bg-[var(--bg-surface)] flex items-center justify-center"><div className="icon-plus text-xs leading-none"></div></button>
-                            <button onClick={handleResetZoom} className="h-full px-3 hover:bg-[var(--bg-surface)] border-l border-[var(--border-dim)] flex items-center justify-center"><div className="icon-maximize text-xs leading-none"></div></button>
+                            <button onClick={handleZoomIn} className="h-full px-3 hover:bg-[var(--bg-surface)] inline-flex items-center justify-center text-center"><div className="icon-plus text-xs leading-none"></div></button>
+                            <button onClick={handleResetZoom} className="h-full px-3 hover:bg-[var(--bg-surface)] border-l border-[var(--border-dim)] inline-flex items-center justify-center text-center"><div className="icon-maximize text-xs leading-none"></div></button>
                         </div>
                         <div className="w-px h-4 bg-[var(--border-dim)]"></div>
-                        <button onClick={handleCopyCode} className={`btn btn-ghost py-1 px-2 text-xs h-8 ${copied ? 'text-green-500' : ''}`}>{copied ? 'COPIED' : 'COPY'}</button>
-                        <button onClick={handleDownloadSvg} className="btn btn-primary py-1 px-3 text-xs h-8">EXPORT</button>
+                        <button onClick={handleCopyCode} className={`btn btn-ghost py-1 px-3 text-xs h-8 inline-flex items-center justify-center text-center ${copied ? 'text-green-500' : ''}`}>{copied ? 'COPIED' : 'COPY SVG'}</button>
                     </div>
                 </div>
             )}
