@@ -85,7 +85,7 @@ function AssetDetailView({ user, onOpenAuth }) {
             btn.disabled = true;
         }
         setTimeout(() => {
-            window.location.href = 'success.html';
+            window.location.href = '/success';
         }, 1500);
     };
 
@@ -96,7 +96,7 @@ function AssetDetailView({ user, onOpenAuth }) {
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
                 <div className="icon-file-x w-12 h-12 text-[var(--text-dim)] mb-4"></div>
                 <h1 className="text-xl font-mono font-bold mb-2">Asset Not Found</h1>
-                <a href="marketplace.html" className="btn btn-secondary">BACK TO MARKETPLACE</a>
+                <a href="/marketplace" className="btn btn-secondary">BACK TO MARKETPLACE</a>
             </div>
         );
     }
@@ -107,7 +107,7 @@ function AssetDetailView({ user, onOpenAuth }) {
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="mb-8">
-                <a href="marketplace.html" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] flex items-center gap-2 mb-4 uppercase">
+                <a href="/marketplace" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] flex items-center gap-2 mb-4 uppercase">
                     <div className="icon-arrow-left w-3 h-3"></div>
                     Back to Marketplace
                 </a>

@@ -16,8 +16,8 @@ function Footer() {
                     {/* Links and Copyright */}
                     <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-sm font-mono">
                         <div className="flex items-center gap-6 text-[var(--text-dim)]">
-                            <a href="marketplace.html" className="hover:text-[var(--text-interactive)] transition-colors font-bold text-[var(--text-main)]">Marketplace</a>
-                            <a href="contact.html" className="hover:text-[var(--text-interactive)] transition-colors">Contact</a>
+                            <a href="/marketplace" className="hover:text-[var(--text-interactive)] transition-colors font-bold text-[var(--text-main)]">Marketplace</a>
+                            <a href="/contact" className="hover:text-[var(--text-interactive)] transition-colors">Contact</a>
                             <a href="#" className="hover:text-[var(--text-interactive)] transition-colors">Terms</a>
                             <a href="#" className="hover:text-[var(--text-interactive)] transition-colors">Privacy</a>
                         </div>

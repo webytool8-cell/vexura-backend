@@ -141,7 +141,7 @@ function Hero() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mb-8">
-                    <a href="tool.html" className="btn h-14 px-8 text-base bg-black text-white hover:bg-black/80 hover:scale-105 border-transparent shadow-xl shadow-black/10 font-bold transform transition-all">
+                    <a href="/tool" className="btn h-14 px-8 text-base bg-black text-white hover:bg-black/80 hover:scale-105 border-transparent shadow-xl shadow-black/10 font-bold transform transition-all">
                         <div className="icon-wand w-5 h-5"></div>
                         START CREATING
                     </a>
@@ -153,7 +153,7 @@ function Hero() {
 
                 <div className="mb-24 flex items-center justify-center gap-2 text-sm font-medium text-black/70 animate-in fade-in slide-in-from-bottom-2 delay-300">
                     <span>Need instant assets?</span>
-                    <a href="marketplace.html" className="flex items-center gap-1 text-black font-bold hover:underline decoration-2 underline-offset-2">
+                    <a href="/marketplace" className="flex items-center gap-1 text-black font-bold hover:underline decoration-2 underline-offset-2">
                         Browse the Marketplace <div className="icon-arrow-right w-4 h-4"></div>
                     </a>
                 </div>

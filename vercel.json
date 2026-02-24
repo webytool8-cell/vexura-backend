@@ -3,6 +3,9 @@
     { "source": "/", "destination": "/site/index.html" },
     { "source": "/tool", "destination": "/site/tool.html" },
     { "source": "/marketplace", "destination": "/site/marketplace.html" },
-    { "source": "/profile", "destination": "/site/profile.html" }
+    { "source": "/profile", "destination": "/site/profile.html" },
+    { "source": "/contact", "destination": "/site/contact.html" },
+    { "source": "/asset", "destination": "/site/asset.html" },
+    { "source": "/success", "destination": "/site/success.html" }
   ]
 }
