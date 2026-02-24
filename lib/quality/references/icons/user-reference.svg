@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <title>User Icon Reference</title>
+  <circle cx="200" cy="150" r="50" fill="#000000"/>
+  <path d="M 120 300 Q 120 230 200 230 Q 280 230 280 300 Z" fill="#000000"/>
+</svg>
