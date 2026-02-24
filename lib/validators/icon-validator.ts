@@ -25,7 +25,7 @@ interface VectorData {
 /**
  * Main validation function
  */
-export function validateAndFixIcon(vectorData: any): ValidationResult {
+export function validateAndFixIcon(vectorData: any, _options?: { iconTypeHint?: "icon" | "illustration"; prompt?: string }): ValidationResult {
   const result: ValidationResult = {
     isValid: true,
     warnings: [],
