@@ -25,7 +25,7 @@ interface VectorData {
 /**
  * Main validation function
  */
-export function validateAndFixIcon(vectorData: any): ValidationResult {
+export function validateAndFixIcon(vectorData: any, options?: { iconTypeHint?: "icon" | "illustration"; prompt?: string }): ValidationResult {
   const result: ValidationResult = {
     isValid: true,
     warnings: [],
@@ -40,11 +40,13 @@ export function validateAndFixIcon(vectorData: any): ValidationResult {
   checkBasicStructure(fixed, result);
   checkElementCount(fixed, result);
   cleanAttributes(fixed, result);
-  checkAndFixBounds(fixed, result);
-  checkAndFixCentering(fixed, result);
-  enforceCanonicalHeartGeometry(fixed, result);
-  roundCoordinates(fixed, result);
-  normalizeColors(fixed, result);
+  const isIcon = options?.iconTypeHint !== "illustration";
+
+  checkAndFixBounds(fixed, result, isIcon);
+  checkAndFixCentering(fixed, result, isIcon);
+  enforceCanonicalHeartGeometry(fixed, result, options?.prompt || "", isIcon);
+  roundCoordinates(fixed, result, isIcon);
+  normalizeColors(fixed, result, isIcon);
   checkStrokeFillConsistency(fixed, result);
   validatePaths(fixed, result);
 
@@ -125,7 +127,7 @@ function cleanAttributes(data: VectorData & Record<string, any>, result: Validat
 /**
  * Check and fix bounds (elements outside viewBox)
  */
-function checkAndFixBounds(data: VectorData, result: ValidationResult) {
+function checkAndFixBounds(data: VectorData, result: ValidationResult, isIcon: boolean) {
   const CANVAS_SIZE = 400;
   const PADDING = 40;
   const MIN = PADDING;
@@ -154,9 +156,10 @@ function checkAndFixBounds(data: VectorData, result: ValidationResult) {
     }
   });
   
-  if (outsideCount > 0 || safeZoneViolations > 0) {
-    // Auto-scale to safe zone, not just viewBox
+  if (outsideCount > 0) {
     scaleToFit(data, result);
+  } else if (isIcon && safeZoneViolations > 1) {
+    result.warnings.push('Multiple safe-zone violations detected; keeping composition unchanged to preserve style');
   }
 }
 
@@ -363,7 +366,7 @@ function scalePathData(d: string, scale: number, tx: number, ty: number): string
 /**
  * Check and fix centering
  */
-function checkAndFixCentering(data: VectorData, result: ValidationResult) {
+function checkAndFixCentering(data: VectorData, result: ValidationResult, isIcon: boolean) {
   // Calculate visual center
   let minX = Infinity, maxX = -Infinity;
   let minY = Infinity, maxY = -Infinity;
@@ -385,8 +388,8 @@ function checkAndFixCentering(data: VectorData, result: ValidationResult) {
   const offsetX = Math.abs(centerX - idealCenter);
   const offsetY = Math.abs(centerY - idealCenter);
   
-  // If off-center by more than 20px, auto-translate and warn
-  if (offsetX > 20 || offsetY > 20) {
+  // For icons only: if off-center significantly, auto-translate and warn
+  if (isIcon && (offsetX > 30 || offsetY > 30)) {
     result.warnings.push(`Icon off-center: visual center at (${centerX.toFixed(0)}, ${centerY.toFixed(0)}), should be near (200, 200)`);
 
     const dx = idealCenter - centerX;
@@ -403,7 +406,11 @@ function checkAndFixCentering(data: VectorData, result: ValidationResult) {
 /**
  * Normalize classic heart geometry if icon looks like two circles + one polygon.
  */
-function enforceCanonicalHeartGeometry(data: VectorData, result: ValidationResult) {
+function enforceCanonicalHeartGeometry(data: VectorData, result: ValidationResult, prompt: string, isIcon: boolean) {
+  if (!isIcon || !/heart|love|favorite|like/i.test(prompt)) {
+    return;
+  }
+
   const circles = data.elements.filter(el => el.type === 'circle');
   const polygons = data.elements.filter(el => el.type === 'polygon');
 
@@ -435,7 +442,9 @@ function enforceCanonicalHeartGeometry(data: VectorData, result: ValidationResul
 /**
  * Round coordinates to nearest 10
  */
-function roundCoordinates(data: VectorData, result: ValidationResult) {
+function roundCoordinates(data: VectorData, result: ValidationResult, isIcon: boolean) {
+  if (!isIcon) return;
+
   let rounded = 0;
   
   data.elements.forEach(el => {
@@ -468,7 +477,9 @@ function roundCoordinates(data: VectorData, result: ValidationResult) {
 /**
  * Normalize icon colors to monochrome black/white defaults.
  */
-function normalizeColors(data: VectorData, result: ValidationResult) {
+function normalizeColors(data: VectorData, result: ValidationResult, isIcon: boolean) {
+  if (!isIcon) return;
+
   let normalized = 0;
 
   data.elements.forEach(el => {

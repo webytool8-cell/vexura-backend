@@ -13,16 +13,13 @@ export function correctGeometry(vector: any) {
   // Step 2: Enforce vertical axis alignment for symmetric icons
   elements = enforceAxisAlignment(elements);
   
-  // Step 3: Apply canonical geometry for known icon shapes (heart, etc.)
-  elements = enforceCanonicalShapes(elements);
-
-  // Step 4: Merge genuinely overlapping shapes with same fill
+  // Step 3: Merge genuinely overlapping shapes with same fill
   elements = resolveOverlaps(elements);
 
-  // Step 5: Normalize to fit within canvas with padding
+  // Step 4: Normalize to fit within canvas with padding
   elements = normalizeBounds(elements, 400, 400);
 
-  // Step 6: Final grid snap after scaling
+  // Step 5: Final grid snap after scaling
   elements = snapToGrid(elements, 1);
 
   return {
@@ -92,49 +89,6 @@ function enforceAxisAlignment(elements: Element[]) {
   });
 }
 
-
-function enforceCanonicalShapes(elements: Element[]) {
-  const circles = elements.filter((el) => el.type === "circle");
-  const polygons = elements.filter((el) => el.type === "polygon" && typeof el.points === "string");
-
-  if (circles.length === 2 && polygons.length === 1) {
-    const sortedCircles = [...circles].sort((a, b) => (a.cx || 0) - (b.cx || 0));
-    const polygon = polygons[0];
-    const points = parsePoints(polygon.points);
-
-    const likelyHeart = points.length >= 3 && points.some((p) => p.y > 260);
-    const asymmetric = Math.abs(((sortedCircles[0].cx || 0) + (sortedCircles[1].cx || 0)) - 400) > 10;
-
-    if (likelyHeart || asymmetric) {
-      sortedCircles[0].cx = 170;
-      sortedCircles[0].cy = 180;
-      sortedCircles[0].r = 60;
-      sortedCircles[1].cx = 230;
-      sortedCircles[1].cy = 180;
-      sortedCircles[1].r = 60;
-
-      polygon.points = "200,340 120,240 280,240";
-
-      sortedCircles.forEach((circle) => {
-        if (!circle.fill || circle.fill === "none") circle.fill = "#000000";
-      });
-      if (!polygon.fill || polygon.fill === "none") polygon.fill = "#000000";
-    }
-  }
-
-  return elements;
-}
-
-function parsePoints(points: string): { x: number; y: number }[] {
-  const values = points.trim().split(/[\s,]+/).map(Number).filter((n) => !Number.isNaN(n));
-  const out: { x: number; y: number }[] = [];
-
-  for (let i = 0; i < values.length - 1; i += 2) {
-    out.push({ x: values[i], y: values[i + 1] });
-  }
-
-  return out;
-}
 
 /* ---------------- OVERLAP RESOLUTION ---------------- */
 
