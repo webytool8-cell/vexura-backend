@@ -25,7 +25,10 @@ interface VectorData {
 /**
  * Main validation function
  */
-export function validateAndFixIcon(vectorData: any, _options?: { iconTypeHint?: "icon" | "illustration"; prompt?: string }): ValidationResult {
+export function validateAndFixIcon(
+  vectorData: any,
+  options?: { iconTypeHint?: "icon" | "illustration"; prompt?: string; enforceMonochrome?: boolean }
+): ValidationResult {
   const result: ValidationResult = {
     isValid: true,
     warnings: [],
@@ -44,7 +47,9 @@ export function validateAndFixIcon(vectorData: any, _options?: { iconTypeHint?: 
   checkAndFixCentering(fixed, result);
   enforceCanonicalHeartGeometry(fixed, result);
   roundCoordinates(fixed, result);
-  normalizeColors(fixed, result);
+  if (options?.enforceMonochrome) {
+    normalizeColors(fixed, result);
+  }
   checkStrokeFillConsistency(fixed, result);
   validatePaths(fixed, result);
 

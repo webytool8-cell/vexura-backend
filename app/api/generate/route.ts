@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     vector.elements = corrected.elements;
 
     // Validate + auto-fix to ensure runtime output respects quality constraints
-    const validation = validateAndFixIcon(vector);
+    const validation = validateAndFixIcon(vector, { enforceMonochrome: type === "icon" });
     const validatedVector = validation.fixed ?? vector;
     const validationScore = calculateQualityScore(validation);
 

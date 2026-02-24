@@ -17,7 +17,7 @@ export async function executeAutomationPipeline(prompt: string) {
     console.log('✅ Vector generated');
     
     // STEP 2: VALIDATE AND FIX (NEW!)
-    const validation = validateAndFixIcon(vectorData, { iconTypeHint: "icon", prompt });
+    const validation = validateAndFixIcon(vectorData, { iconTypeHint: "icon", prompt, enforceMonochrome: true });
     const score = calculateQualityScore(validation);
     
     console.log(`📊 Quality Score: ${score}/100`);
