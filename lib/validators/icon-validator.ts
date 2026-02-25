@@ -45,7 +45,7 @@ export function validateAndFixIcon(
   cleanAttributes(fixed, result);
   checkAndFixBounds(fixed, result);
   checkAndFixCentering(fixed, result);
-  enforceCanonicalHeartGeometry(fixed, result);
+  enforceCanonicalHeartGeometry(fixed, result, options?.prompt);
   roundCoordinates(fixed, result);
   if (options?.enforceMonochrome) {
     normalizeColors(fixed, result);
@@ -358,12 +358,102 @@ function scaleAndTranslateElement(el: Element, scale: number, tx: number, ty: nu
  * Scale path data (simplified)
  */
 function scalePathData(d: string, scale: number, tx: number, ty: number): string {
-  return d.replace(/(-?\d+\.?\d*)\s+(-?\d+\.?\d*)/g, (match, x, y) => {
-    const newX = parseFloat(x) * scale + tx;
-    const newY = parseFloat(y) * scale + ty;
-    return `${newX} ${newY}`;
-  });
+  return transformPathData(d, scale, tx, ty);
 }
+
+
+function transformPathData(d: string, scale: number, tx: number, ty: number): string {
+  const tokens = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e[-+]?\d+)?/g);
+  if (!tokens) return d;
+
+  const out: string[] = [];
+  let cmd = '';
+  let i = 0;
+
+  const format = (n: number) => Number(n.toFixed(3)).toString();
+
+  while (i < tokens.length) {
+    const token = tokens[i];
+
+    if (/^[a-zA-Z]$/.test(token)) {
+      cmd = token;
+      out.push(token);
+      i++;
+      continue;
+    }
+
+    if (!cmd) {
+      out.push(token);
+      i++;
+      continue;
+    }
+
+    const isRelative = cmd === cmd.toLowerCase();
+    const command = cmd.toUpperCase();
+
+    const applyXY = (x: number, y: number) => {
+      const scaledX = x * scale;
+      const scaledY = y * scale;
+      return {
+        x: isRelative ? scaledX : scaledX + tx,
+        y: isRelative ? scaledY : scaledY + ty
+      };
+    };
+
+    const readNum = () => parseFloat(tokens[i++]);
+
+    if (command === 'M' || command === 'L' || command === 'T') {
+      const { x, y } = applyXY(readNum(), readNum());
+      out.push(format(x), format(y));
+      continue;
+    }
+
+    if (command === 'H') {
+      const x = readNum() * scale;
+      out.push(format(isRelative ? x : x + tx));
+      continue;
+    }
+
+    if (command === 'V') {
+      const y = readNum() * scale;
+      out.push(format(isRelative ? y : y + ty));
+      continue;
+    }
+
+    if (command === 'C') {
+      for (let k = 0; k < 3; k++) {
+        const { x, y } = applyXY(readNum(), readNum());
+        out.push(format(x), format(y));
+      }
+      continue;
+    }
+
+    if (command === 'S' || command === 'Q') {
+      for (let k = 0; k < 2; k++) {
+        const { x, y } = applyXY(readNum(), readNum());
+        out.push(format(x), format(y));
+      }
+      continue;
+    }
+
+    if (command === 'A') {
+      const rx = readNum() * scale;
+      const ry = readNum() * scale;
+      const rotation = readNum();
+      const largeArc = readNum();
+      const sweep = readNum();
+      const { x, y } = applyXY(readNum(), readNum());
+      out.push(format(rx), format(ry), format(rotation), format(largeArc), format(sweep), format(x), format(y));
+      continue;
+    }
+
+    out.push(token);
+    i++;
+  }
+
+  return out.join(' ');
+}
+
 
 /**
  * Check and fix centering
@@ -408,7 +498,11 @@ function checkAndFixCentering(data: VectorData, result: ValidationResult) {
 /**
  * Normalize classic heart geometry if icon looks like two circles + one polygon.
  */
-function enforceCanonicalHeartGeometry(data: VectorData, result: ValidationResult) {
+function enforceCanonicalHeartGeometry(data: VectorData, result: ValidationResult, prompt?: string) {
+  if (!prompt || !/heart|love|favorite/i.test(prompt)) {
+    return;
+  }
+
   const circles = data.elements.filter(el => el.type === 'circle');
   const polygons = data.elements.filter(el => el.type === 'polygon');
 

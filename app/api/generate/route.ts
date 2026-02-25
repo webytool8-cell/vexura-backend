@@ -61,11 +61,11 @@ export async function POST(request: Request) {
     }
 
     // Apply geometry correction
-    const corrected = correctGeometry(vector);
+    const corrected = correctGeometry(vector, { prompt });
     vector.elements = corrected.elements;
 
     // Validate + auto-fix to ensure runtime output respects quality constraints
-    const validation = validateAndFixIcon(vector, { enforceMonochrome: type === "icon" });
+    const validation = validateAndFixIcon(vector, { iconTypeHint: type, prompt, enforceMonochrome: type === "icon" });
     const validatedVector = validation.fixed ?? vector;
     const validationScore = calculateQualityScore(validation);
 
