@@ -23,6 +23,7 @@ If you uploaded the `manual-upload-assets-50` placeholder vectors, use this scri
 
 1. Delete those slugs from marketplace via authenticated admin delete endpoint (when supported).
 2. Regenerate each prompt through `/api/automate/generate` (the real pipeline), which overwrites same slugs.
+   - Type is now inferred per prompt (`illustration` prompts generate illustrations; others generate icons).
 
 ### macOS/Linux (bash/zsh)
 

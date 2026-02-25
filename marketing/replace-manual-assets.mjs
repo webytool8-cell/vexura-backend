@@ -21,6 +21,12 @@ async function readJson(path) {
   return JSON.parse(raw);
 }
 
+function inferType(prompt) {
+  return /\b(illustration|scene|mascot|character|poster|hero|story)\b/i.test(String(prompt || ''))
+    ? 'illustration'
+    : 'icon';
+}
+
 async function deleteSlug(slug) {
   const url = `${DOMAIN}/api/marketplace/${encodeURIComponent(slug)}`;
   const res = await fetch(url, {
@@ -42,12 +48,12 @@ async function deleteSlug(slug) {
   return body;
 }
 
-async function generateOne(prompt, price) {
+async function generateOne(prompt, price, type) {
   const url = `${DOMAIN}/api/automate/generate`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, price })
+    body: JSON.stringify({ prompt, price, type })
   });
 
   const body = await res.json().catch(() => ({}));
@@ -60,6 +66,7 @@ async function generateOne(prompt, price) {
     price,
     slug: body.listing?.slug,
     id: body.listing?.id,
+    type,
     score: body.validation?.score,
     warnings: body.validation?.warnings || []
   };
@@ -99,10 +106,15 @@ async function main() {
   const batch = await readJson(BATCH_PATH);
 
   const slugs = (manifest.items || []).map((it) => String(it.file || '').replace(/\.json$/i, '').replace(/^\d+-/, ''));
-  const prompts = (batch.prompts || []).map((p) => ({
-    prompt: typeof p === 'string' ? p : p.prompt,
-    price: typeof p === 'string' ? 0 : (Number.isFinite(p.price) ? p.price : 0)
-  }));
+  const prompts = (batch.prompts || []).map((p) => {
+    const prompt = typeof p === 'string' ? p : p.prompt;
+    const explicitType = typeof p === 'string' ? undefined : p.type;
+    return {
+      prompt,
+      price: typeof p === 'string' ? 0 : (Number.isFinite(p.price) ? p.price : 0),
+      type: explicitType === 'icon' || explicitType === 'illustration' ? explicitType : inferType(prompt)
+    };
+  });
 
   if (slugs.length === 0) throw new Error('No slugs found in manifest.');
   if (prompts.length === 0) throw new Error('No prompts found in batch file.');
@@ -138,11 +150,11 @@ async function main() {
     const item = prompts[idx];
     const marker = `[${idx + 1}/${prompts.length}]`;
     try {
-      const result = await generateOne(item.prompt, item.price);
+      const result = await generateOne(item.prompt, item.price, item.type);
       generated.push(result);
-      console.log(`✅ ${marker} generated: ${result.slug} (score=${result.score ?? 'n/a'})`);
+      console.log(`✅ ${marker} generated: ${result.slug} [${item.type}] (score=${result.score ?? 'n/a'})`);
     } catch (e) {
-      failed.push({ prompt: item.prompt, price: item.price, error: e.message });
+      failed.push({ prompt: item.prompt, price: item.price, type: item.type, error: e.message });
       console.error(`❌ ${marker} ${e.message}`);
     }
     await wait(DELAY_MS);
