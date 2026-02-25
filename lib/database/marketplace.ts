@@ -1,4 +1,18 @@
-import { kv } from '@vercel/kv';
+import { createClient } from '@vercel/kv';
+
+
+const kvUrl = process.env.KV_REST_API_URL || process.env.db_KV_REST_API_URL;
+const kvToken = process.env.KV_REST_API_TOKEN || process.env.db_KV_REST_API_TOKEN;
+
+if (!kvUrl || !kvToken) {
+  console.warn('⚠️ KV credentials missing. Expected KV_REST_API_URL/KV_REST_API_TOKEN or db_KV_REST_API_URL/db_KV_REST_API_TOKEN');
+}
+
+const kv = createClient({
+  url: kvUrl || '',
+  token: kvToken || ''
+});
+
 
 export interface MarketplaceItem {
   id: string;

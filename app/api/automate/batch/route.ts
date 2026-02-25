@@ -14,10 +14,18 @@ export async function POST(request: Request) {
 
     const results = [];
     
-    for (const prompt of prompts) {
+    for (const promptItem of prompts) {
+      const prompt = typeof promptItem === 'string' ? promptItem : promptItem?.prompt;
+      const price = typeof promptItem === 'object' ? promptItem?.price : undefined;
+
+      if (!prompt || typeof prompt !== 'string') {
+        results.push({ success: false, prompt: String(prompt), error: 'Invalid prompt item' });
+        continue;
+      }
+
       try {
-        const result = await executeAutomationPipeline(prompt);
-        results.push({ success: true, prompt, ...result });
+        const result = await executeAutomationPipeline(prompt, { price });
+        results.push({ success: true, prompt, price: price ?? 0, ...result });
         
         // Rate limit delay
         await new Promise(resolve => setTimeout(resolve, delayMs));
