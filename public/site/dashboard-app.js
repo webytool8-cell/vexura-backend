@@ -24,6 +24,14 @@ function DashboardApp() {
   const isOwner = firebaseUser?.email?.toLowerCase() === OWNER_EMAIL;
 
   React.useEffect(() => {
+    if (authLoading) return;
+    if (!firebaseUser || !isOwner) {
+      const t = setTimeout(() => { window.location.href = '/'; }, 1200);
+      return () => clearTimeout(t);
+    }
+  }, [authLoading, firebaseUser, isOwner]);
+
+  React.useEffect(() => {
     if (typeof firebase === 'undefined' || !firebase.auth) {
       setAuthLoading(false);
       return;
@@ -61,10 +69,13 @@ function DashboardApp() {
   };
 
   const handleLogout = async () => {
+    setFirebaseUser(null);
     try {
       if (window.fireAuth?.signOut) await window.fireAuth.signOut();
     } catch (e) {
       console.error(e);
+    } finally {
+      window.location.href = '/';
     }
   };
 
@@ -163,12 +174,12 @@ function DashboardApp() {
           ) : !firebaseUser ? (
             <div className="panel p-8 text-center">
               <div className="text-sm font-mono text-[var(--text-main)] mb-2">Sign in required</div>
-              <div className="text-xs text-[var(--text-dim)]">Use your owner Google account to access dashboard upload tools.</div>
+              <div className="text-xs text-[var(--text-dim)]">Use your owner Google account to access dashboard upload tools. Redirecting...</div>
             </div>
           ) : !isOwner ? (
             <div className="panel p-8 border-red-500/40">
               <div className="text-red-400 font-mono text-sm mb-2">Access denied</div>
-              <div className="text-xs text-[var(--text-dim)]">Signed in as <span className="text-[var(--text-main)]">{firebaseUser.email}</span>. Only <span className="text-[var(--text-main)]">{OWNER_EMAIL}</span> can access this page.</div>
+              <div className="text-xs text-[var(--text-dim)]">Signed in as <span className="text-[var(--text-main)]">{firebaseUser.email}</span>. Only <span className="text-[var(--text-main)]">{OWNER_EMAIL}</span> can access this page. Redirecting...</div>
             </div>
           ) : (
             <>

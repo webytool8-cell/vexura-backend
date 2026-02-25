@@ -844,54 +844,43 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                      
                      {/* Top Action Bar */}
                      {result && !isProcessing && viewMode === 'create' && (
-                        <div className="mb-6 flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                            <div className="flex justify-end">
-                                <div className="inline-flex items-center h-9 border border-[var(--border-mid)] rounded-[4px] overflow-hidden bg-[var(--bg-panel)]">
-                                    <button className="px-4 h-full text-xs font-medium text-[var(--text-dim)]" disabled>View Mode</button>
-                                    <button
-                                        onClick={enterEditMode}
-                                        className="px-4 h-full text-xs font-semibold bg-[var(--accent)] text-black inline-flex items-center gap-2 transition-colors"
-                                        aria-label="Switch to edit mode"
-                                    >
-                                        <div className="icon-edit-3 w-3.5 h-3.5"></div>
-                                        Edit Mode
-                                    </button>
-                                </div>
-                            </div>
+                        <div className="mb-4 flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
 
-                            <div className="border border-[var(--border-dim)] rounded-[4px] bg-[var(--bg-panel)] p-4 space-y-3">
-                                <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-[0.5px]">Refinement</span>
+                            <div className="flex flex-col gap-3 sm:gap-2">
+                                <button 
+                                    onClick={enterEditMode}
+                                    className="btn btn-primary btn-primary-animate shadow-[0_0_15px_rgba(204,255,0,0.2)] text-black font-bold px-4 py-2 w-full justify-center"
+                                >
+                                    <div className="icon-edit-3 w-4 h-4"></div>
+                                    <span className="text-xs sm:text-sm">ENTER EDIT MODE</span>
+                                </button>
 
-                                <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border-dim)]">
+                                    <span className="text-[9px] font-mono text-[var(--text-dim)] uppercase mr-1">Refine:</span>
+
                                     {result.source !== 'upload' && (
-                                        <button
-                                            onClick={handleSmartRetry}
-                                            className="btn btn-secondary text-sm h-10 px-5 inline-flex items-center justify-center gap-2"
-                                            title="Regenerate with quality improvements"
+                                        <button 
+                                            onClick={handleSmartRetry} 
+                                            className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px] inline-flex items-center justify-center text-center"
                                         >
-                                            <div className="icon-target w-4 h-4"></div>
-                                            Smart Retry
+                                            SMART RETRY
                                         </button>
                                     )}
 
-                                    <button
-                                        onClick={() => handleGenerate(null, 'simpler')}
-                                        className="btn btn-secondary text-sm h-10 px-5 inline-flex items-center justify-center gap-2"
+                                    <button 
+                                        onClick={() => handleGenerate(null, 'simpler')} 
+                                        className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px] inline-flex items-center justify-center text-center"
                                         disabled={result.source === 'upload'}
-                                        title="Reduce complexity and element count"
                                     >
-                                        <div className="icon-arrow-left w-4 h-4"></div>
-                                        Simplify
+                                        SIMPLER
                                     </button>
 
-                                    <button
-                                        onClick={() => handleGenerate(null, 'detailed')}
-                                        className="btn btn-secondary text-sm h-10 px-5 inline-flex items-center justify-center gap-2"
+                                    <button 
+                                        onClick={() => handleGenerate(null, 'detailed')} 
+                                        className="btn btn-secondary text-[10px] sm:text-xs py-2 px-3 h-[32px] inline-flex items-center justify-center text-center"
                                         disabled={result.source === 'upload'}
-                                        title="Enhance with additional structure"
                                     >
-                                        Add Detail
-                                        <div className="icon-arrow-right w-4 h-4"></div>
+                                        DETAILED
                                     </button>
                                 </div>
                             </div>
@@ -955,29 +944,29 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
 
                 {/* Bottom Utility Bar */}
                 {result && !isProcessing && viewMode === 'create' && (
-                    <div className="border-t border-[var(--border-dim)] bg-[var(--bg-panel)] px-4 py-4 shrink-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="space-y-2">
-                                <h3 className="text-sm font-medium text-[var(--text-main)]">How&apos;s this result?</h3>
+                    <div className="border-t border-[var(--border-dim)] bg-[var(--bg-panel)] px-4 py-2 shrink-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
                                 {!feedbackSent && result.source !== 'upload' ? (
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <button onClick={() => handleFeedback('good')} className="h-9 px-3 border border-[var(--border-dim)] rounded-[4px] text-xs inline-flex items-center gap-2 hover:border-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors" title="Good result"><div className="icon-thumbs-up w-4 h-4"></div>Good</button>
-                                        <button onClick={() => handleFeedback('too_abstract')} className="h-9 px-3 border border-[var(--border-dim)] rounded-[4px] text-xs inline-flex items-center gap-2 hover:border-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors" title="Too simple"><div className="icon-minus-circle w-4 h-4"></div>Too Simple</button>
-                                        <button onClick={() => handleFeedback('wrong_style')} className="h-9 px-3 border border-[var(--border-dim)] rounded-[4px] text-xs inline-flex items-center gap-2 hover:border-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors" title="Wrong style"><div className="icon-brush w-4 h-4"></div>Wrong Style</button>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-mono text-[var(--text-dim)]">RATE_RESULT:</span>
+                                        <button onClick={() => handleFeedback('good')} className="p-1 hover:text-green-500 transition-colors" title="Good result"><div className="icon-thumbs-up w-4 h-4"></div></button>
+                                        <div className="w-px h-3 bg-[var(--border-dim)]"></div>
+                                        <button onClick={() => handleFeedback('too_abstract')} className="p-1 hover:text-red-400 transition-colors" title="Too Abstract"><div className="icon-help-circle w-4 h-4"></div></button>
+                                        <button onClick={() => handleFeedback('wrong_style')} className="p-1 hover:text-red-400 transition-colors" title="Wrong Style"><div className="icon-brush w-4 h-4"></div></button>
                                     </div>
                                 ) : (
-                                    <div className="text-xs text-green-500">{feedbackSent ? 'Thanks for your feedback!' : ''}</div>
+                                    <div className="text-[10px] text-green-500 font-mono">{feedbackSent ? 'FEEDBACK_LOGGED' : ''}</div>
                                 )}
-                                <p className="text-[11px] text-[var(--text-dim)]">Your feedback helps improve generation quality.</p>
                             </div>
 
                             <button 
                                 onClick={handleSave}
                                 disabled={saved}
-                                className={`h-9 px-4 inline-flex items-center justify-center gap-2 text-center text-xs border border-[var(--border-dim)] rounded-[4px] hover:border-[var(--text-main)] hover:text-[var(--text-main)] transition-colors self-end ${saved ? 'text-green-500 border-green-500/40' : 'text-[var(--text-dim)]'}`}
+                                className={`h-8 px-3 inline-flex items-center justify-center gap-1 text-center text-xs font-mono border border-[var(--border-dim)] rounded-[2px] hover:border-[var(--text-main)] hover:text-[var(--text-main)] transition-colors self-end ${saved ? 'text-green-500 border-green-500/40' : 'text-[var(--text-dim)]'}`}
                             >
-                                <div className={`icon-${saved ? 'check' : 'save'} w-3.5 h-3.5`}></div>
-                                {saved ? 'Saved' : (user ? 'Save' : 'Log in to save')}
+                                <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
+                                {saved ? 'SAVED' : (user ? 'SAVE TO PROFILE' : 'LOGIN_TO_SAVE')}
                             </button>
                         </div>
                     </div>
@@ -985,11 +974,8 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
 
                 {/* Session History */}
                 {history.length > 0 && (
-                    <div className="border-t border-[var(--border-dim)] bg-[var(--bg-panel)] px-4 py-3 shrink-0">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-[0.5px]">Session History</span>
-                        </div>
-                        <div className="flex items-start gap-3 overflow-x-auto custom-scrollbar pb-1">
+                    <div className="h-16 border-t border-[var(--border-dim)] bg-[var(--bg-panel)] flex items-center px-4 gap-2 overflow-x-auto shrink-0 custom-scrollbar">
+                        <span className="text-[10px] font-mono text-[var(--text-dim)] mr-2 shrink-0">HISTORY:</span>
                         {history.map((item, idx) => (
                             <HistoryThumb 
                                 key={item.id || idx} 
@@ -998,20 +984,14 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                                 onClick={() => setResult(item)}
                             />
                         ))}
-                        </div>
                     </div>
                 )}
                 
                 {/* Footer */}
-                <div className="border-t border-[var(--border-dim)] bg-[var(--bg-surface)] px-4 py-2 text-[11px] text-[var(--text-dim)] shrink-0">
-                    <div className="flex items-center gap-3 sm:gap-5 overflow-x-auto whitespace-nowrap custom-scrollbar">
-                        <span className="inline-flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${isProcessing ? 'bg-yellow-400' : viewMode === 'edit' ? 'bg-[var(--accent)]' : 'bg-green-500'}`}></span>
-                            {isProcessing ? 'Generating...' : (viewMode === 'edit' ? 'Editing' : 'Ready')}
-                        </span>
-                        {result && <span>{result.elements ? result.elements.length : 0} elements</span>}
-                        {result && <span>Generated just now</span>}
-                        <span className="font-mono">400×400px</span>
+                <div className="border-t border-[var(--border-dim)] bg-[var(--bg-surface)] px-4 py-2 text-[10px] font-mono text-[var(--text-dim)] shrink-0">
+                    <div className="flex items-center justify-between">
+                        <span>STATUS: {isProcessing ? 'BUSY' : (viewMode === 'edit' ? 'EDITING' : 'READY')}</span>
+                        {result && <span>NODES: {result.elements ? result.elements.length : 0}</span>}
                     </div>
                 </div>
             </div>

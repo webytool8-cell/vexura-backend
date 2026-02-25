@@ -29,35 +29,6 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
     const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));
     const handleResetZoom = () => setZoom(1);
 
-
-    React.useEffect(() => {
-        const onKeyDown = (e) => {
-            if (!data || loading) return;
-            const tag = document.activeElement?.tagName?.toLowerCase();
-            if (tag === 'input' || tag === 'textarea') return;
-
-            if (e.key === 'f' || e.key === 'F') {
-                e.preventDefault();
-                handleResetZoom();
-            }
-            if (e.key === 'g' || e.key === 'G') {
-                e.preventDefault();
-                setBgMode(prev => prev === 'default' ? 'transparent' : 'default');
-            }
-            if (e.key === '+' || e.key === '=') {
-                e.preventDefault();
-                handleZoomIn();
-            }
-            if (e.key === '-' || e.key === '_') {
-                e.preventDefault();
-                handleZoomOut();
-            }
-        };
-
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [data, loading]);
-
     // --- Helpers ---
     const getSvgPoint = (clientX, clientY) => {
         if (!svgRef.current) return { x: 0, y: 0 };
@@ -217,9 +188,6 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
                 case "svg":
                     if (window.ImageUtils.downloadSvg) window.ImageUtils.downloadSvg(svgRef.current, filename);
                     break;
-                case "pdf":
-                    if (window.ImageUtils.downloadSvg) window.ImageUtils.downloadSvg(svgRef.current, `${filename}-for-pdf`);
-                    break;
                 case "json":
                     if (window.ImageUtils.downloadJson) window.ImageUtils.downloadJson(data, filename);
                     break;
@@ -290,80 +258,72 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
 
             {/* Toolbar (Zoom & Export only) */}
             {data && !loading && (
-                <div className="flex flex-col gap-3 bg-[#1a1a1a] px-4 py-3 border-y border-[var(--border-dim)] rounded-[2px] sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 bg-[var(--bg-panel)] p-2 border border-[var(--border-dim)] rounded-[2px] sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4">
                         {/* Background Toggles */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase tracking-[0.5px] text-[var(--text-dim)]">View:</span>
-                            <div className="flex items-center border border-[var(--border-dim)] rounded-[4px] bg-[var(--bg-body)] h-8 p-1 gap-1">
+                        <div className="flex items-center border border-[var(--border-dim)] rounded-[2px] bg-[var(--bg-body)] h-8 p-1 gap-1">
                             <button 
                                 onClick={() => setBgMode('default')} 
-                                className={`px-2 h-full rounded-[2px] inline-flex items-center justify-center gap-1.5 transition-all ${bgMode === 'default' ? 'bg-[var(--bg-surface)] text-[var(--text-main)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}`} 
-                                title="Grid"
-                                aria-label="Toggle grid"
+                                className={`w-6 h-full rounded-[1px] flex items-center justify-center transition-all ${bgMode === 'default' ? 'bg-[var(--bg-surface)] text-[var(--text-main)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}`} 
+                                title="Default Theme"
                             >
                                 <div className="icon-layout-grid w-3 h-3"></div>
-                                <span className="text-[10px]">Grid</span>
                             </button>
                             <button 
                                 onClick={() => setBgMode('white')} 
-                                className={`w-8 h-full rounded-[2px] flex items-center justify-center transition-all ${bgMode === 'white' ? 'bg-[var(--border-dim)] ring-1 ring-[var(--text-main)]' : 'hover:bg-[var(--bg-surface)]'}`} 
-                                title="Fill"
-                                aria-label="Show fill"
+                                className={`w-6 h-full rounded-[1px] flex items-center justify-center transition-all ${bgMode === 'white' ? 'bg-[var(--border-dim)] ring-1 ring-[var(--text-main)]' : 'hover:bg-[var(--bg-surface)]'}`} 
+                                title="White Background"
                             >
-                                <div className="w-4 h-4 bg-white rounded-[1px] border border-gray-300"></div>
+                                <div className="w-3 h-3 bg-white rounded-[1px] border border-gray-300"></div>
                             </button>
                             <button 
                                 onClick={() => setBgMode('black')} 
-                                className={`w-8 h-full rounded-[2px] flex items-center justify-center transition-all ${bgMode === 'black' ? 'bg-[var(--border-dim)] ring-1 ring-[var(--text-main)]' : 'hover:bg-[var(--bg-surface)]'}`} 
-                                title="Stroke"
-                                aria-label="Show stroke"
+                                className={`w-6 h-full rounded-[1px] flex items-center justify-center transition-all ${bgMode === 'black' ? 'bg-[var(--border-dim)] ring-1 ring-[var(--text-main)]' : 'hover:bg-[var(--bg-surface)]'}`} 
+                                title="Black Background"
                             >
-                                <div className="w-4 h-4 bg-black rounded-[1px] border border-gray-600"></div>
+                                <div className="w-3 h-3 bg-black rounded-[1px] border border-gray-600"></div>
                             </button>
                             <button 
                                 onClick={() => setBgMode('transparent')} 
-                                className={`w-8 h-full rounded-[2px] flex items-center justify-center transition-all ${bgMode === 'transparent' ? 'bg-[var(--bg-surface)] text-[var(--text-main)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}`} 
-                                title="Transparent checker"
-                                aria-label="Toggle transparent background"
+                                className={`w-6 h-full rounded-[1px] flex items-center justify-center transition-all ${bgMode === 'transparent' ? 'bg-[var(--bg-surface)] text-[var(--text-main)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}`} 
+                                title="Transparent Checker"
                             >
                                 <div className="icon-grid w-3 h-3 opacity-50"></div>
                             </button>
-                            </div>
                         </div>
                         
                         <div className="w-px h-4 bg-[var(--border-dim)]"></div>
                         
-                        <div className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)] px-3 py-1 rounded-full bg-white/5">400×400</div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--text-muted)]">
+                            <span className="text-[var(--text-dim)]">SIZE:</span> 400px
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                          <div className="flex items-center border border-[var(--border-dim)] rounded-[2px] bg-[var(--bg-body)] h-8">
-                            <button onClick={handleZoomOut} className="h-full px-3 hover:bg-[var(--bg-surface)] inline-flex items-center justify-center text-center" aria-label="Zoom out"><div className="icon-minus text-xs leading-none"></div></button>
-                            <span className="text-xs font-mono px-2 border-x border-[var(--border-dim)] h-full flex items-center select-none">{Math.round(zoom * 100)}%</span>
-                            <button onClick={handleZoomIn} className="h-full px-3 hover:bg-[var(--bg-surface)] inline-flex items-center justify-center text-center" aria-label="Zoom in"><div className="icon-plus text-xs leading-none"></div></button>
-                            <button onClick={handleResetZoom} className="h-full px-3 hover:bg-[var(--bg-surface)] border-l border-[var(--border-dim)] inline-flex items-center justify-center text-center" title="Fit to screen (F)" aria-label="Fit to screen"><div className="icon-maximize text-xs leading-none"></div></button>
+                            <button onClick={handleZoomOut} className="h-full px-3 hover:bg-[var(--bg-surface)] inline-flex items-center justify-center text-center"><div className="icon-minus text-xs leading-none"></div></button>
+                            <span className="text-[10px] font-mono px-2 border-x border-[var(--border-dim)] h-full flex items-center select-none">{Math.round(zoom * 100)}%</span>
+                            <button onClick={handleZoomIn} className="h-full px-3 hover:bg-[var(--bg-surface)] inline-flex items-center justify-center text-center"><div className="icon-plus text-xs leading-none"></div></button>
+                            <button onClick={handleResetZoom} className="h-full px-3 hover:bg-[var(--bg-surface)] border-l border-[var(--border-dim)] inline-flex items-center justify-center text-center"><div className="icon-maximize text-xs leading-none"></div></button>
                         </div>
                         <div className="w-px h-4 bg-[var(--border-dim)]"></div>
                         <div className="relative">
                             <button
                                 onClick={() => setExportOpen(prev => !prev)}
-                                className="h-10 px-4 text-sm font-medium bg-[var(--accent)] text-black rounded-[4px] inline-flex items-center justify-center gap-2 text-center"
-                                aria-label="Export vector"
+                                className="btn btn-ghost py-1 px-3 text-xs h-8 inline-flex items-center justify-center gap-2 text-center"
                             >
-                                <div className="icon-upload w-4 h-4"></div>
-                                Export
+                                EXPORT
                                 <div className="icon-chevron-down w-3 h-3"></div>
                             </button>
 
                             {exportOpen && (
-                                <div className="absolute right-0 top-12 w-48 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] shadow-lg z-50">
-                                    {["png", "svg", "pdf", "json"].map((type) => (
+                                <div className="absolute right-0 top-10 w-40 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] shadow-lg z-50">
+                                    {["png", "jpeg", "svg", "json", "html"].map((type) => (
                                         <button
                                             key={type}
                                             onClick={() => handleExport(type)}
                                             className="w-full px-3 py-2 text-xs font-mono inline-flex items-center justify-center text-center hover:bg-[var(--bg-surface)] border-b border-[var(--border-dim)] last:border-none"
->
-                                            {type === 'png' ? 'PNG (2x)' : type.toUpperCase()}
+                                        >
+                                            {type.toUpperCase()}
                                         </button>
                                     ))}
                                 </div>
