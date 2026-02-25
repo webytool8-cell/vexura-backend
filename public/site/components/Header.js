@@ -71,28 +71,26 @@ function Header({ user, onOpenAuth, onLogout }) {
         </div>
 
         {/* Desktop Navigation (Centered) */}
-        <nav className="hidden md:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--bg-panel)] p-1 rounded-[4px] border border-[var(--border-dim)]">
+        <nav className="hidden md:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <a
             href="/tool"
-            className={`px-5 py-2 text-xs font-mono font-bold rounded-[2px] transition-all flex items-center gap-2 ${
+            className={`px-6 h-12 text-xs font-mono font-bold transition-all inline-flex items-center border-b-[3px] ${
               isTool
-                ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-sm'
-                : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                ? 'text-[var(--text-main)] border-[var(--accent)]'
+                : 'text-[var(--text-dim)] border-transparent hover:text-[var(--text-main)] hover:bg-white/5'
             }`}
           >
-            <div className={`w-1.5 h-1.5 rounded-full ${isTool ? 'bg-[var(--accent)]' : 'bg-transparent'}`}></div>
-            GENERATOR
+            Generator
           </a>
           <a
             href="/marketplace"
-            className={`px-5 py-2 text-xs font-mono font-bold rounded-[2px] transition-all flex items-center gap-2 ${
+            className={`px-6 h-12 text-xs font-mono font-bold transition-all inline-flex items-center border-b-[3px] ${
               currentPath.includes('marketplace')
-                ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-sm'
-                : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                ? 'text-[var(--text-main)] border-[var(--accent)]'
+                : 'text-[var(--text-dim)] border-transparent hover:text-[var(--text-main)] hover:bg-white/5'
             }`}
           >
-            <div className={`w-1.5 h-1.5 rounded-full ${currentPath.includes('marketplace') ? 'bg-[var(--accent)]' : 'bg-transparent'}`}></div>
-            MARKETPLACE
+            Marketplace
           </a>
         </nav>
 
