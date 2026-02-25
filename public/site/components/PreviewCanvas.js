@@ -10,7 +10,6 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
     const [bgMode, setBgMode] = React.useState('default'); // 'default', 'white', 'black', 'transparent'
     const [exportOpen, setExportOpen] = React.useState(false);
     const [loadingMsg, setLoadingMsg] = React.useState('INITIALIZING...');
-    const [copied, setCopied] = React.useState(false);
 
     // Interaction State
     const [interaction, setInteraction] = React.useState({ type: 'idle' }); // { type: 'idle' | 'drag-element' | 'box-select', ...data }
@@ -168,11 +167,41 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
     };
 
 
-    const handleCopyCode = () => {
-        if (!svgRef.current) return;
-        navigator.clipboard.writeText(new XMLSerializer().serializeToString(svgRef.current));
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleExport = async (type) => {
+        if (!isPro) {
+            onOpenUpgrade();
+            return;
+        }
+
+        if (!svgRef?.current) return;
+
+        const filename = data?.name || "vexura-export";
+
+        try {
+            switch (type) {
+                case "png":
+                    await window.ImageUtils.downloadSvgAsImage(svgRef.current, filename, "png", 2, "#ffffff");
+                    break;
+                case "jpeg":
+                    await window.ImageUtils.downloadSvgAsImage(svgRef.current, filename, "jpeg", 2, "#ffffff");
+                    break;
+                case "svg":
+                    if (window.ImageUtils.downloadSvg) window.ImageUtils.downloadSvg(svgRef.current, filename);
+                    break;
+                case "json":
+                    if (window.ImageUtils.downloadJson) window.ImageUtils.downloadJson(data, filename);
+                    break;
+                case "html":
+                    if (window.ImageUtils.downloadHtml) window.ImageUtils.downloadHtml(svgRef.current, filename);
+                    break;
+                default:
+                    break;
+            }
+        } catch (err) {
+            console.error('Export failed:', err);
+        }
+
+        setExportOpen(false);
     };
 
     // Check if data exists but is effectively empty (fallback state)
@@ -277,7 +306,29 @@ function PreviewCanvas({ data, loading, selectedIds = [], setSelectedIds, isPro,
                             <button onClick={handleResetZoom} className="h-full px-3 hover:bg-[var(--bg-surface)] border-l border-[var(--border-dim)] inline-flex items-center justify-center text-center"><div className="icon-maximize text-xs leading-none"></div></button>
                         </div>
                         <div className="w-px h-4 bg-[var(--border-dim)]"></div>
-                        <button onClick={handleCopyCode} className={`btn btn-ghost py-1 px-3 text-xs h-8 inline-flex items-center justify-center text-center ${copied ? 'text-green-500' : ''}`}>{copied ? 'COPIED' : 'COPY SVG'}</button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setExportOpen(prev => !prev)}
+                                className="btn btn-ghost py-1 px-3 text-xs h-8 inline-flex items-center justify-center gap-2 text-center"
+                            >
+                                EXPORT
+                                <div className="icon-chevron-down w-3 h-3"></div>
+                            </button>
+
+                            {exportOpen && (
+                                <div className="absolute right-0 top-10 w-40 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] shadow-lg z-50">
+                                    {["png", "jpeg", "svg", "json", "html"].map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => handleExport(type)}
+                                            className="w-full px-3 py-2 text-xs font-mono inline-flex items-center justify-center text-center hover:bg-[var(--bg-surface)] border-b border-[var(--border-dim)] last:border-none"
+                                        >
+                                            {type.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
