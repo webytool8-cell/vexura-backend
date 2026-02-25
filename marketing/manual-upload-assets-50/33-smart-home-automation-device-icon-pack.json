@@ -1,0 +1,72 @@
+{
+  "name": "smart home automation device icon pack",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "id": "base-rect",
+      "type": "rect",
+      "x": 40,
+      "y": 40,
+      "width": 320,
+      "height": 320,
+      "rx": 32,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 4
+    },
+    {
+      "id": "geo-circle-0",
+      "type": "circle",
+      "cx": 163,
+      "cy": 160,
+      "r": 28.666666666666668,
+      "fill": "#ccff00",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-1",
+      "type": "rect",
+      "x": 144,
+      "y": 61,
+      "width": 94,
+      "height": 94,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-2",
+      "type": "circle",
+      "cx": 299,
+      "cy": 296,
+      "r": 20.666666666666668,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-3",
+      "type": "rect",
+      "x": 242,
+      "y": 199,
+      "width": 90,
+      "height": 90,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "center-accent",
+      "type": "circle",
+      "cx": 200,
+      "cy": 200,
+      "r": 10,
+      "fill": "#ccff00",
+      "stroke": "none"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "name": "music streaming playlist controls icon p...",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "id": "base-rect",
+      "type": "rect",
+      "x": 40,
+      "y": 40,
+      "width": 320,
+      "height": 320,
+      "rx": 32,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 4
+    },
+    {
+      "id": "geo-circle-0",
+      "type": "circle",
+      "cx": 155,
+      "cy": 232,
+      "r": 46,
+      "fill": "#ccff00",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-1",
+      "type": "rect",
+      "x": 110,
+      "y": 67,
+      "width": 66,
+      "height": 66,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-2",
+      "type": "circle",
+      "cx": 171,
+      "cy": 168,
+      "r": 38,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-3",
+      "type": "rect",
+      "x": 228,
+      "y": 185,
+      "width": 102,
+      "height": 102,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "center-accent",
+      "type": "circle",
+      "cx": 200,
+      "cy": 200,
+      "r": 10,
+      "fill": "#ccff00",
+      "stroke": "none"
+    }
+  ]
+}

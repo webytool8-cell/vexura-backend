@@ -1,0 +1,94 @@
+{
+  "name": "weather forecast app ui icon set",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "id": "base-rect",
+      "type": "rect",
+      "x": 40,
+      "y": 40,
+      "width": 320,
+      "height": 320,
+      "rx": 32,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 4
+    },
+    {
+      "id": "geo-circle-0",
+      "type": "circle",
+      "cx": 141,
+      "cy": 178,
+      "r": 21.333333333333332,
+      "fill": "#ccff00",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-1",
+      "type": "rect",
+      "x": 113,
+      "y": 110,
+      "width": 112,
+      "height": 112,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-2",
+      "type": "circle",
+      "cx": 197,
+      "cy": 234,
+      "r": 26.666666666666668,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-3",
+      "type": "rect",
+      "x": 131,
+      "y": 48,
+      "width": 108,
+      "height": 108,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-4",
+      "type": "circle",
+      "cx": 133,
+      "cy": 250,
+      "r": 32,
+      "fill": "#71717a",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-5",
+      "type": "rect",
+      "x": 139,
+      "y": 216,
+      "width": 124,
+      "height": 124,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "center-accent",
+      "type": "circle",
+      "cx": 200,
+      "cy": 200,
+      "r": 10,
+      "fill": "#ccff00",
+      "stroke": "none"
+    }
+  ]
+}

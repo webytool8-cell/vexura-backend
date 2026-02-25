@@ -13,6 +13,12 @@ type GenerateRequest = {
   intent?: string;
 };
 
+function shouldEnforceMonochrome(type: "icon" | "illustration", prompt: string): boolean {
+  if (type !== "icon") return false;
+  return /\b(monochrome|monotone|black\s*(and|&)\s*white|grayscale|single\s*color)\b/i.test(prompt);
+}
+
+
 export async function POST(request: Request) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -61,11 +67,11 @@ export async function POST(request: Request) {
     }
 
     // Apply geometry correction
-    const corrected = correctGeometry(vector);
+    const corrected = correctGeometry(vector, { prompt });
     vector.elements = corrected.elements;
 
     // Validate + auto-fix to ensure runtime output respects quality constraints
-    const validation = validateAndFixIcon(vector);
+    const validation = validateAndFixIcon(vector, { iconTypeHint: type, prompt, enforceMonochrome: shouldEnforceMonochrome(type, prompt) });
     const validatedVector = validation.fixed ?? vector;
     const validationScore = calculateQualityScore(validation);
 
