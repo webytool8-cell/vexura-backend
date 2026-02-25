@@ -1,0 +1,307 @@
+{
+  "total": 50,
+  "generatedBy": "marketing/export-local-assets.mjs",
+  "sourceBatch": "marketing/pinterest-batch.json",
+  "items": [
+    {
+      "index": 1,
+      "file": "01-minimal-fintech-dashboard-analytics-icon-set.json",
+      "prompt": "minimal fintech dashboard analytics icon set",
+      "suggestedPrice": 4.99
+    },
+    {
+      "index": 2,
+      "file": "02-modern-ecommerce-checkout-security-badges-icon-pack.json",
+      "prompt": "modern ecommerce checkout security badges icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 3,
+      "file": "03-clean-ai-chatbot-conversation-ui-icon-collection.json",
+      "prompt": "clean ai chatbot conversation ui icon collection",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 4,
+      "file": "04-startup-saas-onboarding-flow-illustration-icon-style.json",
+      "prompt": "startup saas onboarding flow illustration icon style",
+      "suggestedPrice": 10.99
+    },
+    {
+      "index": 5,
+      "file": "05-remote-work-productivity-app-icon-bundle.json",
+      "prompt": "remote work productivity app icon bundle",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 6,
+      "file": "06-social-media-content-planner-icon-kit.json",
+      "prompt": "social media content planner icon kit",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 7,
+      "file": "07-email-marketing-automation-icon-family.json",
+      "prompt": "email marketing automation icon family",
+      "suggestedPrice": 6.99
+    },
+    {
+      "index": 8,
+      "file": "08-cloud-storage-sync-devices-flat-icon-pack.json",
+      "prompt": "cloud storage sync devices flat icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 9,
+      "file": "09-cybersecurity-shield-lock-data-privacy-icon-set.json",
+      "prompt": "cybersecurity shield lock data privacy icon set",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 10,
+      "file": "10-health-wellness-habit-tracker-app-icon-suite.json",
+      "prompt": "health wellness habit tracker app icon suite",
+      "suggestedPrice": 12.99
+    },
+    {
+      "index": 11,
+      "file": "11-fitness-workout-planner-mobile-icon-collection.json",
+      "prompt": "fitness workout planner mobile icon collection",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 12,
+      "file": "12-travel-booking-app-navigation-icon-pack.json",
+      "prompt": "travel booking app navigation icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 13,
+      "file": "13-food-delivery-tracking-status-icon-set.json",
+      "prompt": "food delivery tracking status icon set",
+      "suggestedPrice": 8.99
+    },
+    {
+      "index": 14,
+      "file": "14-real-estate-property-listing-ui-icon-family.json",
+      "prompt": "real estate property listing ui icon family",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 15,
+      "file": "15-finance-budget-planner-pie-chart-icon-kit.json",
+      "prompt": "finance budget planner pie chart icon kit",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 16,
+      "file": "16-crypto-wallet-transaction-icon-set.json",
+      "prompt": "crypto wallet transaction icon set",
+      "suggestedPrice": 4.99
+    },
+    {
+      "index": 17,
+      "file": "17-banking-mobile-transfer-confirmation-icon-pack.json",
+      "prompt": "banking mobile transfer confirmation icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 18,
+      "file": "18-education-online-course-platform-icon-family.json",
+      "prompt": "education online course platform icon family",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 19,
+      "file": "19-language-learning-streak-rewards-icon-set.json",
+      "prompt": "language learning streak rewards icon set",
+      "suggestedPrice": 10.99
+    },
+    {
+      "index": 20,
+      "file": "20-music-streaming-playlist-controls-icon-pack.json",
+      "prompt": "music streaming playlist controls icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 21,
+      "file": "21-video-editing-timeline-tools-icon-suite.json",
+      "prompt": "video editing timeline tools icon suite",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 22,
+      "file": "22-podcast-studio-recording-icon-collection.json",
+      "prompt": "podcast studio recording icon collection",
+      "suggestedPrice": 6.99
+    },
+    {
+      "index": 23,
+      "file": "23-customer-support-live-chat-icon-family.json",
+      "prompt": "customer support live chat icon family",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 24,
+      "file": "24-team-collaboration-kanban-board-icon-set.json",
+      "prompt": "team collaboration kanban board icon set",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 25,
+      "file": "25-calendar-scheduling-appointment-icon-pack.json",
+      "prompt": "calendar scheduling appointment icon pack",
+      "suggestedPrice": 12.99
+    },
+    {
+      "index": 26,
+      "file": "26-notion-style-productivity-workspace-icon-kit.json",
+      "prompt": "notion style productivity workspace icon kit",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 27,
+      "file": "27-design-system-component-library-icon-family.json",
+      "prompt": "design system component library icon family",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 28,
+      "file": "28-developer-api-integration-icon-pack.json",
+      "prompt": "developer api integration icon pack",
+      "suggestedPrice": 8.99
+    },
+    {
+      "index": 29,
+      "file": "29-database-backup-restore-icon-set.json",
+      "prompt": "database backup restore icon set",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 30,
+      "file": "30-server-monitoring-alert-dashboard-icon-suite.json",
+      "prompt": "server monitoring alert dashboard icon suite",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 31,
+      "file": "31-logistics-shipping-package-tracking-icon-family.json",
+      "prompt": "logistics shipping package tracking icon family",
+      "suggestedPrice": 4.99
+    },
+    {
+      "index": 32,
+      "file": "32-supply-chain-warehouse-management-icon-set.json",
+      "prompt": "supply chain warehouse management icon set",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 33,
+      "file": "33-smart-home-automation-device-icon-pack.json",
+      "prompt": "smart home automation device icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 34,
+      "file": "34-electric-vehicle-charging-station-icon-set.json",
+      "prompt": "electric vehicle charging station icon set",
+      "suggestedPrice": 10.99
+    },
+    {
+      "index": 35,
+      "file": "35-green-energy-sustainability-icon-family.json",
+      "prompt": "green energy sustainability icon family",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 36,
+      "file": "36-weather-forecast-app-ui-icon-set.json",
+      "prompt": "weather forecast app ui icon set",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 37,
+      "file": "37-insurance-claim-process-icon-pack.json",
+      "prompt": "insurance claim process icon pack",
+      "suggestedPrice": 6.99
+    },
+    {
+      "index": 38,
+      "file": "38-legal-contract-e-signature-icon-collection.json",
+      "prompt": "legal contract e-signature icon collection",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 39,
+      "file": "39-medical-telehealth-consultation-icon-suite.json",
+      "prompt": "medical telehealth consultation icon suite",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 40,
+      "file": "40-pharmacy-medication-reminder-icon-set.json",
+      "prompt": "pharmacy medication reminder icon set",
+      "suggestedPrice": 12.99
+    },
+    {
+      "index": 41,
+      "file": "41-event-ticket-booking-icon-family.json",
+      "prompt": "event ticket booking icon family",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 42,
+      "file": "42-wedding-planning-checklist-icon-pack.json",
+      "prompt": "wedding planning checklist icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 43,
+      "file": "43-small-business-invoicing-icon-set.json",
+      "prompt": "small business invoicing icon set",
+      "suggestedPrice": 8.99
+    },
+    {
+      "index": 44,
+      "file": "44-freelancer-portfolio-service-icon-collection.json",
+      "prompt": "freelancer portfolio service icon collection",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 45,
+      "file": "45-restaurant-menu-ordering-icon-pack.json",
+      "prompt": "restaurant menu ordering icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 46,
+      "file": "46-beauty-salon-appointment-icon-set.json",
+      "prompt": "beauty salon appointment icon set",
+      "suggestedPrice": 4.99
+    },
+    {
+      "index": 47,
+      "file": "47-pet-care-veterinary-app-icon-family.json",
+      "prompt": "pet care veterinary app icon family",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 48,
+      "file": "48-gaming-leaderboard-achievement-icon-pack.json",
+      "prompt": "gaming leaderboard achievement icon pack",
+      "suggestedPrice": 0
+    },
+    {
+      "index": 49,
+      "file": "49-kids-learning-activity-icon-set.json",
+      "prompt": "kids learning activity icon set",
+      "suggestedPrice": 10.99
+    },
+    {
+      "index": 50,
+      "file": "50-mindfulness-meditation-breathing-icon-suite.json",
+      "prompt": "mindfulness meditation breathing icon suite",
+      "suggestedPrice": 0
+    }
+  ]
+}
