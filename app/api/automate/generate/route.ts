@@ -4,7 +4,7 @@ import { executeAutomationPipeline } from '@/lib/automation/pipeline';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { prompt } = body;
+    const { prompt, price } = body;
     
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await executeAutomationPipeline(prompt);
+    const result = await executeAutomationPipeline(prompt, { price });
     
     return NextResponse.json(result);
     
