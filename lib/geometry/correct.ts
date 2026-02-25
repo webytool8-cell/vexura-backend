@@ -2,7 +2,7 @@
 
 type Element = any;
 
-export function correctGeometry(vector: any) {
+export function correctGeometry(vector: any, options?: { prompt?: string }) {
   if (!vector?.elements?.length) return vector;
 
   let elements = [...vector.elements];
@@ -14,7 +14,7 @@ export function correctGeometry(vector: any) {
   elements = enforceAxisAlignment(elements);
   
   // Step 3: Apply canonical geometry for known icon shapes (heart, etc.)
-  elements = enforceCanonicalShapes(elements);
+  elements = enforceCanonicalShapes(elements, options?.prompt);
 
   // Step 4: Merge genuinely overlapping shapes with same fill
   elements = resolveOverlaps(elements);
@@ -93,7 +93,8 @@ function enforceAxisAlignment(elements: Element[]) {
 }
 
 
-function enforceCanonicalShapes(elements: Element[]) {
+function enforceCanonicalShapes(elements: Element[], prompt?: string) {
+  if (!prompt || !/heart|love|favorite/i.test(prompt)) return elements;
   const circles = elements.filter((el) => el.type === "circle");
   const polygons = elements.filter((el) => el.type === "polygon" && typeof el.points === "string");
 
@@ -280,11 +281,7 @@ function translateElement(el: Element, dx: number, dy: number) {
 }
 
 function translatePathData(d: string, dx: number, dy: number): string {
-  // Simple translation for absolute coordinates
-  // This is a simplified version - production would need proper SVG path parsing
-  return d.replace(/([ML])\s*(-?\d+\.?\d*)\s+(-?\d+\.?\d*)/g, (match, cmd, x, y) => {
-    return `${cmd} ${parseFloat(x) + dx} ${parseFloat(y) + dy}`;
-  });
+  return transformPathData(d, 1, dx, dy);
 }
 
 function translatePointsString(points: string, dx: number, dy: number): string {
@@ -327,9 +324,7 @@ function scaleElement(el: Element, scale: number) {
 }
 
 function scalePathData(d: string, scale: number): string {
-  return d.replace(/-?\d+\.?\d*/g, (match) => {
-    return String(parseFloat(match) * scale);
-  });
+  return transformPathData(d, scale, 0, 0);
 }
 
 function scalePointsString(points: string, scale: number): string {
@@ -337,6 +332,99 @@ function scalePointsString(points: string, scale: number): string {
     return String(parseFloat(match) * scale);
   });
 }
+
+
+function transformPathData(d: string, scale: number, tx: number, ty: number): string {
+  const tokens = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e[-+]?\d+)?/g);
+  if (!tokens) return d;
+
+  const out: string[] = [];
+  let cmd = '';
+  let i = 0;
+
+  const format = (n: number) => Number(n.toFixed(3)).toString();
+
+  while (i < tokens.length) {
+    const token = tokens[i];
+
+    if (/^[a-zA-Z]$/.test(token)) {
+      cmd = token;
+      out.push(token);
+      i++;
+      continue;
+    }
+
+    if (!cmd) {
+      out.push(token);
+      i++;
+      continue;
+    }
+
+    const isRelative = cmd === cmd.toLowerCase();
+    const command = cmd.toUpperCase();
+    const read = () => parseFloat(tokens[i++]);
+
+    const applyXY = (x: number, y: number) => {
+      const sx = x * scale;
+      const sy = y * scale;
+      return {
+        x: isRelative ? sx : sx + tx,
+        y: isRelative ? sy : sy + ty,
+      };
+    };
+
+    if (command === 'M' || command === 'L' || command === 'T') {
+      const { x, y } = applyXY(read(), read());
+      out.push(format(x), format(y));
+      continue;
+    }
+
+    if (command === 'H') {
+      const x = read() * scale;
+      out.push(format(isRelative ? x : x + tx));
+      continue;
+    }
+
+    if (command === 'V') {
+      const y = read() * scale;
+      out.push(format(isRelative ? y : y + ty));
+      continue;
+    }
+
+    if (command === 'C') {
+      for (let k = 0; k < 3; k++) {
+        const { x, y } = applyXY(read(), read());
+        out.push(format(x), format(y));
+      }
+      continue;
+    }
+
+    if (command === 'S' || command === 'Q') {
+      for (let k = 0; k < 2; k++) {
+        const { x, y } = applyXY(read(), read());
+        out.push(format(x), format(y));
+      }
+      continue;
+    }
+
+    if (command === 'A') {
+      const rx = read() * scale;
+      const ry = read() * scale;
+      const rotation = read();
+      const largeArc = read();
+      const sweep = read();
+      const { x, y } = applyXY(read(), read());
+      out.push(format(rx), format(ry), format(rotation), format(largeArc), format(sweep), format(x), format(y));
+      continue;
+    }
+
+    out.push(token);
+    i++;
+  }
+
+  return out.join(' ');
+}
+
 
 function getBounds(el: Element) {
   // Handle specific element types

@@ -946,21 +946,39 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                                  <div className="text-center text-[10px] text-green-500 font-mono py-2">FEEDBACK_LOGGED</div>
                              )}
 
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                
-                                {/* LEFT SIDE */}
-                                <div className="flex items-center gap-2 w-full sm:w-auto">
-                                    <button 
-                                        onClick={enterEditMode}
-                                        className="btn btn-primary btn-primary-animate shadow-[0_0_15px_rgba(204,255,0,0.2)] text-black font-bold px-4 py-2 w-full sm:w-auto justify-center"
-                                    >
-                                        <div className="icon-edit-3 w-4 h-4"></div>
-                                        <span className="text-xs sm:text-sm">ENTER EDIT MODE</span>
-                                    </button>
+                            <div className="flex flex-col gap-3 sm:gap-2">
+                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 w-full lg:w-auto">
+                                        <button 
+                                            onClick={enterEditMode}
+                                            className="btn btn-primary btn-primary-animate shadow-[0_0_15px_rgba(204,255,0,0.2)] text-black font-bold px-4 py-2 w-full sm:w-auto justify-center"
+                                        >
+                                            <div className="icon-edit-3 w-4 h-4"></div>
+                                            <span className="text-xs sm:text-sm">ENTER EDIT MODE</span>
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 w-full lg:w-auto justify-between sm:justify-end">
+                                        <button 
+                                            onClick={handleSave}
+                                            disabled={saved}
+                                            className={`h-8 px-2 inline-flex items-center justify-center gap-1 text-center text-xs hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
+                                        >
+                                            <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
+                                            {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}
+                                        </button>
+
+                                        <ExportDropdown
+                                            svgRef={previewSvgRef}
+                                            result={result}
+                                            isPro={user?.plan === "pro" || window.__DEV_PRO__}
+                                            onOpenUpgrade={onOpenUpgrade}
+                                        />
+                                    </div>
                                 </div>
 
-                                {/* RIGHT SIDE */}
-                                <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+                                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border-dim)]">
+                                    <span className="text-[9px] font-mono text-[var(--text-dim)] uppercase mr-1">Refine:</span>
 
                                     {result.source !== 'upload' && (
                                         <button 
@@ -986,25 +1004,6 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                                     >
                                         DETAILED
                                     </button>
-
-                                    {/* SAVE BUTTON */}
-                                    <button 
-                                        onClick={handleSave}
-                                        disabled={saved}
-                                        className={`h-8 px-2 inline-flex items-center justify-center gap-1 text-center text-xs hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
-                                    >
-                                        <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
-                                        {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}
-                                    </button>
-
-                                    {/* EXPORT DROPDOWN */}
-                                    <ExportDropdown
-                                        svgRef={previewSvgRef}
-                                        result={result}
-                                        isPro={user?.plan === "pro" || window.__DEV_PRO__}
-                                        onOpenUpgrade={onOpenUpgrade}
-                                    />
-
                                 </div>
                             </div>
                         </div>
