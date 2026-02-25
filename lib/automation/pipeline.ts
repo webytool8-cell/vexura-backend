@@ -8,6 +8,10 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || ''
 });
 
+function shouldEnforceMonochrome(prompt: string): boolean {
+  return /\b(monochrome|monotone|black\s*(and|&)\s*white|grayscale|single\s*color)\b/i.test(prompt);
+}
+
 export async function executeAutomationPipeline(prompt: string) {
   console.log('🚀 Starting pipeline for:', prompt);
 
@@ -17,7 +21,7 @@ export async function executeAutomationPipeline(prompt: string) {
     console.log('✅ Vector generated');
     
     // STEP 2: VALIDATE AND FIX (NEW!)
-    const validation = validateAndFixIcon(vectorData, { iconTypeHint: "icon", prompt });
+    const validation = validateAndFixIcon(vectorData, { iconTypeHint: "icon", prompt, enforceMonochrome: shouldEnforceMonochrome(prompt) });
     const score = calculateQualityScore(validation);
     
     console.log(`📊 Quality Score: ${score}/100`);
