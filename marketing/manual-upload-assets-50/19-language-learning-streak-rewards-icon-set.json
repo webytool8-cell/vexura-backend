@@ -1,0 +1,94 @@
+{
+  "name": "language learning streak rewards icon se...",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "id": "base-rect",
+      "type": "rect",
+      "x": 40,
+      "y": 40,
+      "width": 320,
+      "height": 320,
+      "rx": 32,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 4
+    },
+    {
+      "id": "geo-circle-0",
+      "type": "circle",
+      "cx": 165,
+      "cy": 162,
+      "r": 22.666666666666668,
+      "fill": "#ccff00",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-1",
+      "type": "rect",
+      "x": 185,
+      "y": 222,
+      "width": 96,
+      "height": 96,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-2",
+      "type": "circle",
+      "cx": 101,
+      "cy": 138,
+      "r": 34.666666666666664,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-3",
+      "type": "rect",
+      "x": 143,
+      "y": 220,
+      "width": 132,
+      "height": 132,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-4",
+      "type": "circle",
+      "cx": 237,
+      "cy": 154,
+      "r": 46.666666666666664,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-5",
+      "type": "rect",
+      "x": 51,
+      "y": 208,
+      "width": 108,
+      "height": 108,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "center-accent",
+      "type": "circle",
+      "cx": 200,
+      "cy": 200,
+      "r": 10,
+      "fill": "#ccff00",
+      "stroke": "none"
+    }
+  ]
+}

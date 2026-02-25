@@ -1,0 +1,62 @@
+{
+  "name": "legal contract e-signature icon collecti...",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "id": "base-rect",
+      "type": "rect",
+      "x": 40,
+      "y": 40,
+      "width": 320,
+      "height": 320,
+      "rx": 32,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 4
+    },
+    {
+      "id": "nature-el-0",
+      "type": "circle",
+      "cx": 278,
+      "cy": 215,
+      "r": 30.5,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2,
+      "opacity": 0.6
+    },
+    {
+      "id": "geo-rect-1",
+      "type": "rect",
+      "x": 151.5,
+      "y": 208.5,
+      "width": 69,
+      "height": 69,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "nature-el-2",
+      "type": "circle",
+      "cx": 174,
+      "cy": 191,
+      "r": 38.5,
+      "fill": "#ccff00",
+      "stroke": "#000000",
+      "strokeWidth": 2,
+      "opacity": 0.6
+    },
+    {
+      "id": "center-accent",
+      "type": "circle",
+      "cx": 200,
+      "cy": 200,
+      "r": 10,
+      "fill": "#ccff00",
+      "stroke": "none"
+    }
+  ]
+}
