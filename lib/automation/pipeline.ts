@@ -12,7 +12,7 @@ function shouldEnforceMonochrome(prompt: string): boolean {
   return /\b(monochrome|monotone|black\s*(and|&)\s*white|grayscale|single\s*color)\b/i.test(prompt);
 }
 
-export async function executeAutomationPipeline(prompt: string) {
+export async function executeAutomationPipeline(prompt: string, options?: { price?: number }) {
   console.log('🚀 Starting pipeline for:', prompt);
 
   try {
@@ -40,6 +40,14 @@ export async function executeAutomationPipeline(prompt: string) {
     
     // STEP 3: Enrich Metadata
     const enriched = enrichMetadata(fixedVector, prompt);
+
+    if (typeof options?.price === 'number' && Number.isFinite(options.price) && options.price >= 0) {
+      enriched.marketplace.price = options.price;
+      enriched.seo.structuredData.offers.price = options.price.toFixed(2);
+      enriched.pinterest.richPin.product.price = options.price;
+      const isFree = options.price === 0;
+      enriched.pinterest.title = `${fixedVector.name} | ${isFree ? 'Free' : 'Premium'} Vector Icon`;
+    }
     console.log('✅ Metadata enriched');
     
     // Add validation metadata
