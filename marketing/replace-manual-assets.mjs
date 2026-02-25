@@ -5,6 +5,8 @@ const DOMAIN = process.env.VEXURA_DOMAIN || 'https://www.vexura.io';
 const ADMIN_TOKEN = process.env.MARKETPLACE_ADMIN_TOKEN || '';
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
+const SKIP_DELETE = args.includes('--skip-delete');
+const ALLOW_405_FALLBACK = !args.includes('--strict-delete');
 const positional = args.filter((a) => !a.startsWith('--'));
 const BATCH_PATH = positional[0] || 'marketing/pinterest-batch.json';
 const MANIFEST_PATH = positional[1] || 'marketing/manual-upload-assets-50/manifest.json';
@@ -27,10 +29,14 @@ async function deleteSlug(slug) {
       'x-admin-token': ADMIN_TOKEN
     }
   });
+
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(`Delete failed (${res.status}) for ${slug}: ${body.error || JSON.stringify(body)}`);
+    const details = body?.error || JSON.stringify(body);
+    const error = new Error(`Delete failed (${res.status}) for ${slug}: ${details}`);
+    error.status = res.status;
+    throw error;
   }
 
   return body;
@@ -72,6 +78,12 @@ async function deleteAll(slugs) {
         console.log(`🗑️  deleted: ${slug}`);
         results.push({ slug, success: true, result });
       } catch (e) {
+        if (ALLOW_405_FALLBACK && e?.status === 405) {
+          console.warn(`⚠️ delete not supported (405) for ${slug}; continuing with regenerate overwrite strategy.`);
+          results.push({ slug, success: true, skipped: true, reason: 'DELETE_405_NOT_SUPPORTED' });
+          continue;
+        }
+
         console.error(`❌ delete error: ${slug} :: ${e.message}`);
         results.push({ slug, success: false, error: e.message });
       }
@@ -98,20 +110,25 @@ async function main() {
   console.log(`🌐 Domain: ${DOMAIN}`);
   console.log(`🗑️  Slugs to delete: ${slugs.length}`);
   console.log(`⚙️  Prompts to regenerate: ${prompts.length}`);
+  if (SKIP_DELETE) console.log('⚠️ Skip delete enabled; regenerate/overwrite only.');
+  if (ALLOW_405_FALLBACK) console.log('⚠️ 405 delete fallback enabled; will continue with overwrite strategy.');
 
   if (DRY_RUN) {
     console.log('DRY RUN enabled; no API calls will be made.');
     return;
   }
 
-  if (!ADMIN_TOKEN) {
-    throw new Error('Missing MARKETPLACE_ADMIN_TOKEN env var for delete step.');
-  }
+  let deleted = [];
+  if (!SKIP_DELETE) {
+    if (!ADMIN_TOKEN) {
+      throw new Error('Missing MARKETPLACE_ADMIN_TOKEN env var for delete step. Use --skip-delete if your deployment does not support DELETE yet.');
+    }
 
-  const deleted = await deleteAll(slugs);
-  const deleteFailures = deleted.filter((d) => !d.success);
-  if (deleteFailures.length > 0) {
-    throw new Error(`Delete phase had ${deleteFailures.length} failures. Aborting regenerate phase.`);
+    deleted = await deleteAll(slugs);
+    const deleteFailures = deleted.filter((d) => !d.success);
+    if (deleteFailures.length > 0) {
+      throw new Error(`Delete phase had ${deleteFailures.length} failures. Aborting regenerate phase.`);
+    }
   }
 
   const generated = [];
@@ -135,6 +152,10 @@ async function main() {
   const outPath = `marketing/output/replace-manual-assets-${Date.now()}.json`;
   await fs.writeFile(outPath, JSON.stringify({
     domain: DOMAIN,
+    options: {
+      skipDelete: SKIP_DELETE,
+      allow405Fallback: ALLOW_405_FALLBACK
+    },
     deleted,
     generated,
     failed
