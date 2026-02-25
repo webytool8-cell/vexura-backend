@@ -472,9 +472,9 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
         if (!result) return;
         
         try {
-            const svgString = JSON.stringify(result); 
+            const vectorString = JSON.stringify(result);
             const styleInfo = { style, palette, hex: customHex };
-            await apiSaveCreation(user.objectId, prompt, JSON.stringify(styleInfo), null, svgString);
+            await apiSaveCreation(user.objectId, prompt, JSON.stringify(styleInfo), vectorString, vectorString);
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
         } catch (e) {
@@ -511,95 +511,8 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
         </button>
     );
 
-    function ExportDropdown({ svgRef, result, isPro, onOpenUpgrade }) {
-        const [open, setOpen] = React.useState(false);
 
-        const handleExport = async (type) => {
-            if (!isPro) {
-                onOpenUpgrade();
-                return;
-            }
 
-            if (!svgRef?.current) return;
-
-            const filename = result?.name || "vexura-export";
-
-            try {
-                switch (type) {
-                    case "png":
-                        await window.ImageUtils.downloadSvgAsImage(
-                            svgRef.current,
-                            filename,
-                            "png",
-                            2,
-                            "#ffffff"
-                        );
-                        break;
-
-                    case "jpeg":
-                        await window.ImageUtils.downloadSvgAsImage(
-                            svgRef.current,
-                            filename,
-                            "jpeg",
-                            2,
-                            "#ffffff"
-                        );
-                        break;
-
-                    case "svg":
-                        if (window.ImageUtils.downloadSvg) {
-                            window.ImageUtils.downloadSvg(svgRef.current, filename);
-                        }
-                        break;
-
-                    case "json":
-                        if (window.ImageUtils.downloadJson) {
-                            window.ImageUtils.downloadJson(result, filename);
-                        }
-                        break;
-
-                    case "html":
-                        if (window.ImageUtils.downloadHtml) {
-                            window.ImageUtils.downloadHtml(svgRef.current, filename);
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            } catch (err) {
-                console.error("Export failed:", err);
-            }
-
-            setOpen(false);
-        };
-
-        return (
-            <div className="relative">
-                <button
-                    onClick={() => setOpen(!open)}
-                    className="h-8 px-3 inline-flex items-center justify-center gap-2 text-center rounded-[2px] bg-[var(--accent)] text-black font-semibold text-xs border border-[var(--accent)] hover:brightness-95 transition-all"
-                >
-                    <span>EXPORT</span>
-                    <div className="icon-chevron-down w-3 h-3 flex items-center justify-center"></div>
-                </button>
-
-                {open && (
-                    <div className="absolute right-0 top-10 w-40 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] shadow-lg z-50">
-                        {["png", "jpeg", "svg", "json", "html"].map((type) => (
-                            <button
-                                key={type}
-                                onClick={() => handleExport(type)}
-                                className="w-full px-3 py-2 text-xs font-mono inline-flex items-center justify-center text-center hover:bg-[var(--bg-surface)] border-b border-[var(--border-dim)] last:border-none"
-                            >
-                                {type.toUpperCase()}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-        );
-    }
 
     const currentStyles = STYLE_CONFIG[type];
     
@@ -932,50 +845,15 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                      {/* Top Action Bar */}
                      {result && !isProcessing && viewMode === 'create' && (
                         <div className="mb-4 flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                             {/* Feedback UI (Only show for AI generated) */}
-                             {!feedbackSent && result.source !== 'upload' && (
-                                 <div className="flex items-center justify-center gap-2 py-2 bg-[var(--bg-panel)] border border-[var(--border-dim)] rounded-[2px] w-fit mx-auto shadow-sm">
-                                     <span className="text-[10px] font-mono text-[var(--text-dim)] px-2">RATE_RESULT:</span>
-                                     <button onClick={() => handleFeedback('good')} className="p-1 hover:text-green-500 transition-colors" title="Good result"><div className="icon-thumbs-up w-4 h-4"></div></button>
-                                     <div className="w-px h-3 bg-[var(--border-dim)]"></div>
-                                     <button onClick={() => handleFeedback('too_abstract')} className="p-1 hover:text-red-400 transition-colors" title="Too Abstract"><div className="icon-help-circle w-4 h-4"></div></button>
-                                     <button onClick={() => handleFeedback('wrong_style')} className="p-1 hover:text-red-400 transition-colors" title="Wrong Style"><div className="icon-brush w-4 h-4"></div></button>
-                                 </div>
-                             )}
-                             {feedbackSent && (
-                                 <div className="text-center text-[10px] text-green-500 font-mono py-2">FEEDBACK_LOGGED</div>
-                             )}
 
                             <div className="flex flex-col gap-3 sm:gap-2">
-                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2 w-full lg:w-auto">
-                                        <button 
-                                            onClick={enterEditMode}
-                                            className="btn btn-primary btn-primary-animate shadow-[0_0_15px_rgba(204,255,0,0.2)] text-black font-bold px-4 py-2 w-full sm:w-auto justify-center"
-                                        >
-                                            <div className="icon-edit-3 w-4 h-4"></div>
-                                            <span className="text-xs sm:text-sm">ENTER EDIT MODE</span>
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 w-full lg:w-auto justify-between sm:justify-end">
-                                        <button 
-                                            onClick={handleSave}
-                                            disabled={saved}
-                                            className={`h-8 px-2 inline-flex items-center justify-center gap-1 text-center text-xs hover:text-[var(--text-main)] transition-colors ${saved ? 'text-green-500' : ''}`}
-                                        >
-                                            <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
-                                            {saved ? 'SAVED' : (user ? 'SAVE' : 'LOGIN_TO_SAVE')}
-                                        </button>
-
-                                        <ExportDropdown
-                                            svgRef={previewSvgRef}
-                                            result={result}
-                                            isPro={user?.plan === "pro" || window.__DEV_PRO__}
-                                            onOpenUpgrade={onOpenUpgrade}
-                                        />
-                                    </div>
-                                </div>
+                                <button 
+                                    onClick={enterEditMode}
+                                    className="btn btn-primary btn-primary-animate shadow-[0_0_15px_rgba(204,255,0,0.2)] text-black font-bold px-4 py-2 w-full justify-center"
+                                >
+                                    <div className="icon-edit-3 w-4 h-4"></div>
+                                    <span className="text-xs sm:text-sm">ENTER EDIT MODE</span>
+                                </button>
 
                                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border-dim)]">
                                     <span className="text-[9px] font-mono text-[var(--text-dim)] uppercase mr-1">Refine:</span>
@@ -1063,6 +941,37 @@ function Generator({ user, onOpenAuth, onOpenUpgrade, onCreditUse }) {
                      )}
                 </div>
                 
+
+                {/* Bottom Utility Bar */}
+                {result && !isProcessing && viewMode === 'create' && (
+                    <div className="border-t border-[var(--border-dim)] bg-[var(--bg-panel)] px-4 py-2 shrink-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                {!feedbackSent && result.source !== 'upload' ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-mono text-[var(--text-dim)]">RATE_RESULT:</span>
+                                        <button onClick={() => handleFeedback('good')} className="p-1 hover:text-green-500 transition-colors" title="Good result"><div className="icon-thumbs-up w-4 h-4"></div></button>
+                                        <div className="w-px h-3 bg-[var(--border-dim)]"></div>
+                                        <button onClick={() => handleFeedback('too_abstract')} className="p-1 hover:text-red-400 transition-colors" title="Too Abstract"><div className="icon-help-circle w-4 h-4"></div></button>
+                                        <button onClick={() => handleFeedback('wrong_style')} className="p-1 hover:text-red-400 transition-colors" title="Wrong Style"><div className="icon-brush w-4 h-4"></div></button>
+                                    </div>
+                                ) : (
+                                    <div className="text-[10px] text-green-500 font-mono">{feedbackSent ? 'FEEDBACK_LOGGED' : ''}</div>
+                                )}
+                            </div>
+
+                            <button 
+                                onClick={handleSave}
+                                disabled={saved}
+                                className={`h-8 px-3 inline-flex items-center justify-center gap-1 text-center text-xs font-mono border border-[var(--border-dim)] rounded-[2px] hover:border-[var(--text-main)] hover:text-[var(--text-main)] transition-colors self-end ${saved ? 'text-green-500 border-green-500/40' : 'text-[var(--text-dim)]'}`}
+                            >
+                                <div className={`w-2 h-2 rounded-full ${saved ? 'bg-green-500' : 'bg-[var(--border-mid)]'}`}></div>
+                                {saved ? 'SAVED' : (user ? 'SAVE TO PROFILE' : 'LOGIN_TO_SAVE')}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Session History */}
                 {history.length > 0 && (
                     <div className="h-16 border-t border-[var(--border-dim)] bg-[var(--bg-panel)] flex items-center px-4 gap-2 overflow-x-auto shrink-0 custom-scrollbar">
