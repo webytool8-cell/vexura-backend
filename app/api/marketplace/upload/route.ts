@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     // VALIDATE AND FIX (NEW!)
-    const validation = validateAndFixIcon(vectorData);
+    const validation = validateAndFixIcon(vectorData, { enforceMonochrome: true });
     const score = calculateQualityScore(validation);
     
     if (validation.errors.length > 0) {
