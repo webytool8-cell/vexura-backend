@@ -2,6 +2,7 @@ function AssetDetailView({ user, onOpenAuth }) {
     const [asset, setAsset] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const [downloading, setDownloading] = React.useState(false);
+    const [downloadFormat, setDownloadFormat] = React.useState('svg');
 
     const normalizeCategory = (category) => {
         const c = (category || 'icons').toLowerCase();
@@ -84,26 +85,74 @@ function AssetDetailView({ user, onOpenAuth }) {
 
     const handleDownload = async () => {
         if (!asset) return;
-        
+
         if (asset.type === 'collection') {
-            await downloadCollection();
+            await downloadCollection(downloadFormat);
         } else {
-            downloadSingle();
+            await downloadSingle(downloadFormat);
         }
     };
 
-    const downloadSingle = () => {
-        const blob = new Blob([asset.svg], { type: 'image/svg+xml;charset=utf-8' });
+    const svgToBlob = (svgMarkup, format) => new Promise((resolve, reject) => {
+        if (format === 'svg') {
+            resolve(new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' }));
+            return;
+        }
+
+        const img = new Image();
+        const svgBlob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 400;
+                canvas.height = 400;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const mime = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(svgUrl);
+                    if (!blob) {
+                        reject(new Error('Failed to encode image blob'));
+                        return;
+                    }
+                    resolve(blob);
+                }, mime, 0.92);
+            } catch (err) {
+                URL.revokeObjectURL(svgUrl);
+                reject(err);
+            }
+        };
+
+        img.onerror = (err) => {
+            URL.revokeObjectURL(svgUrl);
+            reject(err);
+        };
+
+        img.src = svgUrl;
+    });
+
+    const triggerDownload = (blob, filename) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${asset.slug}.svg`;
+        link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     };
 
-    const downloadCollection = async () => {
+    const downloadSingle = async (format) => {
+        const blob = await svgToBlob(asset.svg, format);
+        triggerDownload(blob, `${asset.slug}.${format}`);
+    };
+
+    const downloadCollection = async (format) => {
         if (!window.JSZip) {
             alert("Compression library not loaded. Please refresh.");
             return;
@@ -114,25 +163,15 @@ function AssetDetailView({ user, onOpenAuth }) {
             const zip = new JSZip();
             const folder = zip.folder(asset.slug);
 
-            // Add each SVG to the zip
-            asset.items.forEach((item, index) => {
-                const filename = `${item.name || `item-${index}`}.svg`;
-                folder.file(filename, item.svg);
-            });
+            for (let index = 0; index < asset.items.length; index++) {
+                const item = asset.items[index];
+                const filename = `${item.name || `item-${index}`}.${format}`;
+                const blob = await svgToBlob(item.svg, format);
+                folder.file(filename, blob);
+            }
 
-            // Generate ZIP
             const content = await zip.generateAsync({ type: "blob" });
-            
-            // Trigger download
-            const url = URL.createObjectURL(content);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${asset.slug}-collection.zip`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            setTimeout(() => URL.revokeObjectURL(url), 100);
+            triggerDownload(content, `${asset.slug}-${format}-collection.zip`);
 
         } catch (e) {
             console.error("Zip Error:", e);
@@ -261,6 +300,19 @@ function AssetDetailView({ user, onOpenAuth }) {
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
                                 </div>
+                                <div>
+                                    <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
+                                    <select
+                                        value={downloadFormat}
+                                        onChange={(e) => setDownloadFormat(e.target.value)}
+                                        className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+                                    >
+                                        <option value="svg">SVG</option>
+                                        <option value="png">PNG</option>
+                                        <option value="jpeg">JPEG</option>
+                                        <option value="webp">WEBP</option>
+                                    </select>
+                                </div>
                                 <button 
                                     onClick={handleDownload}
                                     disabled={downloading}
@@ -269,18 +321,24 @@ function AssetDetailView({ user, onOpenAuth }) {
                                     {downloading ? (
                                         <span className="flex items-center gap-2">
                                             <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
-                                            COMPRESSING ZIP...
+                                            PREPARING DOWNLOAD...
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-2">
                                             <div className="icon-download w-4 h-4"></div>
-                                            {isCollection ? 'DOWNLOAD COLLECTION (ZIP)' : 'DOWNLOAD SVG'}
+                                            {isCollection ? `DOWNLOAD ${downloadFormat.toUpperCase()} COLLECTION (ZIP)` : `DOWNLOAD ${downloadFormat.toUpperCase()}`}
                                         </span>
                                     )}
                                 </button>
-                                {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual SVG files</p>}
+                                {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
                             </div>
                         )}
+                    </div>
+
+                    <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
+                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                            Still searching for the exact style you need? <a href="/tool" className="text-[var(--accent)] font-mono font-bold hover:underline">Launch the VEXURA Tool</a> to generate custom vectors tailored to your project in seconds.
+                        </p>
                     </div>
                 </div>
             </div>
