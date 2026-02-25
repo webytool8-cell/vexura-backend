@@ -1,0 +1,255 @@
+{
+  "delayMs": 1200,
+  "prompts": [
+    {
+      "prompt": "minimal fintech dashboard analytics icon set",
+      "price": 4.99,
+      "isFree": false
+    },
+    {
+      "prompt": "modern ecommerce checkout security badges icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "clean ai chatbot conversation ui icon collection",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "startup saas onboarding flow illustration icon style",
+      "price": 10.99,
+      "isFree": false
+    },
+    {
+      "prompt": "remote work productivity app icon bundle",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "social media content planner icon kit",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "email marketing automation icon family",
+      "price": 6.99,
+      "isFree": false
+    },
+    {
+      "prompt": "cloud storage sync devices flat icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "cybersecurity shield lock data privacy icon set",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "health wellness habit tracker app icon suite",
+      "price": 12.99,
+      "isFree": false
+    },
+    {
+      "prompt": "fitness workout planner mobile icon collection",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "travel booking app navigation icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "food delivery tracking status icon set",
+      "price": 8.99,
+      "isFree": false
+    },
+    {
+      "prompt": "real estate property listing ui icon family",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "finance budget planner pie chart icon kit",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "crypto wallet transaction icon set",
+      "price": 4.99,
+      "isFree": false
+    },
+    {
+      "prompt": "banking mobile transfer confirmation icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "education online course platform icon family",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "language learning streak rewards icon set",
+      "price": 10.99,
+      "isFree": false
+    },
+    {
+      "prompt": "music streaming playlist controls icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "video editing timeline tools icon suite",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "podcast studio recording icon collection",
+      "price": 6.99,
+      "isFree": false
+    },
+    {
+      "prompt": "customer support live chat icon family",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "team collaboration kanban board icon set",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "calendar scheduling appointment icon pack",
+      "price": 12.99,
+      "isFree": false
+    },
+    {
+      "prompt": "notion style productivity workspace icon kit",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "design system component library icon family",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "developer api integration icon pack",
+      "price": 8.99,
+      "isFree": false
+    },
+    {
+      "prompt": "database backup restore icon set",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "server monitoring alert dashboard icon suite",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "logistics shipping package tracking icon family",
+      "price": 4.99,
+      "isFree": false
+    },
+    {
+      "prompt": "supply chain warehouse management icon set",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "smart home automation device icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "electric vehicle charging station icon set",
+      "price": 10.99,
+      "isFree": false
+    },
+    {
+      "prompt": "green energy sustainability icon family",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "weather forecast app ui icon set",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "insurance claim process icon pack",
+      "price": 6.99,
+      "isFree": false
+    },
+    {
+      "prompt": "legal contract e-signature icon collection",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "medical telehealth consultation icon suite",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "pharmacy medication reminder icon set",
+      "price": 12.99,
+      "isFree": false
+    },
+    {
+      "prompt": "event ticket booking icon family",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "wedding planning checklist icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "small business invoicing icon set",
+      "price": 8.99,
+      "isFree": false
+    },
+    {
+      "prompt": "freelancer portfolio service icon collection",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "restaurant menu ordering icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "beauty salon appointment icon set",
+      "price": 4.99,
+      "isFree": false
+    },
+    {
+      "prompt": "pet care veterinary app icon family",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "gaming leaderboard achievement icon pack",
+      "price": 0,
+      "isFree": true
+    },
+    {
+      "prompt": "kids learning activity icon set",
+      "price": 10.99,
+      "isFree": false
+    },
+    {
+      "prompt": "mindfulness meditation breathing icon suite",
+      "price": 0,
+      "isFree": true
+    }
+  ]
+}
