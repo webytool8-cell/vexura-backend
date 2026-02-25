@@ -3,14 +3,83 @@ function AssetDetailView({ user, onOpenAuth }) {
     const [loading, setLoading] = React.useState(true);
     const [downloading, setDownloading] = React.useState(false);
 
-    React.useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const slug = params.get('id');
-        if (slug) {
-            const found = window.getAssetBySlug(slug);
-            setAsset(found);
+    const normalizeCategory = (category) => {
+        const c = (category || 'icons').toLowerCase();
+        if (c.endsWith('s')) return c;
+        if (c === 'icon') return 'icons';
+        if (c === 'illustration') return 'illustrations';
+        if (c === 'gradient') return 'gradients';
+        if (c === 'shape') return 'shapes';
+        if (c === 'pattern') return 'patterns';
+        return c;
+    };
+
+    const escapeAttr = (value) => String(value).replace(/"/g, '&quot;');
+
+    const vectorToSvg = (vector) => {
+        if (!vector || !Array.isArray(vector.elements) || vector.elements.length === 0) {
+            return '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="400" fill="none" stroke="currentColor" stroke-width="8"/><path d="M90 310 L170 210 L230 260 L310 120" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         }
-        setLoading(false);
+
+        const width = vector.width || 400;
+        const height = vector.height || 400;
+        const elements = vector.elements.map((el) => {
+            const attrs = Object.entries(el)
+                .filter(([k, v]) => k !== 'type' && v !== undefined && v !== null)
+                .map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}="${escapeAttr(v)}"`)
+                .join(' ');
+            return `<${el.type} ${attrs}></${el.type}>`;
+        }).join('');
+
+        return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${elements}</svg>`;
+    };
+
+    const mapDbAsset = (item) => {
+        const price = item?.marketplace?.price || 0;
+        const title = item?.seo?.title?.replace(/\s*-\s*Premium Vector Icon\s*\|\s*VEXURA/i, '') || item?.vector?.name || item?.slug || 'Untitled Asset';
+
+        return {
+            id: item.id || item.slug,
+            title,
+            slug: item.slug,
+            category: normalizeCategory(item?.marketplace?.category),
+            type: 'single',
+            isPremium: price > 0,
+            price,
+            tags: item?.marketplace?.tags || [],
+            description: item?.seo?.description || item?.prompt || 'Marketplace vector asset',
+            svg: vectorToSvg(item.vector)
+        };
+    };
+
+    React.useEffect(() => {
+        let isMounted = true;
+
+        const load = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('id');
+
+            if (!slug) {
+                if (isMounted) setLoading(false);
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/marketplace/${encodeURIComponent(slug)}`);
+                if (!res.ok) throw new Error('Failed to load marketplace asset');
+                const item = await res.json();
+                if (isMounted) setAsset(mapDbAsset(item));
+            } catch (e) {
+                console.warn('Falling back to static asset lookup:', e);
+                const found = window.getAssetBySlug ? window.getAssetBySlug(slug) : null;
+                if (isMounted) setAsset(found || null);
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        load();
+        return () => { isMounted = false; };
     }, []);
 
     const handleDownload = async () => {
