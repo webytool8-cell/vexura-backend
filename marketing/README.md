@@ -10,3 +10,10 @@ Target domain is hardcoded to:
 
 - `https://vexura.io`
 - Endpoint: `https://vexura.io/api/automate/batch`
+
+
+## Smaller test run (10 prompts)
+
+```bash
+node marketing/run-batch.mjs marketing/pinterest-batch-10.json
+```
