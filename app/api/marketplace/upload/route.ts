@@ -3,9 +3,14 @@ import { createMarketplaceListing } from '@/lib/database/marketplace';
 import { enrichMetadataFromJSON } from '@/lib/automation/metadata-enricher';
 import { validateAndFixIcon, calculateQualityScore } from '@/lib/validators/icon-validator'; // ADD THIS
 
+function shouldEnforceMonochrome(promptText?: string): boolean {
+  if (!promptText) return false;
+  return /\b(monochrome|monotone|black\s*(and|&)\s*white|grayscale|single\s*color)\b/i.test(promptText);
+}
+
 export async function POST(request: Request) {
   try {
-    const { vectorData, fileName } = await request.json();
+    const { vectorData, fileName, prompt } = await request.json();
     
     if (!vectorData) {
       return NextResponse.json(
@@ -23,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     // VALIDATE AND FIX (NEW!)
-    const validation = validateAndFixIcon(vectorData, { enforceMonochrome: true });
+    const validation = validateAndFixIcon(vectorData, { enforceMonochrome: shouldEnforceMonochrome(prompt) });
     const score = calculateQualityScore(validation);
     
     if (validation.errors.length > 0) {
