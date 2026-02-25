@@ -1,5 +1,6 @@
 {
-  "items": [
+  "delayMs": 1200,
+  "prompts": [
     {
       "prompt": "minimal fintech dashboard analytics icon set",
       "price": 4.99,
@@ -250,6 +251,5 @@
       "price": 0,
       "isFree": true
     }
-  ],
-  "delayMs": 1200
+  ]
 }
