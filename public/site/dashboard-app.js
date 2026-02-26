@@ -16,17 +16,10 @@ function DashboardApp() {
 
   const [firebaseUser, setFirebaseUser] = React.useState(null);
   const [authLoading, setAuthLoading] = React.useState(true);
-
-  const [stats, setStats] = React.useState({ totalItems: 0, freeItems: 0, premiumItems: 0, avgPrice: 0 });
+  const [stats, setStats] = React.useState({ totalItems: 0 });
   const [uploading, setUploading] = React.useState(false);
   const [uploadResults, setUploadResults] = React.useState([]);
   const [sessionSuccessCount, setSessionSuccessCount] = React.useState(0);
-
-  const [assets, setAssets] = React.useState([]);
-  const [assetsLoading, setAssetsLoading] = React.useState(false);
-  const [assetSearch, setAssetSearch] = React.useState('');
-  const [assetCategoryFilter, setAssetCategoryFilter] = React.useState('all');
-  const [lastSyncAt, setLastSyncAt] = React.useState(null);
 
   const isOwner = firebaseUser?.email?.toLowerCase() === OWNER_EMAIL;
 
@@ -52,63 +45,20 @@ function DashboardApp() {
     return () => unsub && unsub();
   }, []);
 
-  const mapDbAsset = (item) => {
-    const category = (item?.marketplace?.category || 'icon').toLowerCase();
-    const normalizedCategory = category.endsWith('s') ? category : `${category}s`;
-    const price = Number(item?.marketplace?.price || 0);
-
-    return {
-      id: item?.id || item?.slug,
-      slug: item?.slug,
-      name: item?.vector?.name || item?.seo?.title || item?.slug || 'Untitled',
-      category: normalizedCategory,
-      price,
-      isPremium: price > 0,
-      views: Number(item?.marketplace?.views || 0),
-      downloads: Number(item?.marketplace?.downloads || 0),
-      createdAt: item?.marketplace?.createdAt || null,
-      updatedAt: item?.marketplace?.updatedAt || null,
-      tags: item?.marketplace?.tags || []
-    };
-  };
-
-  const computeDerivedStats = (items) => {
-    if (!items.length) return { totalItems: 0, freeItems: 0, premiumItems: 0, avgPrice: 0 };
-
-    const freeItems = items.filter(i => !i.isPremium).length;
-    const premiumItems = items.length - freeItems;
-    const totalPremiumPrice = items.filter(i => i.isPremium).reduce((sum, i) => sum + i.price, 0);
-
-    return {
-      totalItems: items.length,
-      freeItems,
-      premiumItems,
-      avgPrice: premiumItems > 0 ? (totalPremiumPrice / premiumItems) : 0
-    };
-  };
-
-  const loadAssets = React.useCallback(async () => {
-    setAssetsLoading(true);
+  const loadStats = React.useCallback(async () => {
     try {
-      const res = await fetch('/api/marketplace/list?limit=500&offset=0');
-      if (!res.ok) throw new Error('Failed to load assets');
+      const res = await fetch('/api/marketplace/stats');
+      if (!res.ok) return;
       const data = await res.json();
-      const mapped = (data.items || []).map(mapDbAsset);
-      setAssets(mapped);
-      setStats(computeDerivedStats(mapped));
-      setLastSyncAt(new Date().toISOString());
+      setStats({ totalItems: data.totalItems || 0 });
     } catch (e) {
-      console.warn('asset list unavailable', e);
-      setAssets([]);
-      setStats({ totalItems: 0, freeItems: 0, premiumItems: 0, avgPrice: 0 });
-    } finally {
-      setAssetsLoading(false);
+      console.warn('stats unavailable', e);
     }
   }, []);
 
   React.useEffect(() => {
-    if (isOwner) loadAssets();
-  }, [isOwner, loadAssets]);
+    if (isOwner) loadStats();
+  }, [isOwner, loadStats]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -183,7 +133,7 @@ function DashboardApp() {
     setUploadResults(prev => [...runResults, ...prev].slice(0, 30));
     setSessionSuccessCount(prev => prev + successCount);
     setUploading(false);
-    loadAssets();
+    loadStats();
   };
 
   const onFileChange = (e) => {
@@ -200,78 +150,21 @@ function DashboardApp() {
 
   const onDragOver = (e) => e.preventDefault();
 
-  const filteredAssets = React.useMemo(() => {
-    const search = assetSearch.trim().toLowerCase();
-    return assets.filter((a) => {
-      const categoryMatch = assetCategoryFilter === 'all' ? true : a.category === assetCategoryFilter;
-      if (!categoryMatch) return false;
-      if (!search) return true;
-      return (
-        a.slug.toLowerCase().includes(search) ||
-        a.name.toLowerCase().includes(search) ||
-        a.tags.some(t => String(t).toLowerCase().includes(search))
-      );
-    });
-  }, [assets, assetSearch, assetCategoryFilter]);
-
-  const categories = React.useMemo(() => {
-    const set = new Set(['all']);
-    assets.forEach(a => set.add(a.category));
-    return Array.from(set);
-  }, [assets]);
-
-  const topAssets = React.useMemo(() => {
-    return [...assets]
-      .sort((a, b) => (b.downloads + b.views) - (a.downloads + a.views))
-      .slice(0, 5);
-  }, [assets]);
-
-  const exportCsv = () => {
-    const header = ['slug', 'name', 'category', 'price', 'downloads', 'views', 'createdAt'];
-    const rows = filteredAssets.map((a) => [
-      a.slug,
-      a.name,
-      a.category,
-      a.price,
-      a.downloads,
-      a.views,
-      a.createdAt || ''
-    ]);
-
-    const csv = [header, ...rows]
-      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `marketplace-assets-${Date.now()}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header user={firebaseUser} onOpenAuth={handleGoogleLogin} onLogout={handleLogout} />
 
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 py-10 space-y-6">
+        <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
           <div className="panel p-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
                 <div className="text-[var(--accent)] text-xs font-mono uppercase mb-2">Owner Console</div>
-                <h1 className="text-2xl md:text-3xl font-mono font-bold">Marketplace Operations Dashboard</h1>
-                <p className="text-[var(--text-dim)] text-sm mt-2">Upload assets, monitor marketplace health, inspect database records, and run routine admin operations from one place.</p>
+                <h1 className="text-2xl md:text-3xl font-mono font-bold">Dashboard Upload Center</h1>
+                <p className="text-[var(--text-dim)] text-sm mt-2">Manual JSON uploader for marketplace assets with automatic metadata enrichment.</p>
               </div>
-              {!firebaseUser ? (
+              {!firebaseUser && (
                 <button onClick={handleGoogleLogin} className="btn btn-primary">Sign in with Google</button>
-              ) : (
-                <div className="text-xs font-mono text-[var(--text-dim)]">
-                  Last sync: <span className="text-[var(--text-main)]">{lastSyncAt ? new Date(lastSyncAt).toLocaleString() : '—'}</span>
-                </div>
               )}
             </div>
           </div>
@@ -290,134 +183,18 @@ function DashboardApp() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="panel p-4">
-                  <div className="text-[10px] text-[var(--text-dim)] font-mono uppercase">Total Assets</div>
+                  <div className="text-[10px] text-[var(--text-dim)] font-mono uppercase">Marketplace Assets</div>
                   <div className="text-2xl font-mono font-bold mt-2">{stats.totalItems}</div>
                 </div>
                 <div className="panel p-4">
-                  <div className="text-[10px] text-[var(--text-dim)] font-mono uppercase">Free Assets</div>
-                  <div className="text-2xl font-mono font-bold mt-2">{stats.freeItems}</div>
+                  <div className="text-[10px] text-[var(--text-dim)] font-mono uppercase">Uploaded This Session</div>
+                  <div className="text-2xl font-mono font-bold mt-2">{sessionSuccessCount}</div>
                 </div>
                 <div className="panel p-4">
-                  <div className="text-[10px] text-[var(--text-dim)] font-mono uppercase">Premium Assets</div>
-                  <div className="text-2xl font-mono font-bold mt-2">{stats.premiumItems}</div>
-                </div>
-                <div className="panel p-4">
-                  <div className="text-[10px] text-[var(--text-dim)] font-mono uppercase">Avg Premium Price</div>
-                  <div className="text-2xl font-mono font-bold mt-2">${stats.avgPrice.toFixed(2)}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="panel p-6 lg:col-span-2">
-                  <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                    <h2 className="font-mono font-bold text-sm uppercase">Asset Database View</h2>
-                    <div className="flex gap-2">
-                      <button onClick={loadAssets} className="btn btn-secondary text-xs" disabled={assetsLoading}>{assetsLoading ? 'Refreshing...' : 'Refresh'}</button>
-                      <button onClick={exportCsv} className="btn btn-secondary text-xs">Export CSV</button>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 mb-4 flex-wrap">
-                    <input
-                      type="text"
-                      value={assetSearch}
-                      onChange={(e) => setAssetSearch(e.target.value)}
-                      placeholder="Search slug, name, or tag..."
-                      className="flex-1 min-w-[240px] bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
-                    />
-                    <select
-                      value={assetCategoryFilter}
-                      onChange={(e) => setAssetCategoryFilter(e.target.value)}
-                      className="bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)]"
-                    >
-                      {categories.map((cat) => <option key={cat} value={cat}>{cat.toUpperCase()}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="max-h-[420px] overflow-auto border border-[var(--border-dim)] rounded-[2px]">
-                    <table className="w-full text-xs font-mono">
-                      <thead className="bg-[var(--bg-surface)] sticky top-0">
-                        <tr className="text-left text-[var(--text-dim)]">
-                          <th className="px-3 py-2">Slug</th>
-                          <th className="px-3 py-2">Category</th>
-                          <th className="px-3 py-2">Price</th>
-                          <th className="px-3 py-2">D/L</th>
-                          <th className="px-3 py-2">Views</th>
-                          <th className="px-3 py-2">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredAssets.length === 0 ? (
-                          <tr><td colSpan={6} className="px-3 py-6 text-center text-[var(--text-dim)]">No assets match current filters.</td></tr>
-                        ) : (
-                          filteredAssets.map((a) => (
-                            <tr key={a.id} className="border-t border-[var(--border-dim)] hover:bg-[var(--bg-surface)]/40">
-                              <td className="px-3 py-2 max-w-[220px] truncate" title={a.slug}>{a.slug}</td>
-                              <td className="px-3 py-2">{a.category}</td>
-                              <td className="px-3 py-2">{a.isPremium ? `$${a.price}` : 'Free'}</td>
-                              <td className="px-3 py-2">{a.downloads}</td>
-                              <td className="px-3 py-2">{a.views}</td>
-                              <td className="px-3 py-2">
-                                <div className="flex gap-2">
-                                  <a href={`/asset?id=${a.slug}`} target="_blank" rel="noreferrer" className="text-[var(--accent)] hover:underline">View</a>
-                                  <a href={`/api/marketplace/${a.slug}`} target="_blank" rel="noreferrer" className="text-[var(--text-muted)] hover:underline">Open</a>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="panel p-6">
-                    <h2 className="font-mono font-bold text-sm mb-4 uppercase">Analytics Snapshot</h2>
-                    <div className="space-y-3 text-xs font-mono">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--text-dim)]">Session uploads</span>
-                        <span>{sessionSuccessCount}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--text-dim)]">Filtered result size</span>
-                        <span>{filteredAssets.length}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--text-dim)]">Uploader status</span>
-                        <span className={uploading ? 'text-yellow-400' : 'text-green-400'}>{uploading ? 'PROCESSING' : 'READY'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="panel p-6">
-                    <h2 className="font-mono font-bold text-sm mb-4 uppercase">Top Performing Assets</h2>
-                    {topAssets.length === 0 ? (
-                      <div className="text-xs text-[var(--text-dim)]">No marketplace data available.</div>
-                    ) : (
-                      <div className="space-y-2">
-                        {topAssets.map((a, idx) => (
-                          <div key={a.id} className="text-xs font-mono border border-[var(--border-dim)] rounded-[2px] p-2 bg-[var(--bg-surface)]/40">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="truncate">#{idx + 1} {a.slug}</div>
-                              <div className="text-[var(--text-dim)]">{a.downloads + a.views}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="panel p-6">
-                    <h2 className="font-mono font-bold text-sm mb-3 uppercase">Quick Actions</h2>
-                    <div className="space-y-2">
-                      <a href="/marketplace" target="_blank" rel="noreferrer" className="btn btn-secondary w-full text-xs">Open Marketplace</a>
-                      <a href="/tool" target="_blank" rel="noreferrer" className="btn btn-secondary w-full text-xs">Open Generator Tool</a>
-                      <a href="/dashboard" className="btn btn-secondary w-full text-xs">Reload Dashboard</a>
-                    </div>
-                  </div>
+                  <div className="text-[10px] text-[var(--text-dim)] font-mono uppercase">Uploader Status</div>
+                  <div className={`text-sm font-mono mt-3 ${uploading ? 'text-yellow-400' : 'text-green-400'}`}>{uploading ? 'PROCESSING...' : 'READY'}</div>
                 </div>
               </div>
 
