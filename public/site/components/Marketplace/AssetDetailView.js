@@ -3,6 +3,7 @@ function AssetDetailView({ user, onOpenAuth }) {
     const [loading, setLoading] = React.useState(true);
     const [downloading, setDownloading] = React.useState(false);
     const [downloadFormat, setDownloadFormat] = React.useState('svg');
+    const [suggestions, setSuggestions] = React.useState([]);
 
     const normalizeCategory = (category) => {
         const c = (category || 'icons').toLowerCase();
@@ -53,6 +54,37 @@ function AssetDetailView({ user, onOpenAuth }) {
         };
     };
 
+    const toRenderableAsset = (item) => {
+        if (!item) return null;
+        if (item.vector) return mapDbAsset(item);
+
+        return {
+            ...item,
+            category: normalizeCategory(item?.marketplace?.category || item?.category),
+            tags: item?.marketplace?.tags || item?.tags || [],
+            description: item?.seo?.description || item?.prompt || item?.description || 'Marketplace vector asset',
+            slug: item?.slug,
+            type: item?.type || 'single',
+            svg: item?.svg || item?.previewSvg || null
+        };
+    };
+
+    const buildSuggestions = (currentAsset, pool) => {
+        if (!currentAsset || !Array.isArray(pool)) return [];
+
+        return pool
+            .map(toRenderableAsset)
+            .filter((candidate) => candidate && candidate.slug && candidate.slug !== currentAsset.slug && candidate.svg)
+            .map((candidate) => {
+                const tagOverlap = (candidate.tags || []).filter((t) => (currentAsset.tags || []).includes(t)).length;
+                const categoryBoost = candidate.category === currentAsset.category ? 2 : 0;
+                return { candidate, score: tagOverlap + categoryBoost };
+            })
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4)
+            .map((entry) => entry.candidate);
+    };
+
     React.useEffect(() => {
         let isMounted = true;
 
@@ -66,14 +98,30 @@ function AssetDetailView({ user, onOpenAuth }) {
             }
 
             try {
-                const res = await fetch(`/api/marketplace/${encodeURIComponent(slug)}`);
-                if (!res.ok) throw new Error('Failed to load marketplace asset');
-                const item = await res.json();
-                if (isMounted) setAsset(mapDbAsset(item));
+                const [detailRes, listRes] = await Promise.all([
+                    fetch(`/api/marketplace/${encodeURIComponent(slug)}`),
+                    fetch('/api/marketplace/list?limit=120&offset=0')
+                ]);
+
+                if (!detailRes.ok) throw new Error('Failed to load marketplace asset');
+                const item = await detailRes.json();
+                const mapped = mapDbAsset(item);
+
+                if (isMounted) {
+                    setAsset(mapped);
+                }
+
+                if (isMounted && listRes.ok) {
+                    const listData = await listRes.json();
+                    setSuggestions(buildSuggestions(mapped, listData.items || []));
+                }
             } catch (e) {
                 console.warn('Falling back to static asset lookup:', e);
                 const found = window.getAssetBySlug ? window.getAssetBySlug(slug) : null;
-                if (isMounted) setAsset(found || null);
+                if (isMounted) {
+                    setAsset(found || null);
+                    setSuggestions(buildSuggestions(found, window.MarketplaceData || []));
+                }
             } finally {
                 if (isMounted) setLoading(false);
             }
