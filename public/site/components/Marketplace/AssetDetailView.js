@@ -181,22 +181,6 @@ function AssetDetailView({ user, onOpenAuth }) {
         }
     };
 
-    const handlePurchase = () => {
-        if (!user) {
-            onOpenAuth();
-            return;
-        }
-        // Mock Stripe Redirect
-        const btn = document.getElementById('purchase-btn');
-        if(btn) {
-            btn.innerHTML = "REDIRECTING TO STRIPE...";
-            btn.disabled = true;
-        }
-        setTimeout(() => {
-            window.location.href = '/success';
-        }, 1500);
-    };
-
     if (loading) return <div className="min-h-[50vh] flex items-center justify-center"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div></div>;
 
     if (!asset) {
@@ -252,14 +236,7 @@ function AssetDetailView({ user, onOpenAuth }) {
                         <span className="text-[10px] font-mono font-bold uppercase bg-[var(--bg-surface)] border border-[var(--border-dim)] px-2 py-1 rounded-[2px] text-[var(--text-muted)]">
                             {asset.category}
                         </span>
-                        {isCollection && (
-                             <span className="text-[10px] font-mono font-bold uppercase bg-[var(--bg-surface)] border border-[var(--border-dim)] px-2 py-1 rounded-[2px] text-[var(--accent)] flex items-center gap-1">
-                                <div className="icon-layers w-3 h-3"></div> COLLECTION
-                             </span>
-                        )}
-                        {asset.isPremium && (
-                             <span className="text-[10px] font-mono font-bold uppercase bg-[var(--accent)] text-black px-2 py-1 rounded-[2px]">PREMIUM</span>
-                        )}
+                        <span className="text-[10px] font-mono font-bold uppercase border border-[var(--border-dim)] text-[var(--text-dim)] px-2 py-1 rounded-[2px]">FREE</span>
                     </div>
 
                     <h1 className="text-3xl md:text-4xl font-mono font-bold text-[var(--text-main)] mb-6 uppercase leading-tight">{asset.title}</h1>
@@ -279,21 +256,9 @@ function AssetDetailView({ user, onOpenAuth }) {
                             <span className="text-sm font-mono text-[var(--text-muted)]">LICENSE TYPE</span>
                             <span className="text-sm font-bold text-[var(--text-main)]">COMMERCIAL / ROYALTY FREE</span>
                         </div>
-                        
-                        {asset.isPremium ? (
-                            <div className="space-y-4">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-[var(--text-main)]">${asset.price}</span>
-                                    <span className="text-[var(--text-dim)] text-sm">USD</span>
-                                </div>
-                                <button 
-                                    id="purchase-btn"
-                                    onClick={handlePurchase}
-                                    className="btn btn-primary w-full py-4 text-base font-bold shadow-[0_0_20px_rgba(204,255,0,0.15)] hover:shadow-[0_0_30px_rgba(204,255,0,0.25)] transition-all"
-                                >
-                                    UNLOCK COLLECTION
-                                </button>
-                                <p className="text-center text-[10px] text-[var(--text-dim)]">Secured by Stripe</p>
+                        <div className="space-y-4">
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -332,7 +297,32 @@ function AssetDetailView({ user, onOpenAuth }) {
                                 </button>
                                 {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
                             </div>
-                        )}
+                            <button 
+                                onClick={handleDownload}
+                                disabled={downloading}
+                                className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
+                            >
+                                {downloading ? (
+                                    <span className="flex items-center gap-2">
+                                        <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
+                                        PREPARING DOWNLOAD...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        <div className="icon-download w-4 h-4"></div>
+                                        {isCollection ? `DOWNLOAD ${downloadFormat.toUpperCase()} COLLECTION (ZIP)` : `DOWNLOAD ${downloadFormat.toUpperCase()}`}
+                                    </span>
+                                )}
+                            </button>
+                            {!user && <p className="text-center text-[10px] text-[var(--text-dim)]">Sign in to download files.</p>}
+                            {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
+                        </div>
+                    </div>
+
+                    <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
+                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                            Still searching for the exact style you need? <a href="/tool" className="text-[var(--accent)] font-mono font-bold hover:underline">Launch the VEXURA Tool</a> to generate custom vectors tailored to your project in seconds.
+                        </p>
                     </div>
 
                     <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
@@ -342,6 +332,28 @@ function AssetDetailView({ user, onOpenAuth }) {
                     </div>
                 </div>
             </div>
+
+            {suggestions.length > 0 && (
+                <div className="mt-14">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-mono font-bold uppercase">More Suggestions</h2>
+                        <a href="/marketplace" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] uppercase">Browse all</a>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {suggestions.map((s) => (
+                            <a key={s.slug} href={`/asset?id=${s.slug}`} className="group block border border-[var(--border-dim)] rounded-[2px] overflow-hidden bg-[var(--bg-panel)] hover:border-[var(--text-muted)] transition-colors">
+                                <div className="aspect-square p-6 bg-[var(--bg-body)] flex items-center justify-center">
+                                    <div className="w-full h-full text-[var(--text-main)] group-hover:scale-105 transition-transform" dangerouslySetInnerHTML={{ __html: s.svg }}></div>
+                                </div>
+                                <div className="p-3 border-t border-[var(--border-dim)]">
+                                    <div className="text-xs font-mono font-bold uppercase truncate" title={s.title}>{s.title}</div>
+                                    <div className="text-[10px] text-[var(--text-dim)] font-mono mt-1">{s.category} · FREE</div>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
