@@ -134,6 +134,11 @@ function AssetDetailView({ user, onOpenAuth }) {
     const handleDownload = async () => {
         if (!asset) return;
 
+        if (!user) {
+            onOpenAuth();
+            return;
+        }
+
         if (asset.type === 'collection') {
             await downloadCollection(downloadFormat);
         } else {
