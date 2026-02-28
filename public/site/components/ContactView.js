@@ -17,8 +17,8 @@ function ContactView() {
 
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-dim)] rounded-[2px] p-6 mb-8">
                     <p className="text-xs font-mono text-[var(--text-dim)] uppercase mb-2">Support Email</p>
-                    <a href="mailto:hello@VEXURA.ai" className="text-xl md:text-2xl font-bold text-[var(--text-main)] hover:text-[var(--accent)] transition-colors font-mono break-all">
-                        hello@VEXURA.ai
+                    <a href="mailto:hello@vexura.io" className="text-xl md:text-2xl font-bold text-[var(--text-main)] hover:text-[var(--accent)] transition-colors font-mono break-all">
+                        hello@vexura.io
                     </a>
                 </div>
 
