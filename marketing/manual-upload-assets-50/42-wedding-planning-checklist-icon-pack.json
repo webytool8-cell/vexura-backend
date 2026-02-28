@@ -1,0 +1,94 @@
+{
+  "name": "wedding planning checklist icon pack",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "id": "base-rect",
+      "type": "rect",
+      "x": 40,
+      "y": 40,
+      "width": 320,
+      "height": 320,
+      "rx": 32,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 4
+    },
+    {
+      "id": "geo-circle-0",
+      "type": "circle",
+      "cx": 269,
+      "cy": 186,
+      "r": 24,
+      "fill": "#ccff00",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-1",
+      "type": "rect",
+      "x": 227,
+      "y": 184,
+      "width": 60,
+      "height": 60,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-2",
+      "type": "circle",
+      "cx": 285,
+      "cy": 122,
+      "r": 22.666666666666668,
+      "fill": "#71717a",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-3",
+      "type": "rect",
+      "x": 195,
+      "y": 152,
+      "width": 76,
+      "height": 76,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-circle-4",
+      "type": "circle",
+      "cx": 141,
+      "cy": 218,
+      "r": 21.333333333333332,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-5",
+      "type": "rect",
+      "x": 253,
+      "y": 170,
+      "width": 72,
+      "height": 72,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "center-accent",
+      "type": "circle",
+      "cx": 200,
+      "cy": 200,
+      "r": 10,
+      "fill": "#ccff00",
+      "stroke": "none"
+    }
+  ]
+}

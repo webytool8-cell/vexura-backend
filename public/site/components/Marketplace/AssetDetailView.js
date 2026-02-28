@@ -2,39 +2,215 @@ function AssetDetailView({ user, onOpenAuth }) {
     const [asset, setAsset] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const [downloading, setDownloading] = React.useState(false);
+    const [downloadFormat, setDownloadFormat] = React.useState('svg');
+    const [suggestions, setSuggestions] = React.useState([]);
+
+    const normalizeCategory = (category) => {
+        const c = (category || 'icons').toLowerCase();
+        if (c.endsWith('s')) return c;
+        if (c === 'icon') return 'icons';
+        if (c === 'illustration') return 'illustrations';
+        if (c === 'gradient') return 'gradients';
+        if (c === 'shape') return 'shapes';
+        if (c === 'pattern') return 'patterns';
+        return c;
+    };
+
+    const normalizeTitle = (rawTitle = '') => {
+        return String(rawTitle)
+            .replace(/\s*-\s*Premium Vector Icon\s*\|\s*VEXURA/i, '')
+            .replace(/\b(pack|collection)\b/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+    };
+
+    const escapeAttr = (value) => String(value).replace(/"/g, '&quot;');
+
+    const vectorToSvg = (vector) => {
+        if (!vector || !Array.isArray(vector.elements) || vector.elements.length === 0) {
+            return '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="400" fill="none" stroke="currentColor" stroke-width="8"/><path d="M90 310 L170 210 L230 260 L310 120" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        }
+
+        const width = vector.width || 400;
+        const height = vector.height || 400;
+        const elements = vector.elements.map((el) => {
+            const attrs = Object.entries(el)
+                .filter(([k, v]) => k !== 'type' && v !== undefined && v !== null)
+                .map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}="${escapeAttr(v)}"`)
+                .join(' ');
+            return `<${el.type} ${attrs}></${el.type}>`;
+        }).join('');
+
+        return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${elements}</svg>`;
+    };
+
+    const mapDbAsset = (item) => {
+        const title = normalizeTitle(item?.seo?.title || item?.vector?.name || item?.slug || 'Untitled Asset');
+
+        return {
+            id: item.id || item.slug,
+            title,
+            slug: item.slug,
+            category: normalizeCategory(item?.marketplace?.category),
+            type: 'single',
+            isPremium: false,
+            price: 0,
+            tags: item?.marketplace?.tags || [],
+            description: item?.seo?.description || item?.prompt || 'Marketplace vector asset',
+            svg: vectorToSvg(item.vector)
+        };
+    };
+
+    const forceFreeDisplay = (item) => {
+        if (!item) return null;
+        return {
+            ...item,
+            title: normalizeTitle(item.title || item.slug || 'Untitled Asset'),
+            type: 'single',
+            isPremium: false,
+            price: 0,
+            tags: item.tags || [],
+            category: normalizeCategory(item.category)
+        };
+    };
 
     React.useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const slug = params.get('id');
-        if (slug) {
-            const found = window.getAssetBySlug(slug);
-            setAsset(found);
-        }
-        setLoading(false);
+        let isMounted = true;
+
+        const load = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('id');
+
+            if (!slug) {
+                if (isMounted) setLoading(false);
+                return;
+            }
+
+            try {
+                const [detailRes, listRes] = await Promise.all([
+                    fetch(`/api/marketplace/${encodeURIComponent(slug)}`),
+                    fetch('/api/marketplace/list?limit=120&offset=0')
+                ]);
+
+                if (!detailRes.ok) throw new Error('Failed to load marketplace asset');
+                const item = await detailRes.json();
+                const mappedAsset = mapDbAsset(item);
+
+                if (isMounted) setAsset(mappedAsset);
+
+                if (listRes.ok) {
+                    const listData = await listRes.json();
+                    const pool = (listData.items || []).map(mapDbAsset).filter((x) => x.slug !== mappedAsset.slug);
+                    const scored = pool.map((candidate) => {
+                        const tagOverlap = (candidate.tags || []).filter(t => mappedAsset.tags.includes(t)).length;
+                        const categoryBoost = candidate.category === mappedAsset.category ? 2 : 0;
+                        return { candidate, score: tagOverlap + categoryBoost };
+                    }).sort((a, b) => b.score - a.score);
+
+                    if (isMounted) setSuggestions(scored.slice(0, 4).map(s => s.candidate));
+                }
+            } catch (e) {
+                console.warn('Falling back to static asset lookup:', e);
+                const found = window.getAssetBySlug ? window.getAssetBySlug(slug) : null;
+                const fallbackAsset = forceFreeDisplay(found);
+                if (isMounted) setAsset(fallbackAsset || null);
+
+                if (isMounted && window.MarketplaceData && fallbackAsset) {
+                    const pool = window.MarketplaceData
+                        .filter((x) => x.slug !== fallbackAsset.slug)
+                        .map(forceFreeDisplay)
+                        .filter(Boolean);
+                    const scored = pool.map((candidate) => {
+                        const tagOverlap = (candidate.tags || []).filter(t => (fallbackAsset.tags || []).includes(t)).length;
+                        const categoryBoost = candidate.category === fallbackAsset.category ? 2 : 0;
+                        return { candidate, score: tagOverlap + categoryBoost };
+                    }).sort((a, b) => b.score - a.score);
+                    setSuggestions(scored.slice(0, 4).map(s => s.candidate));
+                }
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        load();
+        return () => { isMounted = false; };
     }, []);
 
     const handleDownload = async () => {
         if (!asset) return;
-        
+
+        if (!user) {
+            onOpenAuth();
+            return;
+        }
+
         if (asset.type === 'collection') {
-            await downloadCollection();
+            await downloadCollection(downloadFormat);
         } else {
-            downloadSingle();
+            await downloadSingle(downloadFormat);
         }
     };
 
-    const downloadSingle = () => {
-        const blob = new Blob([asset.svg], { type: 'image/svg+xml;charset=utf-8' });
+    const svgToBlob = (svgMarkup, format) => new Promise((resolve, reject) => {
+        if (format === 'svg') {
+            resolve(new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' }));
+            return;
+        }
+
+        const img = new Image();
+        const svgBlob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 400;
+                canvas.height = 400;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const mime = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(svgUrl);
+                    if (!blob) {
+                        reject(new Error('Failed to encode image blob'));
+                        return;
+                    }
+                    resolve(blob);
+                }, mime, 0.92);
+            } catch (err) {
+                URL.revokeObjectURL(svgUrl);
+                reject(err);
+            }
+        };
+
+        img.onerror = (err) => {
+            URL.revokeObjectURL(svgUrl);
+            reject(err);
+        };
+
+        img.src = svgUrl;
+    });
+
+    const triggerDownload = (blob, filename) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${asset.slug}.svg`;
+        link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     };
 
-    const downloadCollection = async () => {
+    const downloadSingle = async (format) => {
+        const blob = await svgToBlob(asset.svg, format);
+        triggerDownload(blob, `${asset.slug}.${format}`);
+    };
+
+    const downloadCollection = async (format) => {
         if (!window.JSZip) {
             alert("Compression library not loaded. Please refresh.");
             return;
@@ -45,25 +221,15 @@ function AssetDetailView({ user, onOpenAuth }) {
             const zip = new JSZip();
             const folder = zip.folder(asset.slug);
 
-            // Add each SVG to the zip
-            asset.items.forEach((item, index) => {
-                const filename = `${item.name || `item-${index}`}.svg`;
-                folder.file(filename, item.svg);
-            });
+            for (let index = 0; index < asset.items.length; index++) {
+                const item = asset.items[index];
+                const filename = `${item.name || `item-${index}`}.${format}`;
+                const blob = await svgToBlob(item.svg, format);
+                folder.file(filename, blob);
+            }
 
-            // Generate ZIP
             const content = await zip.generateAsync({ type: "blob" });
-            
-            // Trigger download
-            const url = URL.createObjectURL(content);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${asset.slug}-collection.zip`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            setTimeout(() => URL.revokeObjectURL(url), 100);
+            triggerDownload(content, `${asset.slug}-${format}-collection.zip`);
 
         } catch (e) {
             console.error("Zip Error:", e);
@@ -71,22 +237,6 @@ function AssetDetailView({ user, onOpenAuth }) {
         } finally {
             setDownloading(false);
         }
-    };
-
-    const handlePurchase = () => {
-        if (!user) {
-            onOpenAuth();
-            return;
-        }
-        // Mock Stripe Redirect
-        const btn = document.getElementById('purchase-btn');
-        if(btn) {
-            btn.innerHTML = "REDIRECTING TO STRIPE...";
-            btn.disabled = true;
-        }
-        setTimeout(() => {
-            window.location.href = '/success';
-        }, 1500);
     };
 
     if (loading) return <div className="min-h-[50vh] flex items-center justify-center"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div></div>;
@@ -144,14 +294,7 @@ function AssetDetailView({ user, onOpenAuth }) {
                         <span className="text-[10px] font-mono font-bold uppercase bg-[var(--bg-surface)] border border-[var(--border-dim)] px-2 py-1 rounded-[2px] text-[var(--text-muted)]">
                             {asset.category}
                         </span>
-                        {isCollection && (
-                             <span className="text-[10px] font-mono font-bold uppercase bg-[var(--bg-surface)] border border-[var(--border-dim)] px-2 py-1 rounded-[2px] text-[var(--accent)] flex items-center gap-1">
-                                <div className="icon-layers w-3 h-3"></div> COLLECTION
-                             </span>
-                        )}
-                        {asset.isPremium && (
-                             <span className="text-[10px] font-mono font-bold uppercase bg-[var(--accent)] text-black px-2 py-1 rounded-[2px]">PREMIUM</span>
-                        )}
+                        <span className="text-[10px] font-mono font-bold uppercase border border-[var(--border-dim)] text-[var(--text-dim)] px-2 py-1 rounded-[2px]">FREE</span>
                     </div>
 
                     <h1 className="text-3xl md:text-4xl font-mono font-bold text-[var(--text-main)] mb-6 uppercase leading-tight">{asset.title}</h1>
@@ -171,50 +314,74 @@ function AssetDetailView({ user, onOpenAuth }) {
                             <span className="text-sm font-mono text-[var(--text-muted)]">LICENSE TYPE</span>
                             <span className="text-sm font-bold text-[var(--text-main)]">COMMERCIAL / ROYALTY FREE</span>
                         </div>
-                        
-                        {asset.isPremium ? (
-                            <div className="space-y-4">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-[var(--text-main)]">${asset.price}</span>
-                                    <span className="text-[var(--text-dim)] text-sm">USD</span>
-                                </div>
-                                <button 
-                                    id="purchase-btn"
-                                    onClick={handlePurchase}
-                                    className="btn btn-primary w-full py-4 text-base font-bold shadow-[0_0_20px_rgba(204,255,0,0.15)] hover:shadow-[0_0_30px_rgba(204,255,0,0.25)] transition-all"
-                                >
-                                    UNLOCK COLLECTION
-                                </button>
-                                <p className="text-center text-[10px] text-[var(--text-dim)]">Secured by Stripe</p>
+                        <div className="space-y-4">
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
                             </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
-                                </div>
-                                <button 
-                                    onClick={handleDownload}
-                                    disabled={downloading}
-                                    className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
+                            <div>
+                                <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
+                                <select
+                                    value={downloadFormat}
+                                    onChange={(e) => setDownloadFormat(e.target.value)}
+                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
                                 >
-                                    {downloading ? (
-                                        <span className="flex items-center gap-2">
-                                            <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
-                                            COMPRESSING ZIP...
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-2">
-                                            <div className="icon-download w-4 h-4"></div>
-                                            {isCollection ? 'DOWNLOAD COLLECTION (ZIP)' : 'DOWNLOAD SVG'}
-                                        </span>
-                                    )}
-                                </button>
-                                {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual SVG files</p>}
+                                    <option value="svg">SVG</option>
+                                    <option value="png">PNG</option>
+                                    <option value="jpeg">JPEG</option>
+                                    <option value="webp">WEBP</option>
+                                </select>
                             </div>
-                        )}
+                            <button 
+                                onClick={handleDownload}
+                                disabled={downloading}
+                                className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
+                            >
+                                {downloading ? (
+                                    <span className="flex items-center gap-2">
+                                        <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
+                                        PREPARING DOWNLOAD...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        <div className="icon-download w-4 h-4"></div>
+                                        {isCollection ? `DOWNLOAD ${downloadFormat.toUpperCase()} COLLECTION (ZIP)` : `DOWNLOAD ${downloadFormat.toUpperCase()}`}
+                                    </span>
+                                )}
+                            </button>
+                            {!user && <p className="text-center text-[10px] text-[var(--text-dim)]">Sign in to download files.</p>}
+                            {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
+                        </div>
+                    </div>
+
+                    <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
+                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                            Still searching for the exact style you need? <a href="/tool" className="text-[var(--accent)] font-mono font-bold hover:underline">Launch the VEXURA Tool</a> to generate custom vectors tailored to your project in seconds.
+                        </p>
                     </div>
                 </div>
             </div>
+
+            {suggestions.length > 0 && (
+                <div className="mt-14">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-mono font-bold uppercase">More Suggestions</h2>
+                        <a href="/marketplace" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] uppercase">Browse all</a>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {suggestions.map((s) => (
+                            <a key={s.slug} href={`/asset?id=${s.slug}`} className="group block border border-[var(--border-dim)] rounded-[2px] overflow-hidden bg-[var(--bg-panel)] hover:border-[var(--text-muted)] transition-colors">
+                                <div className="aspect-square p-6 bg-[var(--bg-body)] flex items-center justify-center">
+                                    <div className="w-full h-full text-[var(--text-main)] group-hover:scale-105 transition-transform" dangerouslySetInnerHTML={{ __html: s.svg }}></div>
+                                </div>
+                                <div className="p-3 border-t border-[var(--border-dim)]">
+                                    <div className="text-xs font-mono font-bold uppercase truncate" title={s.title}>{s.title}</div>
+                                    <div className="text-[10px] text-[var(--text-dim)] font-mono mt-1">{s.category} · FREE</div>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

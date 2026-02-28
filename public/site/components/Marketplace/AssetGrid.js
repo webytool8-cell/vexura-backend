@@ -1,26 +1,115 @@
 function AssetGrid() {
     const [filter, setFilter] = React.useState('all');
     const [search, setSearch] = React.useState('');
-    
+    const [dbAssets, setDbAssets] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+
     const categories = ['all', 'icons', 'gradients', 'shapes', 'patterns', 'illustrations'];
 
+    const normalizeCategory = (category) => {
+        const c = (category || 'icons').toLowerCase();
+        if (c.endsWith('s')) return c;
+        if (c === 'icon') return 'icons';
+        if (c === 'illustration') return 'illustrations';
+        if (c === 'gradient') return 'gradients';
+        if (c === 'shape') return 'shapes';
+        if (c === 'pattern') return 'patterns';
+        return c;
+    };
+
+    const escapeAttr = (value) => String(value).replace(/"/g, '&quot;');
+
+    const vectorToSvg = (vector) => {
+        if (!vector || !Array.isArray(vector.elements) || vector.elements.length === 0) {
+            return '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="400" fill="none" stroke="currentColor" stroke-width="8"/><path d="M90 310 L170 210 L230 260 L310 120" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        }
+
+        const width = vector.width || 400;
+        const height = vector.height || 400;
+        const elements = vector.elements.map((el) => {
+            const attrs = Object.entries(el)
+                .filter(([k, v]) => k !== 'type' && v !== undefined && v !== null)
+                .map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}="${escapeAttr(v)}"`)
+                .join(' ');
+            return `<${el.type} ${attrs}></${el.type}>`;
+        }).join('');
+
+        return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${elements}</svg>`;
+    };
+
+    const normalizeTitle = (rawTitle = '') => String(rawTitle)
+        .replace(/\s*-\s*Premium Vector Icon\s*\|\s*VEXURA/i, '')
+        .replace(/\b(pack|collection)\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+    const forceFreeDisplay = (asset) => ({
+        ...asset,
+        title: normalizeTitle(asset.title || asset.slug || 'Untitled Asset'),
+        type: 'single',
+        isPremium: false,
+        price: 0,
+        category: normalizeCategory(asset.category),
+        tags: asset.tags || []
+    });
+
+    const mapDbAsset = (item) => {
+        const category = normalizeCategory(item?.marketplace?.category);
+        const title = normalizeTitle(item?.seo?.title || item?.vector?.name || item?.slug || 'Untitled Asset');
+
+        return {
+            id: item.id || item.slug,
+            title,
+            slug: item.slug,
+            category,
+            type: 'single',
+            isPremium: false,
+            price: 0,
+            tags: item?.marketplace?.tags || [],
+            description: item?.seo?.description || item?.prompt || 'Marketplace vector asset',
+            svg: vectorToSvg(item.vector)
+        };
+    };
+
+    React.useEffect(() => {
+        let isMounted = true;
+
+        const load = async () => {
+            try {
+                const res = await fetch('/api/marketplace/list?limit=200&offset=0');
+                if (!res.ok) throw new Error('Failed to load marketplace items');
+                const data = await res.json();
+                const mapped = (data.items || []).map(mapDbAsset);
+                if (isMounted) setDbAssets(mapped);
+            } catch (e) {
+                console.warn('Falling back to static marketplace data:', e);
+                if (isMounted && window.MarketplaceData) setDbAssets(window.MarketplaceData.map(forceFreeDisplay));
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        load();
+        return () => { isMounted = false; };
+    }, []);
+
     const assets = React.useMemo(() => {
-        let data = window.getAssetsByCategory(filter);
+        let data = filter === 'all' ? dbAssets : dbAssets.filter(a => normalizeCategory(a.category) === filter);
         if (search) {
             const lowerSearch = search.toLowerCase();
-            data = data.filter(a => 
-                a.title.toLowerCase().includes(lowerSearch) || 
-                a.tags.some(t => t.includes(lowerSearch))
+            data = data.filter(a =>
+                a.title.toLowerCase().includes(lowerSearch) ||
+                (a.tags || []).some(t => t.toLowerCase().includes(lowerSearch))
             );
         }
         return data;
-    }, [filter, search]);
+    }, [dbAssets, filter, search]);
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">
             {/* Controls */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
-                
+
                 {/* Filters */}
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                     {categories.map(cat => (
@@ -28,8 +117,8 @@ function AssetGrid() {
                             key={cat}
                             onClick={() => setFilter(cat)}
                             className={`px-3 py-1.5 text-xs font-mono font-bold uppercase rounded-[2px] border transition-all ${
-                                filter === cat 
-                                ? 'bg-[var(--accent)] border-[var(--accent)] text-black' 
+                                filter === cat
+                                ? 'bg-[var(--accent)] border-[var(--accent)] text-black'
                                 : 'bg-[var(--bg-surface)] border-[var(--border-dim)] text-[var(--text-dim)] hover:border-[var(--text-muted)]'
                             }`}
                         >
@@ -43,15 +132,19 @@ function AssetGrid() {
                     <div className="absolute left-3 top-2.5 text-[var(--text-dim)]">
                         <div className="icon-search w-4 h-4"></div>
                     </div>
-                    <input 
-                        type="text" 
-                        placeholder="SEARCH ASSETS..." 
+                    <input
+                        type="text"
+                        placeholder="SEARCH ASSETS..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm pl-10 pr-4 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
                     />
                 </div>
             </div>
+
+            {loading && (
+                <div className="text-center py-8 text-[var(--text-dim)] font-mono text-xs">LOADING MARKETPLACE ASSETS...</div>
+            )}
 
             {/* Grid */}
             {assets.length > 0 ? (

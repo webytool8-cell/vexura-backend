@@ -1,0 +1,64 @@
+{
+  "name": "server monitoring alert dashboard icon s...",
+  "width": 400,
+  "height": 400,
+  "elements": [
+    {
+      "id": "base-rect",
+      "type": "rect",
+      "x": 40,
+      "y": 40,
+      "width": 320,
+      "height": 320,
+      "rx": 32,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 4
+    },
+    {
+      "id": "tech-el-0",
+      "type": "rect",
+      "x": 262,
+      "y": 249,
+      "width": 40,
+      "height": 20,
+      "rx": 4,
+      "fill": "#71717a",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "geo-rect-1",
+      "type": "rect",
+      "x": 223.5,
+      "y": 200.5,
+      "width": 93,
+      "height": 93,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#71717a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "tech-el-2",
+      "type": "rect",
+      "x": 198,
+      "y": 145,
+      "width": 40,
+      "height": 20,
+      "rx": 4,
+      "fill": "none",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    },
+    {
+      "id": "center-accent",
+      "type": "circle",
+      "cx": 200,
+      "cy": 200,
+      "r": 10,
+      "fill": "#ccff00",
+      "stroke": "none"
+    }
+  ]
+}
