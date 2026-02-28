@@ -188,7 +188,7 @@ function AssetDetailView({ user, onOpenAuth }) {
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
                 <div className="icon-file-x w-12 h-12 text-[var(--text-dim)] mb-4"></div>
                 <h1 className="text-xl font-mono font-bold mb-2">Asset Not Found</h1>
-                <a href="/marketplace" className="btn btn-secondary">BACK TO MARKETPLACE</a>
+                <a href="/site/marketplace.html" className="btn btn-secondary">BACK TO MARKETPLACE</a>
             </div>
         );
     }
@@ -199,7 +199,7 @@ function AssetDetailView({ user, onOpenAuth }) {
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="mb-8">
-                <a href="/marketplace" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] flex items-center gap-2 mb-4 uppercase">
+                <a href="/site/marketplace.html" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] flex items-center gap-2 mb-4 uppercase">
                     <div className="icon-arrow-left w-3 h-3"></div>
                     Back to Marketplace
                 </a>
@@ -260,44 +260,20 @@ function AssetDetailView({ user, onOpenAuth }) {
                             <div className="flex items-baseline gap-1">
                                 <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
                             </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
-                                    <select
-                                        value={downloadFormat}
-                                        onChange={(e) => setDownloadFormat(e.target.value)}
-                                        className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
-                                    >
-                                        <option value="svg">SVG</option>
-                                        <option value="png">PNG</option>
-                                        <option value="jpeg">JPEG</option>
-                                        <option value="webp">WEBP</option>
-                                    </select>
-                                </div>
-                                <button 
-                                    onClick={handleDownload}
-                                    disabled={downloading}
-                                    className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
+                            <div>
+                                <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
+                                <select
+                                    value={downloadFormat}
+                                    onChange={(e) => setDownloadFormat(e.target.value)}
+                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
                                 >
-                                    {downloading ? (
-                                        <span className="flex items-center gap-2">
-                                            <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
-                                            PREPARING DOWNLOAD...
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-2">
-                                            <div className="icon-download w-4 h-4"></div>
-                                            {isCollection ? `DOWNLOAD ${downloadFormat.toUpperCase()} COLLECTION (ZIP)` : `DOWNLOAD ${downloadFormat.toUpperCase()}`}
-                                        </span>
-                                    )}
-                                </button>
-                                {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
+                                    <option value="svg">SVG</option>
+                                    <option value="png">PNG</option>
+                                    <option value="jpeg">JPEG</option>
+                                    <option value="webp">WEBP</option>
+                                </select>
                             </div>
-                            <button 
+                            <button
                                 onClick={handleDownload}
                                 disabled={downloading}
                                 className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
@@ -324,12 +300,6 @@ function AssetDetailView({ user, onOpenAuth }) {
                             Still searching for the exact style you need? <a href="/tool" className="text-[var(--accent)] font-mono font-bold hover:underline">Launch the VEXURA Tool</a> to generate custom vectors tailored to your project in seconds.
                         </p>
                     </div>
-
-                    <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
-                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                            Still searching for the exact style you need? <a href="/tool" className="text-[var(--accent)] font-mono font-bold hover:underline">Launch the VEXURA Tool</a> to generate custom vectors tailored to your project in seconds.
-                        </p>
-                    </div>
                 </div>
             </div>
 
@@ -337,11 +307,11 @@ function AssetDetailView({ user, onOpenAuth }) {
                 <div className="mt-14">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-mono font-bold uppercase">More Suggestions</h2>
-                        <a href="/marketplace" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] uppercase">Browse all</a>
+                        <a href="/site/marketplace.html" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] uppercase">Browse all</a>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {suggestions.map((s) => (
-                            <a key={s.slug} href={`/asset?id=${s.slug}`} className="group block border border-[var(--border-dim)] rounded-[2px] overflow-hidden bg-[var(--bg-panel)] hover:border-[var(--text-muted)] transition-colors">
+                            <a key={s.slug} href={`/site/asset.html?id=${encodeURIComponent(s.slug)}`} className="group block border border-[var(--border-dim)] rounded-[2px] overflow-hidden bg-[var(--bg-panel)] hover:border-[var(--text-muted)] transition-colors">
                                 <div className="aspect-square p-6 bg-[var(--bg-body)] flex items-center justify-center">
                                     <div className="w-full h-full text-[var(--text-main)] group-hover:scale-105 transition-transform" dangerouslySetInnerHTML={{ __html: s.svg }}></div>
                                 </div>
