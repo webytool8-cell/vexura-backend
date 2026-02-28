@@ -3,7 +3,6 @@ function AssetDetailView({ user, onOpenAuth }) {
     const [loading, setLoading] = React.useState(true);
     const [downloading, setDownloading] = React.useState(false);
     const [downloadFormat, setDownloadFormat] = React.useState('svg');
-    const [suggestions, setSuggestions] = React.useState([]);
 
     const normalizeCategory = (category) => {
         const c = (category || 'icons').toLowerCase();
@@ -14,14 +13,6 @@ function AssetDetailView({ user, onOpenAuth }) {
         if (c === 'shape') return 'shapes';
         if (c === 'pattern') return 'patterns';
         return c;
-    };
-
-    const normalizeTitle = (rawTitle = '') => {
-        return String(rawTitle)
-            .replace(/\s*-\s*Premium Vector Icon\s*\|\s*VEXURA/i, '')
-            .replace(/\b(pack|collection)\b/gi, '')
-            .replace(/\s{2,}/g, ' ')
-            .trim();
     };
 
     const escapeAttr = (value) => String(value).replace(/"/g, '&quot;');
@@ -45,7 +36,8 @@ function AssetDetailView({ user, onOpenAuth }) {
     };
 
     const mapDbAsset = (item) => {
-        const title = normalizeTitle(item?.seo?.title || item?.vector?.name || item?.slug || 'Untitled Asset');
+        const price = item?.marketplace?.price || 0;
+        const title = item?.seo?.title?.replace(/\s*-\s*Premium Vector Icon\s*\|\s*VEXURA/i, '') || item?.vector?.name || item?.slug || 'Untitled Asset';
 
         return {
             id: item.id || item.slug,
@@ -53,24 +45,11 @@ function AssetDetailView({ user, onOpenAuth }) {
             slug: item.slug,
             category: normalizeCategory(item?.marketplace?.category),
             type: 'single',
-            isPremium: false,
-            price: 0,
+            isPremium: price > 0,
+            price,
             tags: item?.marketplace?.tags || [],
             description: item?.seo?.description || item?.prompt || 'Marketplace vector asset',
             svg: vectorToSvg(item.vector)
-        };
-    };
-
-    const forceFreeDisplay = (item) => {
-        if (!item) return null;
-        return {
-            ...item,
-            title: normalizeTitle(item.title || item.slug || 'Untitled Asset'),
-            type: 'single',
-            isPremium: false,
-            price: 0,
-            tags: item.tags || [],
-            category: normalizeCategory(item.category)
         };
     };
 
@@ -87,46 +66,14 @@ function AssetDetailView({ user, onOpenAuth }) {
             }
 
             try {
-                const [detailRes, listRes] = await Promise.all([
-                    fetch(`/api/marketplace/${encodeURIComponent(slug)}`),
-                    fetch('/api/marketplace/list?limit=120&offset=0')
-                ]);
-
-                if (!detailRes.ok) throw new Error('Failed to load marketplace asset');
-                const item = await detailRes.json();
-                const mappedAsset = mapDbAsset(item);
-
-                if (isMounted) setAsset(mappedAsset);
-
-                if (listRes.ok) {
-                    const listData = await listRes.json();
-                    const pool = (listData.items || []).map(mapDbAsset).filter((x) => x.slug !== mappedAsset.slug);
-                    const scored = pool.map((candidate) => {
-                        const tagOverlap = (candidate.tags || []).filter(t => mappedAsset.tags.includes(t)).length;
-                        const categoryBoost = candidate.category === mappedAsset.category ? 2 : 0;
-                        return { candidate, score: tagOverlap + categoryBoost };
-                    }).sort((a, b) => b.score - a.score);
-
-                    if (isMounted) setSuggestions(scored.slice(0, 4).map(s => s.candidate));
-                }
+                const res = await fetch(`/api/marketplace/${encodeURIComponent(slug)}`);
+                if (!res.ok) throw new Error('Failed to load marketplace asset');
+                const item = await res.json();
+                if (isMounted) setAsset(mapDbAsset(item));
             } catch (e) {
                 console.warn('Falling back to static asset lookup:', e);
                 const found = window.getAssetBySlug ? window.getAssetBySlug(slug) : null;
-                const fallbackAsset = forceFreeDisplay(found);
-                if (isMounted) setAsset(fallbackAsset || null);
-
-                if (isMounted && window.MarketplaceData && fallbackAsset) {
-                    const pool = window.MarketplaceData
-                        .filter((x) => x.slug !== fallbackAsset.slug)
-                        .map(forceFreeDisplay)
-                        .filter(Boolean);
-                    const scored = pool.map((candidate) => {
-                        const tagOverlap = (candidate.tags || []).filter(t => (fallbackAsset.tags || []).includes(t)).length;
-                        const categoryBoost = candidate.category === fallbackAsset.category ? 2 : 0;
-                        return { candidate, score: tagOverlap + categoryBoost };
-                    }).sort((a, b) => b.score - a.score);
-                    setSuggestions(scored.slice(0, 4).map(s => s.candidate));
-                }
+                if (isMounted) setAsset(found || null);
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -138,11 +85,6 @@ function AssetDetailView({ user, onOpenAuth }) {
 
     const handleDownload = async () => {
         if (!asset) return;
-
-        if (!user) {
-            onOpenAuth();
-            return;
-        }
 
         if (asset.type === 'collection') {
             await downloadCollection(downloadFormat);
@@ -318,18 +260,42 @@ function AssetDetailView({ user, onOpenAuth }) {
                             <div className="flex items-baseline gap-1">
                                 <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
-                                <select
-                                    value={downloadFormat}
-                                    onChange={(e) => setDownloadFormat(e.target.value)}
-                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
+                                    <select
+                                        value={downloadFormat}
+                                        onChange={(e) => setDownloadFormat(e.target.value)}
+                                        className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+                                    >
+                                        <option value="svg">SVG</option>
+                                        <option value="png">PNG</option>
+                                        <option value="jpeg">JPEG</option>
+                                        <option value="webp">WEBP</option>
+                                    </select>
+                                </div>
+                                <button 
+                                    onClick={handleDownload}
+                                    disabled={downloading}
+                                    className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
                                 >
-                                    <option value="svg">SVG</option>
-                                    <option value="png">PNG</option>
-                                    <option value="jpeg">JPEG</option>
-                                    <option value="webp">WEBP</option>
-                                </select>
+                                    {downloading ? (
+                                        <span className="flex items-center gap-2">
+                                            <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
+                                            PREPARING DOWNLOAD...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            <div className="icon-download w-4 h-4"></div>
+                                            {isCollection ? `DOWNLOAD ${downloadFormat.toUpperCase()} COLLECTION (ZIP)` : `DOWNLOAD ${downloadFormat.toUpperCase()}`}
+                                        </span>
+                                    )}
+                                </button>
+                                {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
                             </div>
                             <button 
                                 onClick={handleDownload}
@@ -351,6 +317,12 @@ function AssetDetailView({ user, onOpenAuth }) {
                             {!user && <p className="text-center text-[10px] text-[var(--text-dim)]">Sign in to download files.</p>}
                             {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
                         </div>
+                    </div>
+
+                    <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
+                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                            Still searching for the exact style you need? <a href="/tool" className="text-[var(--accent)] font-mono font-bold hover:underline">Launch the VEXURA Tool</a> to generate custom vectors tailored to your project in seconds.
+                        </p>
                     </div>
 
                     <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">

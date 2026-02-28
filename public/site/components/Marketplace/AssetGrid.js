@@ -37,25 +37,10 @@ function AssetGrid() {
         return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${elements}</svg>`;
     };
 
-    const normalizeTitle = (rawTitle = '') => String(rawTitle)
-        .replace(/\s*-\s*Premium Vector Icon\s*\|\s*VEXURA/i, '')
-        .replace(/\b(pack|collection)\b/gi, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-
-    const forceFreeDisplay = (asset) => ({
-        ...asset,
-        title: normalizeTitle(asset.title || asset.slug || 'Untitled Asset'),
-        type: 'single',
-        isPremium: false,
-        price: 0,
-        category: normalizeCategory(asset.category),
-        tags: asset.tags || []
-    });
-
     const mapDbAsset = (item) => {
+        const price = item?.marketplace?.price || 0;
         const category = normalizeCategory(item?.marketplace?.category);
-        const title = normalizeTitle(item?.seo?.title || item?.vector?.name || item?.slug || 'Untitled Asset');
+        const title = item?.seo?.title?.replace(/\s*-\s*Premium Vector Icon\s*\|\s*VEXURA/i, '') || item?.vector?.name || item?.slug || 'Untitled Asset';
 
         return {
             id: item.id || item.slug,
@@ -63,8 +48,8 @@ function AssetGrid() {
             slug: item.slug,
             category,
             type: 'single',
-            isPremium: false,
-            price: 0,
+            isPremium: price > 0,
+            price,
             tags: item?.marketplace?.tags || [],
             description: item?.seo?.description || item?.prompt || 'Marketplace vector asset',
             svg: vectorToSvg(item.vector)
@@ -83,7 +68,7 @@ function AssetGrid() {
                 if (isMounted) setDbAssets(mapped);
             } catch (e) {
                 console.warn('Falling back to static marketplace data:', e);
-                if (isMounted && window.MarketplaceData) setDbAssets(window.MarketplaceData.map(forceFreeDisplay));
+                if (isMounted && window.MarketplaceData) setDbAssets(window.MarketplaceData);
             } finally {
                 if (isMounted) setLoading(false);
             }
