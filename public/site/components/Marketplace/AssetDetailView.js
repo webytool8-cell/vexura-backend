@@ -260,44 +260,20 @@ function AssetDetailView({ user, onOpenAuth }) {
                             <div className="flex items-baseline gap-1">
                                 <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
                             </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold text-[var(--text-main)]">Free</span>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
-                                    <select
-                                        value={downloadFormat}
-                                        onChange={(e) => setDownloadFormat(e.target.value)}
-                                        className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
-                                    >
-                                        <option value="svg">SVG</option>
-                                        <option value="png">PNG</option>
-                                        <option value="jpeg">JPEG</option>
-                                        <option value="webp">WEBP</option>
-                                    </select>
-                                </div>
-                                <button 
-                                    onClick={handleDownload}
-                                    disabled={downloading}
-                                    className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
+                            <div>
+                                <label className="block text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Download format</label>
+                                <select
+                                    value={downloadFormat}
+                                    onChange={(e) => setDownloadFormat(e.target.value)}
+                                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-dim)] text-sm px-3 py-2 rounded-[2px] font-mono text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
                                 >
-                                    {downloading ? (
-                                        <span className="flex items-center gap-2">
-                                            <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
-                                            PREPARING DOWNLOAD...
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-2">
-                                            <div className="icon-download w-4 h-4"></div>
-                                            {isCollection ? `DOWNLOAD ${downloadFormat.toUpperCase()} COLLECTION (ZIP)` : `DOWNLOAD ${downloadFormat.toUpperCase()}`}
-                                        </span>
-                                    )}
-                                </button>
-                                {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
+                                    <option value="svg">SVG</option>
+                                    <option value="png">PNG</option>
+                                    <option value="jpeg">JPEG</option>
+                                    <option value="webp">WEBP</option>
+                                </select>
                             </div>
-                            <button 
+                            <button
                                 onClick={handleDownload}
                                 disabled={downloading}
                                 className="btn btn-primary w-full py-4 text-base font-bold shadow-lg"
@@ -317,12 +293,6 @@ function AssetDetailView({ user, onOpenAuth }) {
                             {!user && <p className="text-center text-[10px] text-[var(--text-dim)]">Sign in to download files.</p>}
                             {isCollection && <p className="text-center text-[10px] text-[var(--text-dim)]">Includes {asset.items.length} individual {downloadFormat.toUpperCase()} files in ZIP</p>}
                         </div>
-                    </div>
-
-                    <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
-                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                            Still searching for the exact style you need? <a href="/tool" className="text-[var(--accent)] font-mono font-bold hover:underline">Launch the VEXURA Tool</a> to generate custom vectors tailored to your project in seconds.
-                        </p>
                     </div>
 
                     <div className="border border-[var(--border-dim)] bg-[var(--bg-surface)]/40 rounded-[2px] p-4">
