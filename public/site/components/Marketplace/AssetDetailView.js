@@ -188,7 +188,7 @@ function AssetDetailView({ user, onOpenAuth }) {
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
                 <div className="icon-file-x w-12 h-12 text-[var(--text-dim)] mb-4"></div>
                 <h1 className="text-xl font-mono font-bold mb-2">Asset Not Found</h1>
-                <a href="/marketplace" className="btn btn-secondary">BACK TO MARKETPLACE</a>
+                <a href="/site/marketplace.html" className="btn btn-secondary">BACK TO MARKETPLACE</a>
             </div>
         );
     }
@@ -199,7 +199,7 @@ function AssetDetailView({ user, onOpenAuth }) {
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="mb-8">
-                <a href="/marketplace" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] flex items-center gap-2 mb-4 uppercase">
+                <a href="/site/marketplace.html" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] flex items-center gap-2 mb-4 uppercase">
                     <div className="icon-arrow-left w-3 h-3"></div>
                     Back to Marketplace
                 </a>
@@ -337,11 +337,11 @@ function AssetDetailView({ user, onOpenAuth }) {
                 <div className="mt-14">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-mono font-bold uppercase">More Suggestions</h2>
-                        <a href="/marketplace" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] uppercase">Browse all</a>
+                        <a href="/site/marketplace.html" className="text-[10px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] uppercase">Browse all</a>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {suggestions.map((s) => (
-                            <a key={s.slug} href={`/asset?id=${s.slug}`} className="group block border border-[var(--border-dim)] rounded-[2px] overflow-hidden bg-[var(--bg-panel)] hover:border-[var(--text-muted)] transition-colors">
+                            <a key={s.slug} href={`/site/asset.html?id=${encodeURIComponent(s.slug)}`} className="group block border border-[var(--border-dim)] rounded-[2px] overflow-hidden bg-[var(--bg-panel)] hover:border-[var(--text-muted)] transition-colors">
                                 <div className="aspect-square p-6 bg-[var(--bg-body)] flex items-center justify-center">
                                     <div className="w-full h-full text-[var(--text-main)] group-hover:scale-105 transition-transform" dangerouslySetInnerHTML={{ __html: s.svg }}></div>
                                 </div>

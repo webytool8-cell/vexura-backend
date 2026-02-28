@@ -1,12 +1,14 @@
 function AssetCard({ asset }) {
-    const isFree = !asset.isPremium;
+    const normalizedCategory = (asset.category || '').toLowerCase();
+    const isIcon = normalizedCategory === 'icons' || normalizedCategory === 'icon';
+    const isFree = isIcon || !asset.isPremium;
     const isCollection = asset.type === 'collection';
     
     // Use previewSvg for collections, otherwise use the single svg
     const displaySvg = isCollection ? asset.previewSvg : asset.svg;
 
     return (
-        <a href={`/asset?id=${asset.slug}`} className="card group block relative h-full flex flex-col">
+        <a href={`/site/asset.html?id=${encodeURIComponent(asset.slug)}`} className="card group block relative h-full flex flex-col">
             {/* Preview Area */}
             <div className="aspect-square bg-[var(--bg-body)] relative flex items-center justify-center p-8 overflow-hidden">
                 {/* SVG Preview */}
@@ -37,10 +39,10 @@ function AssetCard({ asset }) {
             <div className="p-4 border-t border-[var(--border-dim)] bg-[var(--bg-panel)] flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-2 gap-2">
                     <h3 className="font-mono font-bold text-sm text-[var(--text-main)] uppercase truncate flex-1" title={asset.title}>{asset.title}</h3>
-                    {asset.isPremium ? (
-                        <span className="text-[10px] font-bold bg-[var(--accent)] text-black px-1.5 py-0.5 rounded-[2px] shrink-0">$ {asset.price}</span>
-                    ) : (
+                    {isFree ? (
                         <span className="text-[10px] font-bold border border-[var(--border-dim)] text-[var(--text-dim)] px-1.5 py-0.5 rounded-[2px] shrink-0">FREE</span>
+                    ) : (
+                        <span className="text-[10px] font-bold bg-[var(--accent)] text-black px-1.5 py-0.5 rounded-[2px] shrink-0">$ {asset.price}</span>
                     )}
                 </div>
                 <div className="mt-auto flex items-center gap-2 text-[10px] text-[var(--text-dim)] font-mono uppercase">
