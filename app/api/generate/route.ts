@@ -5,6 +5,7 @@ import { correctGeometry } from "../../../lib/geometry/correct";
 import { renderSVG } from "../../../lib/render/svg";
 import { buildSystemPrompt } from "../../../prompts/system-prompt"; // NEW IMPORT
 import { validateAndFixIcon, calculateQualityScore } from "../../../lib/validators/icon-validator";
+import { analyzePromptForOrganicNeeds, getOrganicPromptInjection } from "../../../lib/quality/organic-shapes";
 
 type GenerateRequest = {
   prompt: string;
@@ -161,6 +162,9 @@ async function callAIOrchestrator(
 
 // Organic system prompt (for illustrations)
 function buildOrganicSystemPrompt(prompt: string): string {
+  const analysis = analyzePromptForOrganicNeeds(prompt);
+  const organicPrimary = analysis.organicShapes[0]?.keyword ?? 'organic silhouette';
+
   return `
 You are a professional vector illustrator creating organic, flowing designs.
 
@@ -187,16 +191,21 @@ ORGANIC ILLUSTRATION RULES:
    - Balanced visual weight
 
 3. PATHS:
-   - Use Bézier curves (Q, C commands)
-   - Smooth, natural-looking curves
-   - Close paths with Z
+   - Use Bézier curves (Q, C, S commands)
+   - Keep curve tangents smooth and realistic
+   - Use one unified path for each primary organic silhouette
+   - Close closed silhouettes with Z
 
-4. COMPLEXITY:
+4. ORGANIC PRIORITY FOR THIS PROMPT:
+   - Detected primary organic subject: ${organicPrimary}
+${getOrganicPromptInjection(prompt)}
+
+5. COMPLEXITY:
    - Can use 10-20 elements for detailed illustrations
    - Layers and depth allowed
    - Overlapping shapes for visual interest
 
-5. FORBIDDEN:
+6. FORBIDDEN:
    - NO class/data-id attributes
    - NO transforms
    - NO gradients or filters
