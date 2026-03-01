@@ -19,3 +19,29 @@ The route `DELETE /api/marketplace/[slug]` requires an admin token header:
 - Server env: `MARKETPLACE_ADMIN_TOKEN`
 
 If `MARKETPLACE_ADMIN_TOKEN` is not configured, delete requests are rejected.
+
+## Pinterest auto-post environment
+
+Pinterest auto-post (used by automation pipeline) is enabled when:
+
+- `PINTEREST_AUTO_POST=true`
+
+Required token:
+
+- `PINTEREST_ACCESS_TOKEN`
+
+Board configuration (new easiest option):
+
+- `PINTEREST_BOARD_TEST` (single-board mode)
+
+Also supported:
+
+- `PINTEREST_BOARD_DEFAULT`
+- `PINTEREST_BOARD_UI`
+- `PINTEREST_BOARD_BRANDING`
+- `PINTEREST_BOARD_TECH`
+- `PINTEREST_BOARD_NATURE`
+- `PINTEREST_BOARD_ABSTRACT`
+- `PINTEREST_BOARD_BUSINESS`
+
+If only one board ID is available, set `PINTEREST_BOARD_TEST` and all generated pins will fall back to that board.

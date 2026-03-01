@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createMarketplaceListing } from '@/lib/database/marketplace';
+import { createMarketplaceListing, updatePinterestInfo } from '@/lib/database/marketplace';
 import { enrichMetadataFromJSON } from '@/lib/automation/metadata-enricher';
 import { validateAndFixIcon, calculateQualityScore } from '@/lib/validators/icon-validator';
+import { postToPinterest } from '@/lib/automation/pinterest-poster';
 
 function shouldEnforceMonochrome(promptText?: string): boolean {
   if (!promptText) return false;
@@ -79,6 +80,30 @@ export async function POST(request: Request) {
 
     // Save to database
     const listing = await createMarketplaceListing(enriched);
+
+    // Optional Pinterest auto-post for dashboard/manual uploads as well
+    const shouldPostToPinterest = process.env.PINTEREST_AUTO_POST === 'true';
+
+    if (shouldPostToPinterest) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.vexura.io';
+
+      try {
+        const pinResult = await postToPinterest({
+          title: enriched.pinterest.title,
+          description: enriched.pinterest.description,
+          board: enriched.pinterest.board,
+          imageUrl: `${baseUrl}/api/pinterest/image/${listing.slug}`,
+          link: `${baseUrl}/marketplace/${listing.slug}`,
+          altText: enriched.pinterest.altText
+        });
+
+        await updatePinterestInfo(listing.slug, pinResult.pinId, pinResult.pinUrl);
+        console.log('✅ Manual upload posted to Pinterest:', pinResult.pinId);
+      } catch (error) {
+        // Keep upload success even if Pinterest fails.
+        console.warn('⚠️ Manual upload Pinterest auto-post failed:', error);
+      }
+    }
 
     console.log('✅ Manual upload successful:', listing.slug);
 

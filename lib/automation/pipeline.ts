@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { enrichMetadata } from './metadata-enricher';
-import { createMarketplaceListing } from '../database/marketplace';
+import { createMarketplaceListing, updatePinterestInfo } from '../database/marketplace';
+import { postToPinterest } from './pinterest-poster';
 import { validateAndFixIcon, calculateQualityScore } from '../validators/icon-validator';
 import { buildSystemPrompt } from '../../prompts/system-prompt';
 
@@ -116,6 +117,32 @@ export async function executeAutomationPipeline(
     // STEP 4: Save to Database
     const listing = await createMarketplaceListing(enriched);
     console.log('✅ Saved to marketplace database');
+
+    // STEP 5 (optional): Post to Pinterest
+    const shouldPostToPinterest = process.env.PINTEREST_AUTO_POST === 'true';
+
+    if (shouldPostToPinterest) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.vexura.io';
+
+      try {
+        const pinResult = await postToPinterest({
+          title: enriched.pinterest.title,
+          description: enriched.pinterest.description,
+          board: enriched.pinterest.board,
+          imageUrl: `${baseUrl}/api/pinterest/image/${listing.slug}`,
+          link: `${baseUrl}/marketplace/${listing.slug}`,
+          altText: enriched.pinterest.altText
+        });
+
+        await updatePinterestInfo(listing.slug, pinResult.pinId, pinResult.pinUrl);
+        listing.pinterest.pinId = pinResult.pinId;
+        listing.pinterest.pinUrl = pinResult.pinUrl;
+        console.log('✅ Posted to Pinterest:', pinResult.pinId);
+      } catch (error) {
+        // Do not fail the core pipeline if Pinterest posting fails.
+        console.warn('⚠️ Pinterest auto-post failed:', error);
+      }
+    }
 
     return {
       success: true,
