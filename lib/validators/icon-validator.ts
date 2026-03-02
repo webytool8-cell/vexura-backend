@@ -1,3 +1,5 @@
+import { applyParentContainmentPass, enforceOrganicShapeIntegrity } from "./vector-passes";
+
 /**
  * Icon Validator & Auto-Fixer
  * Validates and corrects common issues in generated icons
@@ -44,8 +46,9 @@ export function validateAndFixIcon(
   checkElementCount(fixed, result);
   cleanAttributes(fixed, result);
   checkAndFixBounds(fixed, result);
+  applyParentContainmentPass(fixed, result, { getElementBounds, scaleAndTranslateElement });
   checkAndFixCentering(fixed, result);
-  enforceCanonicalHeartGeometry(fixed, result, options?.prompt);
+  enforceOrganicShapeIntegrity(fixed, result, { prompt: options?.prompt, iconTypeHint: options?.iconTypeHint });
   roundCoordinates(fixed, result);
   if (options?.enforceMonochrome) {
     normalizeColors(fixed, result);
@@ -492,42 +495,6 @@ function checkAndFixCentering(data: VectorData, result: ValidationResult) {
     });
 
     result.warnings.push('Auto-centered icon composition to (200, 200)');
-  }
-}
-
-/**
- * Normalize classic heart geometry if icon looks like two circles + one polygon.
- */
-function enforceCanonicalHeartGeometry(data: VectorData, result: ValidationResult, prompt?: string) {
-  if (!prompt || !/heart|love|favorite/i.test(prompt)) {
-    return;
-  }
-
-  const circles = data.elements.filter(el => el.type === 'circle');
-  const polygons = data.elements.filter(el => el.type === 'polygon');
-
-  if (circles.length !== 2 || polygons.length !== 1) {
-    return;
-  }
-
-  const polygon = polygons[0];
-  const points = typeof polygon.points === 'string' ? parsePoints(polygon.points) : [];
-
-  const hasComplexBottom = points.length > 3;
-  const circlesAreAsymmetric = Math.abs((circles[0].cx || 0) + (circles[1].cx || 0) - 400) > 10;
-
-  if (hasComplexBottom || circlesAreAsymmetric) {
-    circles[0].cx = 170;
-    circles[0].cy = 180;
-    circles[0].r = 60;
-
-    circles[1].cx = 230;
-    circles[1].cy = 180;
-    circles[1].r = 60;
-
-    polygon.points = '200,340 120,240 280,240';
-
-    result.warnings.push('Detected malformed heart geometry; auto-corrected to symmetric 2-circle + triangle structure');
   }
 }
 
