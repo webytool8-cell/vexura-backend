@@ -6,6 +6,17 @@ export type VexuraEmailTemplateInput = {
   previewText?: string;
 };
 
+export type VexuraAssetPreviewTemplateInput = VexuraEmailTemplateInput & {
+  assetImageUrl: string;
+  assetImageAlt?: string;
+  assetCaption?: string;
+};
+
+export type VexuraMarketingTemplateInput = VexuraEmailTemplateInput & {
+  eyebrow?: string;
+  secondaryText?: string;
+};
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -15,18 +26,8 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export function buildVexuraEmailTemplate({
-  title,
-  bodyText,
-  buttonText,
-  buttonLink,
-  previewText,
-}: VexuraEmailTemplateInput): string {
-  const safeTitle = escapeHtml(title);
-  const safeBody = escapeHtml(bodyText);
-  const safeButtonText = escapeHtml(buttonText);
-  const safeButtonLink = escapeHtml(buttonLink);
-  const safePreviewText = escapeHtml(previewText || title);
+function renderShell(content: string, previewText: string): string {
+  const safePreviewText = escapeHtml(previewText);
 
   return `<!DOCTYPE html>
 <html>
@@ -45,27 +46,7 @@ export function buildVexuraEmailTemplate({
                 </h1>
               </td>
             </tr>
-            <tr>
-              <td style="padding-bottom:20px;">
-                <h2 style="color:#ffffff; font-size:20px; margin:0; font-weight:600; line-height:1.3;">
-                  ${safeTitle}
-                </h2>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-bottom:30px;">
-                <p style="color:#b8c0cc; font-size:14px; line-height:1.6; margin:0;">
-                  ${safeBody}
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding-bottom:30px;">
-                <a href="${safeButtonLink}" style="display:inline-block; padding:12px 28px; font-size:14px; font-weight:bold; text-decoration:none; color:#ffffff; border-radius:6px; background:#00c6ff; background-image:linear-gradient(90deg,#00c6ff,#7f5af0);">
-                  ${safeButtonText}
-                </a>
-              </td>
-            </tr>
+            ${content}
             <tr>
               <td style="border-top:1px solid #232834; padding-top:20px;">
                 <p style="color:#6b7280; font-size:12px; margin:0; text-align:center;">
@@ -80,3 +61,147 @@ export function buildVexuraEmailTemplate({
   </body>
 </html>`;
 }
+
+export function buildVexuraMinimalTransactionalTemplate({
+  title,
+  bodyText,
+  buttonText,
+  buttonLink,
+  previewText,
+}: VexuraEmailTemplateInput): string {
+  const safeTitle = escapeHtml(title);
+  const safeBody = escapeHtml(bodyText);
+  const safeButtonText = escapeHtml(buttonText);
+  const safeButtonLink = escapeHtml(buttonLink);
+
+  const content = `<tr>
+    <td style="padding-bottom:16px;">
+      <h2 style="color:#ffffff; font-size:18px; margin:0; font-weight:600; line-height:1.3;">${safeTitle}</h2>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:24px;">
+      <p style="color:#b8c0cc; font-size:14px; line-height:1.6; margin:0;">${safeBody}</p>
+    </td>
+  </tr>
+  <tr>
+    <td align="left" style="padding-bottom:28px;">
+      <a href="${safeButtonLink}" style="display:inline-block; padding:11px 22px; font-size:14px; font-weight:bold; text-decoration:none; color:#ffffff; border-radius:6px; background:#1f2937; border:1px solid #2d3748;">${safeButtonText}</a>
+    </td>
+  </tr>`;
+
+  return renderShell(content, previewText || title);
+}
+
+export function buildVexuraAssetPreviewTemplate({
+  title,
+  bodyText,
+  buttonText,
+  buttonLink,
+  previewText,
+  assetImageUrl,
+  assetImageAlt,
+  assetCaption,
+}: VexuraAssetPreviewTemplateInput): string {
+  const safeTitle = escapeHtml(title);
+  const safeBody = escapeHtml(bodyText);
+  const safeButtonText = escapeHtml(buttonText);
+  const safeButtonLink = escapeHtml(buttonLink);
+  const safeAssetImageUrl = escapeHtml(assetImageUrl);
+  const safeAssetImageAlt = escapeHtml(assetImageAlt || "Asset preview");
+  const safeAssetCaption = assetCaption ? escapeHtml(assetCaption) : "";
+
+  const captionBlock = safeAssetCaption
+    ? `<tr><td style="padding-top:10px; padding-bottom:26px;"><p style="margin:0; font-size:12px; color:#94a3b8; line-height:1.5;">${safeAssetCaption}</p></td></tr>`
+    : `<tr><td style="padding-bottom:26px;"></td></tr>`;
+
+  const content = `<tr>
+    <td style="padding-bottom:18px;">
+      <h2 style="color:#ffffff; font-size:20px; margin:0; font-weight:600; line-height:1.3;">${safeTitle}</h2>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:22px;">
+      <p style="color:#b8c0cc; font-size:14px; line-height:1.6; margin:0;">${safeBody}</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:0;">
+      <img src="${safeAssetImageUrl}" alt="${safeAssetImageAlt}" width="520" style="display:block; width:100%; max-width:520px; border-radius:10px; border:1px solid #232834;" />
+    </td>
+  </tr>
+  ${captionBlock}
+  <tr>
+    <td align="center" style="padding-bottom:30px;">
+      <a href="${safeButtonLink}" style="display:inline-block; padding:12px 28px; font-size:14px; font-weight:bold; text-decoration:none; color:#ffffff; border-radius:6px; background:#00c6ff; background-image:linear-gradient(90deg,#00c6ff,#7f5af0);">${safeButtonText}</a>
+    </td>
+  </tr>`;
+
+  return renderShell(content, previewText || title);
+}
+
+export function buildVexuraMarketingTemplate({
+  title,
+  bodyText,
+  buttonText,
+  buttonLink,
+  previewText,
+  eyebrow,
+  secondaryText,
+}: VexuraMarketingTemplateInput): string {
+  const safeTitle = escapeHtml(title);
+  const safeBody = escapeHtml(bodyText);
+  const safeButtonText = escapeHtml(buttonText);
+  const safeButtonLink = escapeHtml(buttonLink);
+  const safeEyebrow = eyebrow ? escapeHtml(eyebrow) : "NEW DROP";
+  const safeSecondaryText = secondaryText ? escapeHtml(secondaryText) : "";
+
+  const secondaryBlock = safeSecondaryText
+    ? `<tr><td style="padding-top:14px; padding-bottom:0;"><p style="color:#8b93a5; font-size:13px; line-height:1.6; margin:0;">${safeSecondaryText}</p></td></tr>`
+    : "";
+
+  const content = `<tr>
+    <td style="padding-bottom:10px;">
+      <p style="margin:0; color:#7dd3fc; font-size:11px; font-weight:700; letter-spacing:1.2px;">${safeEyebrow}</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:16px;">
+      <h2 style="color:#ffffff; font-size:24px; margin:0; font-weight:700; line-height:1.25;">${safeTitle}</h2>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:24px;">
+      <p style="color:#c3cad5; font-size:15px; line-height:1.7; margin:0;">${safeBody}</p>
+    </td>
+  </tr>
+  <tr>
+    <td align="left" style="padding-bottom:6px;">
+      <a href="${safeButtonLink}" style="display:inline-block; padding:12px 28px; font-size:14px; font-weight:bold; text-decoration:none; color:#ffffff; border-radius:6px; background:#00c6ff; background-image:linear-gradient(90deg,#00c6ff,#7f5af0);">${safeButtonText}</a>
+    </td>
+  </tr>
+  ${secondaryBlock}`;
+
+  return renderShell(content, previewText || title);
+}
+
+export function buildVexuraPlainTextTemplate({
+  title,
+  bodyText,
+  buttonText,
+  buttonLink,
+}: VexuraEmailTemplateInput): string {
+  return [
+    "VEXURA",
+    "",
+    title,
+    "",
+    bodyText,
+    "",
+    `${buttonText}: ${buttonLink}`,
+    "",
+    "© 2026 Vexura.io — All rights reserved",
+  ].join("\n");
+}
+
+export const buildVexuraEmailTemplate = buildVexuraMarketingTemplate;

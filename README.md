@@ -87,3 +87,28 @@ Example request body:
 ```
 
 The route uses a reusable dark/minimal Vexura template in `lib/email/template.ts`.
+
+Template variants supported by `/api/email/send`:
+
+- `minimal` (transactional-only, simplest layout)
+- `asset-preview` (includes image preview block; requires `assetImageUrl`)
+- `marketing` (default; includes eyebrow/secondary copy options)
+
+Plain-text fallback is always included automatically in sent emails.
+
+Example (asset preview):
+
+```json
+{
+  "to": "recipient@example.com",
+  "subject": "Your Vector Asset Is Ready",
+  "variant": "asset-preview",
+  "title": "Your Vector Asset Is Ready",
+  "bodyText": "Your AI-generated vector has been created and is now available.",
+  "buttonText": "View Asset",
+  "buttonLink": "https://vexura.io/dashboard",
+  "assetImageUrl": "https://vexura.io/previews/asset-123.png",
+  "assetImageAlt": "Generated vector preview",
+  "assetCaption": "Preview of your generated vector"
+}
+```

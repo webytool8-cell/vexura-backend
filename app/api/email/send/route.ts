@@ -11,6 +11,12 @@ type SendEmailRequest = {
   buttonText?: string;
   buttonLink?: string;
   previewText?: string;
+  variant?: "minimal" | "asset-preview" | "marketing";
+  assetImageUrl?: string;
+  assetImageAlt?: string;
+  assetCaption?: string;
+  eyebrow?: string;
+  secondaryText?: string;
 };
 
 export async function POST(request: Request) {
@@ -33,6 +39,12 @@ export async function POST(request: Request) {
       buttonText: body.buttonText || "View Asset",
       buttonLink: body.buttonLink || "https://vexura.io/dashboard",
       previewText: body.previewText,
+      variant: body.variant,
+      assetImageUrl: body.assetImageUrl,
+      assetImageAlt: body.assetImageAlt,
+      assetCaption: body.assetCaption,
+      eyebrow: body.eyebrow,
+      secondaryText: body.secondaryText,
     });
 
     return NextResponse.json({
