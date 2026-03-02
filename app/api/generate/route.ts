@@ -6,7 +6,7 @@ import { renderSVG } from "../../../lib/render/svg";
 import { buildSystemPrompt } from "../../../prompts/system-prompt"; // NEW IMPORT
 import { validateAndFixIcon, calculateQualityScore } from "../../../lib/validators/icon-validator";
 import { analyzePromptForOrganicNeeds, getOrganicPromptInjection } from "../../../lib/quality/organic-shapes";
-import { getComputedPatternPromptInjection, getHybridIntegrationRules } from "../../../lib/quality/computed-patterns";
+import { analyzeShapeRequirements, getComputedPatternPromptInjection, getHybridIntegrationRules } from "../../../lib/quality/computed-patterns";
 
 type GenerateRequest = {
   prompt: string;
@@ -125,10 +125,22 @@ async function callAIOrchestrator(
   console.log("🎨 Generation Mode:", isOrganic ? "ORGANIC" : "GEOMETRIC");
   console.log("📝 Prompt:", prompt);
 
+  const shapeRequirements = analyzeShapeRequirements(prompt);
+  if (process.env.DEBUG_SHAPE_ANALYSIS === "true") {
+    console.log("🔍 Shape requirements:", JSON.stringify(shapeRequirements));
+  }
+
   // Use new pattern-aware system prompt builder
   const systemPrompt = isOrganic 
     ? buildOrganicSystemPrompt(prompt)
     : buildSystemPrompt(prompt); // Uses pattern detection from lib/quality
+
+  if (process.env.DEBUG_PROMPTS === "true") {
+    console.log(`📝 FULL SYSTEM PROMPT BEING SENT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${systemPrompt}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  }
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
