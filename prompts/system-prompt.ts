@@ -2,6 +2,7 @@ import { iconPatterns, getPatternForPrompt } from '../lib/quality/icon-patterns'
 import { styleGuide } from '../lib/quality/style-guide';
 import { getMistakesForIconType } from '../lib/quality/common-mistakes';
 import { analyzePromptForOrganicNeeds, getOrganicPromptInjection } from '../lib/quality/organic-shapes';
+import { getComputedPatternPromptInjection, getHybridIntegrationRules } from '../lib/quality/computed-patterns';
 
 export function buildSystemPrompt(userPrompt: string): string {
   // Check for specific pattern
@@ -99,6 +100,8 @@ Before returning JSON, verify:
 ${styleGuide.validationChecklist.map(check => `□ ${check}`).join('\n')}
 
 ${getOrganicPromptInjection(userPrompt)}
+${getComputedPatternPromptInjection(userPrompt)}
+${getHybridIntegrationRules(userPrompt)}
 
 Remember: These are ICONS not ILLUSTRATIONS. Think iOS/Material Design system icons.`;
 

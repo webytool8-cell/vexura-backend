@@ -1,4 +1,4 @@
-import { applyParentContainmentPass, enforceOrganicShapeIntegrity } from "./vector-passes";
+import { applyParentContainmentPass, enforceComputedPatternIntegrity, enforceOrganicShapeIntegrity } from "./vector-passes";
 
 /**
  * Icon Validator & Auto-Fixer
@@ -49,6 +49,7 @@ export function validateAndFixIcon(
   applyParentContainmentPass(fixed, result, { getElementBounds, scaleAndTranslateElement });
   checkAndFixCentering(fixed, result);
   enforceOrganicShapeIntegrity(fixed, result, { prompt: options?.prompt, iconTypeHint: options?.iconTypeHint });
+  enforceComputedPatternIntegrity(fixed, result, { prompt: options?.prompt, getElementBounds });
   roundCoordinates(fixed, result);
   if (options?.enforceMonochrome) {
     normalizeColors(fixed, result);

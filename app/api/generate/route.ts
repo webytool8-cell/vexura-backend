@@ -6,6 +6,7 @@ import { renderSVG } from "../../../lib/render/svg";
 import { buildSystemPrompt } from "../../../prompts/system-prompt"; // NEW IMPORT
 import { validateAndFixIcon, calculateQualityScore } from "../../../lib/validators/icon-validator";
 import { analyzePromptForOrganicNeeds, getOrganicPromptInjection } from "../../../lib/quality/organic-shapes";
+import { getComputedPatternPromptInjection, getHybridIntegrationRules } from "../../../lib/quality/computed-patterns";
 
 type GenerateRequest = {
   prompt: string;
@@ -199,6 +200,8 @@ ORGANIC ILLUSTRATION RULES:
 4. ORGANIC PRIORITY FOR THIS PROMPT:
    - Detected primary organic subject: ${organicPrimary}
 ${getOrganicPromptInjection(prompt)}
+${getComputedPatternPromptInjection(prompt)}
+${getHybridIntegrationRules(prompt)}
 
 5. COMPLEXITY:
    - Can use 10-20 elements for detailed illustrations

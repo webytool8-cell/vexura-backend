@@ -5,13 +5,15 @@ const passesSource = fs.readFileSync('lib/validators/vector-passes.ts', 'utf8');
 
 const requiredValidator = [
   'applyParentContainmentPass(fixed, result, { getElementBounds, scaleAndTranslateElement });',
-  'enforceOrganicShapeIntegrity(fixed, result, { prompt: options?.prompt, iconTypeHint: options?.iconTypeHint });'
+  'enforceOrganicShapeIntegrity(fixed, result, { prompt: options?.prompt, iconTypeHint: options?.iconTypeHint });',
+  'enforceComputedPatternIntegrity(fixed, result, { prompt: options?.prompt, getElementBounds });'
 ];
 
 const requiredPassesExactlyOne = [
   'export function applyParentContainmentPass(',
   'function calcBoundsAreaForContainment(',
   'export function enforceOrganicShapeIntegrity(',
+  'export function enforceComputedPatternIntegrity(',
   'function convertHeartPrimitivesToUnifiedPath('
 ];
 
@@ -23,6 +25,7 @@ const forbiddenLegacyInValidator = [
   'function computeElementBoundsArea(',
   'function calcBoundsAreaForContainment(',
   'function enforceOrganicShapeIntegrity(',
+  'function enforceComputedPatternIntegrity(',
   'function convertHeartPrimitivesToUnifiedPath('
 ];
 

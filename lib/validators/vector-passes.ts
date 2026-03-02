@@ -1,4 +1,5 @@
 import { analyzePromptForOrganicNeeds, pathContainsBezierCurves } from "../quality/organic-shapes";
+import { analyzeShapeRequirements } from "../quality/computed-patterns";
 
 type Element = { type: string; [key: string]: any };
 type Bounds = { minX: number; maxX: number; minY: number; maxY: number };
@@ -153,4 +154,45 @@ function generateHeartPath(centerX: number, centerY: number, size: number, fill:
     fill,
     ...(stroke ? { stroke } : {})
   };
+}
+
+
+export function enforceComputedPatternIntegrity(
+  data: VectorData,
+  result: ValidationResult,
+  options: {
+    prompt?: string;
+    getElementBounds: (el: Element) => Bounds | null;
+  }
+) {
+  const prompt = options.prompt;
+  if (!prompt) return;
+
+  const requirements = analyzeShapeRequirements(prompt);
+  if (!requirements.hasComputedPattern || !requirements.computedType) return;
+
+  const centers = data.elements
+    .map((el) => options.getElementBounds(el))
+    .filter((b): b is Bounds => !!b)
+    .map((b) => ({ x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 }));
+
+  if (centers.length < 3) return;
+
+  if (requirements.computedType === 'grid') {
+    const xs = [...new Set(centers.map(c => Math.round(c.x / 10) * 10))].sort((a, b) => a - b);
+    const ys = [...new Set(centers.map(c => Math.round(c.y / 10) * 10))].sort((a, b) => a - b);
+    if (xs.length * ys.length !== centers.length) {
+      result.warnings.push('Computed grid prompt detected but element centers do not form a clean row/column matrix');
+    }
+    return;
+  }
+
+  const center = { x: 200, y: 200 };
+  const radii = centers.map(c => Math.hypot(c.x - center.x, c.y - center.y));
+  const avgR = radii.reduce((a, b) => a + b, 0) / radii.length;
+  const variance = radii.reduce((a, r) => a + Math.abs(r - avgR), 0) / radii.length;
+
+  if ((requirements.computedType === 'radial' || requirements.computedType === 'star' || requirements.computedType === 'concentric') && variance > 14) {
+    result.warnings.push(`Computed ${requirements.computedType} pattern detected, but radii are uneven. Prefer mathematically consistent placement.`);
+  }
 }
