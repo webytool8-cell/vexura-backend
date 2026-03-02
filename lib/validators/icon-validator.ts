@@ -46,7 +46,7 @@ export function validateAndFixIcon(
   checkElementCount(fixed, result);
   cleanAttributes(fixed, result);
   checkAndFixBounds(fixed, result);
-  applyParentContainmentPass(fixed, result);
+  checkAndFixParentContainment(fixed, result);
   checkAndFixCentering(fixed, result);
   enforceOrganicShapeIntegrity(fixed, result, options?.prompt, options?.iconTypeHint);
   roundCoordinates(fixed, result);
@@ -502,9 +502,9 @@ function checkAndFixCentering(data: VectorData, result: ValidationResult) {
  * Ensure child geometry remains visually contained by likely parent containers
  * (e.g., dashboard border containing cards/lines).
  */
-function applyParentContainmentPass(data: VectorData, result: ValidationResult) {
+function checkAndFixParentContainment(data: VectorData, result: ValidationResult) {
   const parentCandidates = data.elements
-    .map((el, idx) => ({ el, idx, bounds: getElementBounds(el), area: calcBoundsAreaForContainment(el) }))
+    .map((el, idx) => ({ el, idx, bounds: getElementBounds(el), area: getElementArea(el) }))
     .filter(item => item.bounds && item.area > 0)
     .sort((a, b) => b.area - a.area);
 
@@ -519,7 +519,7 @@ function applyParentContainmentPass(data: VectorData, result: ValidationResult) 
     const parent = parentCandidates.find(candidate => {
       if (candidate.idx === childIdx || !candidate.bounds) return false;
 
-      const childArea = calcBoundsAreaForContainment(child);
+      const childArea = getElementArea(child);
       if (childArea <= 0 || candidate.area <= childArea * 1.8) return false;
 
       const childCenterX = (childBounds.minX + childBounds.maxX) / 2;
@@ -559,7 +559,75 @@ function applyParentContainmentPass(data: VectorData, result: ValidationResult) 
   }
 }
 
-function calcBoundsAreaForContainment(el: Element): number {
+function getElementArea(el: Element): number {
+  const bounds = getElementBounds(el);
+  if (!bounds) return 0;
+  const width = Math.max(0, bounds.maxX - bounds.minX);
+  const height = Math.max(0, bounds.maxY - bounds.minY);
+  return width * height;
+}
+
+/**
+ * Normalize classic heart geometry if icon looks like two circles + one polygon.
+ */
+function checkAndFixParentContainment(data: VectorData, result: ValidationResult) {
+  const parentCandidates = data.elements
+    .map((el, idx) => ({ el, idx, bounds: getElementBounds(el), area: getElementArea(el) }))
+    .filter(item => item.bounds && item.area > 0)
+    .sort((a, b) => b.area - a.area);
+
+  if (parentCandidates.length === 0) return;
+
+  let fixes = 0;
+
+  data.elements.forEach((child, childIdx) => {
+    const childBounds = getElementBounds(child);
+    if (!childBounds) return;
+
+    const parent = parentCandidates.find(candidate => {
+      if (candidate.idx === childIdx || !candidate.bounds) return false;
+
+      const childArea = getElementArea(child);
+      if (childArea <= 0 || candidate.area <= childArea * 1.8) return false;
+
+      const childCenterX = (childBounds.minX + childBounds.maxX) / 2;
+      const childCenterY = (childBounds.minY + childBounds.maxY) / 2;
+
+      return (
+        childCenterX >= candidate.bounds.minX &&
+        childCenterX <= candidate.bounds.maxX &&
+        childCenterY >= candidate.bounds.minY &&
+        childCenterY <= candidate.bounds.maxY
+      );
+    });
+
+    if (!parent?.bounds) return;
+
+    const margin = 2;
+    const overflowLeft = Math.max(0, parent.bounds.minX + margin - childBounds.minX);
+    const overflowRight = Math.max(0, childBounds.maxX - (parent.bounds.maxX - margin));
+    const overflowTop = Math.max(0, parent.bounds.minY + margin - childBounds.minY);
+    const overflowBottom = Math.max(0, childBounds.maxY - (parent.bounds.maxY - margin));
+
+    if (overflowLeft === 0 && overflowRight === 0 && overflowTop === 0 && overflowBottom === 0) {
+      return;
+    }
+
+    const dx = overflowLeft > 0 ? overflowLeft : overflowRight > 0 ? -overflowRight : 0;
+    const dy = overflowTop > 0 ? overflowTop : overflowBottom > 0 ? -overflowBottom : 0;
+
+    if (dx !== 0 || dy !== 0) {
+      scaleAndTranslateElement(child, 1, dx, dy);
+      fixes++;
+    }
+  });
+
+  if (fixes > 0) {
+    result.warnings.push(`Adjusted ${fixes} element(s) to stay contained within likely parent boundaries`);
+  }
+}
+
+function getElementArea(el: Element): number {
   const bounds = getElementBounds(el);
   if (!bounds) return 0;
   const width = Math.max(0, bounds.maxX - bounds.minX);
