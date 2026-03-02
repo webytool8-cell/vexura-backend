@@ -45,3 +45,19 @@ Also supported:
 - `PINTEREST_BOARD_BUSINESS`
 
 If only one board ID is available, set `PINTEREST_BOARD_TEST` and all generated pins will fall back to that board.
+
+## Merge conflict resolution for validator changes
+
+If a PR touches `lib/validators/icon-validator.ts` and `lib/validators/vector-passes.ts`, prefer this merge strategy:
+
+- Keep `icon-validator.ts` as orchestration only (imports + function calls).
+- Keep pass implementations in `vector-passes.ts`.
+- Do **not** reintroduce pass helper function definitions inside `icon-validator.ts`.
+
+After resolving conflicts, run:
+
+```bash
+npm run check:validator-structure
+```
+
+This command fails if legacy/duplicate helper definitions are reintroduced during conflict resolution.
