@@ -5,6 +5,8 @@ import { correctGeometry } from "../../../lib/geometry/correct";
 import { renderSVG } from "../../../lib/render/svg";
 import { buildSystemPrompt } from "../../../prompts/system-prompt"; // NEW IMPORT
 import { validateAndFixIcon, calculateQualityScore } from "../../../lib/validators/icon-validator";
+import { analyzePromptForOrganicNeeds, getOrganicPromptInjection } from "../../../lib/quality/organic-shapes";
+import { analyzeShapeRequirements, getComputedPatternPromptInjection, getHybridIntegrationRules } from "../../../lib/quality/computed-patterns";
 
 type GenerateRequest = {
   prompt: string;
@@ -123,10 +125,22 @@ async function callAIOrchestrator(
   console.log("🎨 Generation Mode:", isOrganic ? "ORGANIC" : "GEOMETRIC");
   console.log("📝 Prompt:", prompt);
 
+  const shapeRequirements = analyzeShapeRequirements(prompt);
+  if (process.env.DEBUG_SHAPE_ANALYSIS === "true") {
+    console.log("🔍 Shape requirements:", JSON.stringify(shapeRequirements));
+  }
+
   // Use new pattern-aware system prompt builder
   const systemPrompt = isOrganic 
     ? buildOrganicSystemPrompt(prompt)
     : buildSystemPrompt(prompt); // Uses pattern detection from lib/quality
+
+  if (process.env.DEBUG_PROMPTS === "true") {
+    console.log(`📝 FULL SYSTEM PROMPT BEING SENT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${systemPrompt}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  }
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -161,6 +175,9 @@ async function callAIOrchestrator(
 
 // Organic system prompt (for illustrations)
 function buildOrganicSystemPrompt(prompt: string): string {
+  const analysis = analyzePromptForOrganicNeeds(prompt);
+  const organicPrimary = analysis.organicShapes[0]?.keyword ?? 'organic silhouette';
+
   return `
 You are a professional vector illustrator creating organic, flowing designs.
 
@@ -187,16 +204,23 @@ ORGANIC ILLUSTRATION RULES:
    - Balanced visual weight
 
 3. PATHS:
-   - Use Bézier curves (Q, C commands)
-   - Smooth, natural-looking curves
-   - Close paths with Z
+   - Use Bézier curves (Q, C, S commands)
+   - Keep curve tangents smooth and realistic
+   - Use one unified path for each primary organic silhouette
+   - Close closed silhouettes with Z
 
-4. COMPLEXITY:
+4. ORGANIC PRIORITY FOR THIS PROMPT:
+   - Detected primary organic subject: ${organicPrimary}
+${getOrganicPromptInjection(prompt)}
+${getComputedPatternPromptInjection(prompt)}
+${getHybridIntegrationRules(prompt)}
+
+5. COMPLEXITY:
    - Can use 10-20 elements for detailed illustrations
    - Layers and depth allowed
    - Overlapping shapes for visual interest
 
-5. FORBIDDEN:
+6. FORBIDDEN:
    - NO class/data-id attributes
    - NO transforms
    - NO gradients or filters
