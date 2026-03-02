@@ -1,18 +1,14 @@
 import { iconPatterns, getPatternForPrompt } from '../lib/quality/icon-patterns';
 import { styleGuide } from '../lib/quality/style-guide';
 import { getMistakesForIconType } from '../lib/quality/common-mistakes';
-
-
-function needsOrganicCurves(prompt: string): boolean {
-  return /heart|love|favorite|organic|nature|leaf|petal|floral|blob|flow/i.test(prompt);
-}
-
+import { analyzePromptForOrganicNeeds, getOrganicPromptInjection } from '../lib/quality/organic-shapes';
 
 export function buildSystemPrompt(userPrompt: string): string {
   // Check for specific pattern
   const pattern = getPatternForPrompt(userPrompt);
   const specificMistakes = getMistakesForIconType(userPrompt);
-  const organicShapeRequired = needsOrganicCurves(userPrompt);
+  const shapeAnalysis = analyzePromptForOrganicNeeds(userPrompt);
+  const organicShapeRequired = shapeAnalysis.organicShapes.length > 0;
   
   let prompt = `You are a professional vector icon designer. Generate clean, geometric SVG icons following modern UI icon design standards (iOS, Material Design, Fluent, macOS).
 
@@ -92,7 +88,8 @@ ${specificMistakes.map(m => `   ⚠️  ${m}`).join('\n')}
 ${organicShapeRequired
   ? `   • Use smooth cubic/quadratic curves for silhouette continuity
    • Avoid hard polygon corners for organic subjects
-   • Keep tangent transitions continuous where lobes and base meet`
+   • Keep tangent transitions continuous where lobes and base meet
+   • Prefer one unified path for the main organic silhouette`
   : `   • Not required for this prompt`}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -100,6 +97,8 @@ ${organicShapeRequired
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Before returning JSON, verify:
 ${styleGuide.validationChecklist.map(check => `□ ${check}`).join('\n')}
+
+${getOrganicPromptInjection(userPrompt)}
 
 Remember: These are ICONS not ILLUSTRATIONS. Think iOS/Material Design system icons.`;
 
