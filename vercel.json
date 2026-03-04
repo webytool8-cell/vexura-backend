@@ -39,6 +39,26 @@
     {
       "source": "/success",
       "destination": "/site/success.html"
+    },
+    {
+      "source": "/generate",
+      "destination": "/site/generate.html"
+    },
+    {
+      "source": "/vectorize",
+      "destination": "/site/vectorize.html"
+    },
+    {
+      "source": "/blog",
+      "destination": "/site/blog.html"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/site/blog-post.html"
+    },
+    {
+      "source": "/pricing",
+      "destination": "/site/pricing.html"
     }
   ]
 }
