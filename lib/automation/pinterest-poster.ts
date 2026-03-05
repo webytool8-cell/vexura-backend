@@ -1,3 +1,5 @@
+import { getPinterestAccessToken } from './pinterest-auth';
+
 interface PinterestPostData {
   title: string;
   description: string;
@@ -10,10 +12,12 @@ interface PinterestPostData {
 export async function postToPinterest(data: PinterestPostData) {
   const boardId = await getBoardId(data.board);
 
+  const accessToken = await getPinterestAccessToken();
+
   const response = await fetch('https://api.pinterest.com/v5/pins', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.PINTEREST_ACCESS_TOKEN}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({

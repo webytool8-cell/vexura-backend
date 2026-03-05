@@ -20,19 +20,45 @@ The route `DELETE /api/marketplace/[slug]` requires an admin token header:
 
 If `MARKETPLACE_ADMIN_TOKEN` is not configured, delete requests are rejected.
 
-## Pinterest auto-post environment
+## Pinterest backend pipeline (OAuth + auto-post)
 
-Pinterest auto-post (used by automation pipeline) is enabled when:
+Pinterest auto-post (used by the automation pipeline and manual upload route) is enabled when:
 
 - `PINTEREST_AUTO_POST=true`
 
-Required token:
+### OAuth credentials
 
-- `PINTEREST_ACCESS_TOKEN`
+Set these to support Pinterest OAuth and token refresh:
 
-Board configuration (new easiest option):
+- `PINTEREST_APP_ID` (or `PINTEREST_CLIENT_ID`)
+- `PINTEREST_APP_SECRET` (or `PINTEREST_CLIENT_SECRET`)
+- `PINTEREST_REDIRECT_URI` (must match your Pinterest app redirect)
 
-- `PINTEREST_BOARD_TEST` (single-board mode)
+### OAuth scopes
+
+Default scopes requested by `/api/pinterest/auth/start` are:
+
+- `pins:read`
+- `pins:write`
+- `boards:read`
+- `user_accounts:read`
+
+You can override with:
+
+- `PINTEREST_SCOPES` (comma-separated)
+
+### Token strategy
+
+Supported token sources for pin creation:
+
+1. `PINTEREST_ACCESS_TOKEN` (direct static token), or
+2. `PINTEREST_REFRESH_TOKEN` (+ OAuth credentials) for automatic access-token refresh.
+
+### Board configuration
+
+Single-board mode (easiest):
+
+- `PINTEREST_BOARD_TEST`
 
 Also supported:
 
@@ -45,6 +71,13 @@ Also supported:
 - `PINTEREST_BOARD_BUSINESS`
 
 If only one board ID is available, set `PINTEREST_BOARD_TEST` and all generated pins will fall back to that board.
+
+### Backend auth routes
+
+- `GET /api/pinterest/auth/start` → returns authorization URL
+- `GET /api/pinterest/auth/start?mode=redirect` → redirects to Pinterest consent screen
+- `GET /api/pinterest/auth/callback` → exchanges `code` for token payload
+- `GET /api/pinterest/auth/status` → returns readiness/missing config keys
 
 ## Merge conflict resolution for validator changes
 
