@@ -104,18 +104,14 @@ function Hero() {
 
     return (
         <section className="relative overflow-hidden py-24 lg:py-32 bg-[#ccff00] text-black">
-            {/* 1. Main Gradient Background - Green/Pink/Orange */}
             <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #ccff00 0%, #ff80b5 50%, #ff9f43 100%)' }}></div>
 
-            {/* 2. Floating Shapes Layer */}
             <div className="absolute inset-0 overflow-hidden">
                 {shapes.map(renderShape)}
             </div>
 
-            {/* 3. Subtle Dark Overlay Tint */}
             <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
             
-            {/* 4. Grid Pattern Overlay (Dark version) */}
             <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
                  style={{ 
                      backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', 
@@ -124,43 +120,29 @@ function Hero() {
             </div>
 
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center z-10">
-                
-                {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/10 border border-black/10 mb-8 backdrop-blur-sm shadow-sm">
                     <span className="w-2 h-2 rounded-full bg-black animate-pulse"></span>
                     <span className="text-xs font-mono font-bold tracking-wide text-black/70">VEXURA PRO LIVE</span>
                 </div>
 
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter mb-6 font-mono uppercase leading-[0.9] drop-shadow-sm text-black">
-                    Professional<br/>
-                    Vectors
+                <h1 className="text-[28px] md:text-7xl lg:text-8xl font-bold tracking-tighter mb-6 font-mono leading-[0.9] drop-shadow-sm text-black">
+                    AI Vector & Icon Generation Simplified
                 </h1>
 
                 <p className="max-w-2xl text-lg md:text-xl font-medium mb-12 leading-relaxed text-black/70">
-                    Generate production-ready SVG icons and organic illustrations instantly with AI.
+                    Create logos, icons, and scalable SVG assets instantly using AI. Clean exports. No design software required.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mb-8">
-                    <a href="/tool" className="btn h-14 px-8 text-base bg-black text-white hover:bg-black/80 hover:scale-105 border-transparent shadow-xl shadow-black/10 font-bold transform transition-all">
-                        <div className="icon-wand w-5 h-5"></div>
-                        START CREATING
+                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mb-16">
+                    <a href="#generator" className="btn h-14 px-8 text-base bg-black text-white hover:bg-black/80 border-transparent shadow-xl shadow-black/10 font-bold no-underline">
+                        Start Generating
                     </a>
-                    <a href="#pricing" className="btn h-14 px-8 text-base bg-white/20 backdrop-blur-md border-2 border-black/5 text-black hover:bg-black hover:text-white hover:border-black transition-all font-bold">
-                        <div className="icon-crown w-5 h-5"></div>
-                        VIEW PRICING
+                    <a href="/showcase" className="btn h-14 px-8 text-base bg-white/20 backdrop-blur-md border-2 border-black/5 text-black hover:bg-black hover:text-white hover:border-black font-bold no-underline">
+                        View Examples
                     </a>
                 </div>
 
-                <div className="mb-24 flex items-center justify-center gap-2 text-sm font-medium text-black/70 animate-in fade-in slide-in-from-bottom-2 delay-300">
-                    <span>Need instant assets?</span>
-                    <a href="/marketplace" className="flex items-center gap-1 text-black font-bold hover:underline decoration-2 underline-offset-2">
-                        Browse the Marketplace <div className="icon-arrow-right w-4 h-4"></div>
-                    </a>
-                </div>
-
-                {/* Engaging Showcase Section */}
                 <div className="w-full max-w-4xl relative">
-                    {/* Header for Showcase */}
                     <div className="flex items-center justify-between mb-6 px-2 opacity-80">
                          <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-black rounded-full"></div>
@@ -179,10 +161,7 @@ function Hero() {
                                 className="group relative aspect-square"
                                 style={{ animationDelay: `${i * 100}ms` }}
                             >
-                                {/* Card Container */}
                                 <div className="absolute inset-0 bg-white/20 backdrop-blur-md border border-white/30 rounded-[16px] shadow-lg shadow-black/5 transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-xl group-hover:bg-white/30 overflow-hidden flex flex-col items-center justify-center p-6">
-                                    
-                                    {/* Icon */}
                                     <svg 
                                         viewBox="0 0 400 400" 
                                         className="w-2/3 h-2/3 text-black/80 group-hover:text-black group-hover:scale-110 transition-all duration-500 drop-shadow-sm"
@@ -190,7 +169,6 @@ function Hero() {
                                         {item.svg}
                                     </svg>
                                     
-                                    {/* Prompt Label (Appears on Hover) */}
                                     <div className="absolute bottom-0 left-0 w-full p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-black/5 backdrop-blur-sm border-t border-white/20">
                                         <div className="flex items-center gap-2 text-[10px] font-mono text-black/70">
                                             <span className="text-black/40">&gt;</span>
@@ -204,7 +182,6 @@ function Hero() {
                 </div>
             </div>
             
-            {/* Bottom Fade to Dark Body */}
             <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[var(--bg-body)] to-transparent pointer-events-none"></div>
         </section>
     );
