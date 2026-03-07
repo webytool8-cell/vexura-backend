@@ -3,14 +3,14 @@ function Header({ user, onOpenAuth, onLogout }) {
   const currentPath = window.location.pathname;
 
   const navItems = [
-    { label: 'Generator', href: '/tool' },
+    { label: 'Generator', href: '/' },
     { label: 'Showcase', href: '/showcase' },
     { label: 'Docs', href: '/docs' },
   ];
 
   const isActive = (href) => {
-    if (href === '/tool') {
-      return currentPath === '/tool';
+    if (href === '/') {
+      return currentPath === '/' || currentPath === '/tool';
     }
     return currentPath.startsWith(href);
   };
@@ -18,7 +18,7 @@ function Header({ user, onOpenAuth, onLogout }) {
   return (
     <header className="sticky top-0 z-50 bg-[#0D0F14] border-b border-[#232834] h-[72px]">
       <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <a href="/tool" className="flex items-center gap-2 no-underline">
+        <a href="/" className="flex items-center gap-2 no-underline">
           <Logo className="w-5 h-5 text-[var(--text-main)]" />
           <span className="font-mono font-bold text-sm text-white">VEXURA</span>
         </a>

@@ -14,7 +14,7 @@ function Footer() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <a href="/tool" className="text-[var(--text-dim)] hover:text-[var(--text-muted)] no-underline">Generator</a>
+            <a href="/" className="text-[var(--text-dim)] hover:text-[var(--text-muted)] no-underline">Generator</a>
             <a href="/showcase" className="text-[var(--text-dim)] hover:text-[var(--text-muted)] no-underline">Showcase</a>
             <a href="/docs" className="text-[var(--text-dim)] hover:text-[var(--text-muted)] no-underline">Docs</a>
           </div>
