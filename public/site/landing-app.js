@@ -19,12 +19,7 @@ class ErrorBoundary extends React.Component {
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
-            <button
-              onClick={() => window.location.reload()}
-              className="btn btn-black"
-            >
-              Reload Page
-            </button>
+            <button onClick={() => window.location.reload()} className="btn btn-black">Reload Page</button>
           </div>
         </div>
       );
@@ -39,31 +34,31 @@ function LandingApp() {
   const [isAuthOpen, setIsAuthOpen] = React.useState(false);
 
   React.useEffect(() => {
-      const stored = localStorage.getItem('vector_user');
-      if (stored) setUser(JSON.parse(stored));
+    const stored = localStorage.getItem('vector_user');
+    if (stored) setUser(JSON.parse(stored));
   }, []);
 
   const handleLogin = (userData) => {
-      setUser(userData);
-      localStorage.setItem('vector_user', JSON.stringify(userData));
+    setUser(userData);
+    localStorage.setItem('vector_user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
-      setUser(null);
-      localStorage.removeItem('vector_user');
+    setUser(null);
+    localStorage.removeItem('vector_user');
   };
 
   return (
     <div className="min-h-screen flex flex-col" data-name="landing-app" data-file="landing-app.js">
       <Header user={user} onOpenAuth={() => setIsAuthOpen(true)} onLogout={handleLogout} />
-      
+
       <main className="flex-1" id="main-content">
-          <Hero />
-          <Features />
-          <Pricing />
-          <HowItWorks />
-          <Testimonials />
-          <CTA />
+        <Hero />
+        <HowItWorks />
+        <ExamplePreview />
+        <Features />
+        <GeneratorSection user={user} onOpenAuth={() => setIsAuthOpen(true)} />
+        <Testimonials />
       </main>
 
       <Footer />

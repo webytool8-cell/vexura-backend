@@ -9,6 +9,14 @@
       "destination": "/site/tool.html"
     },
     {
+      "source": "/showcase",
+      "destination": "/site/showcase.html"
+    },
+    {
+      "source": "/docs",
+      "destination": "/site/docs.html"
+    },
+    {
       "source": "/marketplace",
       "destination": "/site/marketplace.html"
     },
